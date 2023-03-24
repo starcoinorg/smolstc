@@ -4,6 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members=[
+    "consensus/dag",
+]
 
+default-members = [
+    "consensus/dag",
+]
 [dependencies]
-network-p2p = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
