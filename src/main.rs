@@ -1,9 +1,9 @@
 use starcoin_config::NodeConfig;
-fn build_network(){
 
+pub fn build_network() {
 }
 
-fn main() {
 
+fn main() {
     println!("Hello, world!");
 }
