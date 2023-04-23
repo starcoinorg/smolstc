@@ -29,7 +29,11 @@ where
     S: BuildHasher + Default,
 {
     pub fn new(db: Arc<DB>, cache_size: u64, prefix: Vec<u8>) -> Self {
-        Self { db, cache: Cache::new(cache_size), prefix }
+        Self {
+            db,
+            cache: Cache::new(cache_size),
+            prefix,
+        }
     }
 
     pub fn read_from_cache(&self, key: TKey) -> Option<TData>
@@ -43,7 +47,8 @@ where
     where
         TKey: Clone + AsRef<[u8]>,
     {
-        Ok(self.cache.contains_key(&key) || self.db.get_pinned(DbKey::new(&self.prefix, key))?.is_some())
+        Ok(self.cache.contains_key(&key)
+            || self.db.get_pinned(DbKey::new(&self.prefix, key))?.is_some())
     }
 
     pub fn read(&self, key: TKey) -> Result<TData, StoreError>
@@ -73,13 +78,18 @@ where
         let db_key = DbKey::prefix_only(&self.prefix);
         let mut read_opts = ReadOptions::default();
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
-        self.db.iterator_opt(IteratorMode::From(db_key.as_ref(), Direction::Forward), read_opts).map(|iter_result| match iter_result {
-            Ok((key, data_bytes)) => match bincode::deserialize(&data_bytes) {
-                Ok(data) => Ok((key[self.prefix.len() + 1..].into(), data)),
+        self.db
+            .iterator_opt(
+                IteratorMode::From(db_key.as_ref(), Direction::Forward),
+                read_opts,
+            )
+            .map(|iter_result| match iter_result {
+                Ok((key, data_bytes)) => match bincode::deserialize(&data_bytes) {
+                    Ok(data) => Ok((key[self.prefix.len() + 1..].into(), data)),
+                    Err(e) => Err(e.into()),
+                },
                 Err(e) => Err(e.into()),
-            },
-            Err(e) => Err(e.into()),
-        })
+            })
     }
 
     pub fn write(&self, mut writer: impl DbWriter, key: TKey, data: TData) -> Result<(), StoreError>
@@ -139,7 +149,11 @@ where
         Ok(())
     }
 
-    pub fn delete_many(&self, mut writer: impl DbWriter, key_iter: &mut (impl Iterator<Item = TKey> + Clone)) -> Result<(), StoreError>
+    pub fn delete_many(
+        &self,
+        mut writer: impl DbWriter,
+        key_iter: &mut (impl Iterator<Item = TKey> + Clone),
+    ) -> Result<(), StoreError>
     where
         TKey: Clone + AsRef<[u8]>,
     {
@@ -162,7 +176,10 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
         let keys = self
             .db
-            .iterator_opt(IteratorMode::From(db_key.as_ref(), Direction::Forward), read_opts)
+            .iterator_opt(
+                IteratorMode::From(db_key.as_ref(), Direction::Forward),
+                read_opts,
+            )
             .map(|iter_result| match iter_result {
                 Ok((key, _)) => Ok::<_, rocksdb::Error>(key),
                 Err(e) => Err(e),
@@ -178,10 +195,10 @@ where
     //TODO: loop and chain iterators for multi-prefix / bucket iterator.
     pub fn seek_iterator(
         &self,
-        bucket: Option<&[u8]>,   // iter self.prefix if None, else append bytes to self.prefix.
+        bucket: Option<&[u8]>, // iter self.prefix if None, else append bytes to self.prefix.
         seek_from: Option<TKey>, // iter whole range if None
-        limit: usize,            // amount to take.
-        skip_first: bool,        // skips the first value, (useful in conjunction with the seek-key, as to not re-retrieve).
+        limit: usize,          // amount to take.
+        skip_first: bool, // skips the first value, (useful in conjunction with the seek-key, as to not re-retrieve).
     ) -> impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_
     where
         TKey: Clone + AsRef<[u8]>,
@@ -197,9 +214,13 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
 
         let mut db_iterator = match seek_from {
-            Some(seek_key) => {
-                self.db.iterator_opt(IteratorMode::From(DbKey::new(&self.prefix, seek_key).as_ref(), Direction::Forward), read_opts)
-            }
+            Some(seek_key) => self.db.iterator_opt(
+                IteratorMode::From(
+                    DbKey::new(&self.prefix, seek_key).as_ref(),
+                    Direction::Forward,
+                ),
+                read_opts,
+            ),
             None => self.db.iterator_opt(IteratorMode::Start, read_opts),
         };
 
@@ -208,10 +229,12 @@ where
         }
 
         db_iterator.take(limit).map(move |item| match item {
-            Ok((key_bytes, value_bytes)) => match bincode::deserialize::<TData>(value_bytes.as_ref()) {
-                Ok(value) => Ok((key_bytes[db_key.prefix_len()..].into(), value)),
-                Err(err) => Err(err.into()),
-            },
+            Ok((key_bytes, value_bytes)) => {
+                match bincode::deserialize::<TData>(value_bytes.as_ref()) {
+                    Ok(value) => Ok((key_bytes[db_key.prefix_len()..].into(), value)),
+                    Err(err) => Err(err.into()),
+                }
+            }
             Err(err) => Err(err.into()),
         })
     }
