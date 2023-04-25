@@ -6,3 +6,10 @@ edition.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ghostdag.workspace = true
+reachability.workspace = true
+consensus-types.workspace = true
+database.workspace = true
+parking_lot.workspace = true
+starcoin-crypto.workspace = true
+starcoin-types.workspace = true
