@@ -1,15 +1,22 @@
-use std::sync::Arc;
+use super::ordering::*;
+use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
 use crate::util::Refs;
-use starcoin_crypto::HashValue as Hash;
-use consensus_types::blockhash::{self, BlockHashes, BlockHashExtensions, BlockHashMap, BlueWorkType, HashKTypeMap, KType};
+use consensus_types::blockhash::{
+    self, BlockHashExtensions, BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType,
+};
 use consensus_types::header::HeaderStoreReader;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
-use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
-use super::ordering::*;
+use starcoin_crypto::HashValue as Hash;
+use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct GhostdagManager<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V: HeaderStoreReader> {
+pub struct GhostdagManager<
+    T: GhostdagStoreReader,
+    S: RelationsStoreReader,
+    U: ReachabilityService,
+    V: HeaderStoreReader,
+> {
     genesis_hash: Hash,
     pub(super) k: KType,
     pub(super) ghostdag_store: Arc<T>,
@@ -18,7 +25,13 @@ pub struct GhostdagManager<T: GhostdagStoreReader, S: RelationsStoreReader, U: R
     pub(super) reachability_service: U,
 }
 
-impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V: HeaderStoreReader> GhostdagManager<T, S, U, V> {
+impl<
+        T: GhostdagStoreReader,
+        S: RelationsStoreReader,
+        U: ReachabilityService,
+        V: HeaderStoreReader,
+    > GhostdagManager<T, S, U, V>
+{
     pub fn new(
         genesis_hash: Hash,
         k: KType,
@@ -27,7 +40,14 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
         headers_store: Arc<V>,
         reachability_service: U,
     ) -> Self {
-        Self { genesis_hash, k, ghostdag_store, relations_store, reachability_service, headers_store }
+        Self {
+            genesis_hash,
+            k,
+            ghostdag_store,
+            relations_store,
+            reachability_service,
+            headers_store,
+        }
     }
 
     pub fn genesis_ghostdag_data(&self) -> GhostdagData {
@@ -55,7 +75,10 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
     pub fn find_selected_parent(&self, parents: impl IntoIterator<Item = Hash>) -> Hash {
         parents
             .into_iter()
-            .map(|parent| SortableBlock { hash: parent, blue_work: self.ghostdag_store.get_blue_work(parent).unwrap() })
+            .map(|parent| SortableBlock {
+                hash: parent,
+                blue_work: self.ghostdag_store.get_blue_work(parent).unwrap(),
+            })
             .max()
             .unwrap()
             .hash
@@ -80,14 +103,18 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
     ///
     /// For further details see the article https://eprint.iacr.org/2018/104.pdf
     pub fn ghostdag(&self, parents: &[Hash]) -> GhostdagData {
-        assert!(!parents.is_empty(), "genesis must be added via a call to init");
+        assert!(
+            !parents.is_empty(),
+            "genesis must be added via a call to init"
+        );
 
         // Run the GHOSTDAG parent selection algorithm
         let selected_parent = self.find_selected_parent(&mut parents.iter().copied());
         // Initialize new GHOSTDAG block data with the selected parent
         let mut new_block_data = GhostdagData::new_with_selected_parent(selected_parent, self.k);
         // Get the mergeset in consensus-agreed topological order (topological here means forward in time from blocks to children)
-        let ordered_mergeset = self.ordered_mergeset_without_selected_parent(selected_parent, parents);
+        let ordered_mergeset =
+            self.ordered_mergeset_without_selected_parent(selected_parent, parents);
 
         for blue_candidate in ordered_mergeset.iter().cloned() {
             let coloring = self.check_blue_candidate(&new_block_data, blue_candidate);
@@ -100,21 +127,26 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
             }
         }
 
-        let blue_score = self.ghostdag_store.get_blue_score(selected_parent).unwrap() + new_block_data.mergeset_blues.len() as u64;
+        let blue_score = self.ghostdag_store.get_blue_score(selected_parent).unwrap()
+            + new_block_data.mergeset_blues.len() as u64;
 
         let added_blue_work: BlueWorkType = new_block_data
             .mergeset_blues
             .iter()
             .cloned()
-            .map(|hash| if hash.is_origin() { 0u128 } else {
-                //TODO: implement caculate pow work
-                let bits = self.headers_store.get_bits(hash).unwrap();
-                BlueWorkType::default()
-            }
-            )
+            .map(|hash| {
+                if hash.is_origin() {
+                    0u128
+                } else {
+                    //TODO: implement caculate pow work
+                    let difficulty = self.headers_store.get_difficulty(hash).unwrap();
+                    1024u128
+                }
+            })
             .sum();
 
-        let blue_work = self.ghostdag_store.get_blue_work(selected_parent).unwrap() + added_blue_work;
+        let blue_work =
+            self.ghostdag_store.get_blue_work(selected_parent).unwrap() + added_blue_work;
         new_block_data.finalize_score_and_work(blue_score, blue_work);
 
         new_block_data
@@ -139,18 +171,25 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
 
         // We check if chain_block is not the new block by checking if it has a hash.
         if let Some(hash) = chain_block.hash {
-            if self.reachability_service.is_dag_ancestor_of(hash, blue_candidate) {
+            if self
+                .reachability_service
+                .is_dag_ancestor_of(hash, blue_candidate)
+            {
                 return ColoringState::Blue;
             }
         }
 
         for &block in chain_block.data.mergeset_blues.iter() {
             // Skip blocks that exist in the past of blue_candidate.
-            if self.reachability_service.is_dag_ancestor_of(block, blue_candidate) {
+            if self
+                .reachability_service
+                .is_dag_ancestor_of(block, blue_candidate)
+            {
                 continue;
             }
 
-            candidate_blues_anticone_sizes.insert(block, self.blue_anticone_size(block, new_block_data));
+            candidate_blues_anticone_sizes
+                .insert(block, self.blue_anticone_size(block, new_block_data));
 
             *candidate_blue_anticone_size += 1;
             if *candidate_blue_anticone_size > self.k {
@@ -166,7 +205,10 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
 
             // This is a sanity check that validates that a blue
             // block's blue anticone is not already larger than K.
-            assert!(*candidate_blues_anticone_sizes.get(&block).unwrap() <= self.k, "found blue anticone larger than K");
+            assert!(
+                *candidate_blues_anticone_sizes.get(&block).unwrap() <= self.k,
+                "found blue anticone larger than K"
+            );
         }
 
         ColoringState::Pending
@@ -182,28 +224,44 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
                 return *size;
             }
 
-            if current_selected_parent == self.genesis_hash || current_selected_parent == Hash::new(blockhash::ORIGIN) {
+            if current_selected_parent == self.genesis_hash
+                || current_selected_parent == Hash::new(blockhash::ORIGIN)
+            {
                 panic!("block {block} is not in blue set of the given context");
             }
 
-            current_blues_anticone_sizes = self.ghostdag_store.get_blues_anticone_sizes(current_selected_parent).unwrap();
-            current_selected_parent = self.ghostdag_store.get_selected_parent(current_selected_parent).unwrap();
+            current_blues_anticone_sizes = self
+                .ghostdag_store
+                .get_blues_anticone_sizes(current_selected_parent)
+                .unwrap();
+            current_selected_parent = self
+                .ghostdag_store
+                .get_selected_parent(current_selected_parent)
+                .unwrap();
         }
     }
 
-    fn check_blue_candidate(&self, new_block_data: &GhostdagData, blue_candidate: Hash) -> ColoringOutput {
+    fn check_blue_candidate(
+        &self,
+        new_block_data: &GhostdagData,
+        blue_candidate: Hash,
+    ) -> ColoringOutput {
         // The maximum length of new_block_data.mergeset_blues can be K+1 because
         // it contains the selected parent.
         if new_block_data.mergeset_blues.len() as KType == self.k + 1 {
             return ColoringOutput::Red;
         }
 
-        let mut candidate_blues_anticone_sizes: BlockHashMap<KType> = BlockHashMap::with_capacity(self.k as usize);
+        let mut candidate_blues_anticone_sizes: BlockHashMap<KType> =
+            BlockHashMap::with_capacity(self.k as usize);
         // Iterate over all blocks in the blue past of the new block that are not in the past
         // of blue_candidate, and check for each one of them if blue_candidate potentially
         // enlarges their blue anticone to be over K, or that they enlarge the blue anticone
         // of blue_candidate to be over K.
-        let mut chain_block = ChainBlock { hash: None, data: new_block_data.into() };
+        let mut chain_block = ChainBlock {
+            hash: None,
+            data: new_block_data.into(),
+        };
         let mut candidate_blue_anticone_size: KType = 0;
 
         loop {
@@ -216,14 +274,23 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
             );
 
             match state {
-                ColoringState::Blue => return ColoringOutput::Blue(candidate_blue_anticone_size, candidate_blues_anticone_sizes),
+                ColoringState::Blue => {
+                    return ColoringOutput::Blue(
+                        candidate_blue_anticone_size,
+                        candidate_blues_anticone_sizes,
+                    )
+                }
                 ColoringState::Red => return ColoringOutput::Red,
                 ColoringState::Pending => (), // continue looping
             }
 
             chain_block = ChainBlock {
                 hash: Some(chain_block.data.selected_parent),
-                data: self.ghostdag_store.get_data(chain_block.data.selected_parent).unwrap().into(),
+                data: self
+                    .ghostdag_store
+                    .get_data(chain_block.data.selected_parent)
+                    .unwrap()
+                    .into(),
             }
         }
     }
