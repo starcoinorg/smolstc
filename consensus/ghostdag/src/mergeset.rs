@@ -1,11 +1,12 @@
 use super::protocol::GhostdagManager;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
+use crate::ghostdata::GhostdagStoreReader;
 use consensus_types::blockhash::BlockHashSet;
 use consensus_types::header::HeaderStoreReader;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
-use crate::ghostdata::GhostdagStoreReader;
+
 
 impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V: HeaderStoreReader> GhostdagManager<T, S, U, V> {
     pub fn ordered_mergeset_without_selected_parent(&self, selected_parent: Hash, parents: &[Hash]) -> Vec<Hash> {

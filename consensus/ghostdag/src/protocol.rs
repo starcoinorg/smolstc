@@ -1,13 +1,11 @@
 use std::sync::Arc;
+use crate::util::Refs;
 use starcoin_crypto::HashValue as Hash;
 use consensus_types::blockhash::{self, BlockHashes, BlockHashExtensions, BlockHashMap, BlueWorkType, HashKTypeMap, KType};
 use consensus_types::header::HeaderStoreReader;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
-use crate::util::Refs;
-
 use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
-
 use super::ordering::*;
 
 #[derive(Clone)]

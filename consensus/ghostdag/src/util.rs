@@ -1,5 +1,4 @@
 use std::{ops::Deref, rc::Rc, sync::Arc};
-
 /// Enum used to represent a concrete varying pointer type which only needs to be accessed by ref.
 /// We avoid adding a `Val(T)` variant in order to keep the size of the enum minimal
 pub enum Refs<'a, T> {

@@ -14,5 +14,4 @@ serde.workspace = true
 itertools.workspace = true
 parking_lot.workspace = true
 rocksdb.workspace = true
-
 reachability.workspace = true

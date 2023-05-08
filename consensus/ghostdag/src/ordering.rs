@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 use starcoin_crypto::HashValue as Hash;
-
 use serde::{Deserialize, Serialize};
 use consensus_types::blockhash::BlueWorkType;
 use consensus_types::header::HeaderStoreReader;
