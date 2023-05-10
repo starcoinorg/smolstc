@@ -1,18 +1,45 @@
-[package]
-name = "smolstc"
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
+include = ["src/**/*.rs", "Cargo.toml"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 members=[
     "consensus",
+    "consensus/reachability",
+    "consensus/types",
+    "database",
+    "consensus/ghostdag",
 ]
 
 default-members = [
     "consensus",
+    "consensus/reachability",
+    "consensus/types",
+    "database",
+    "consensus/ghostdag",
 ]
-[dependencies]
+
+[workspace.dependencies]
 starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
+
+rocksdb = "0.19"
+bincode = { version = "1", default-features = false }
+faster-hex = "0.6"
+indexmap = "1.9.1"
+itertools = "0.10"
+num_cpus = "1.15.0"
+parking_lot = "0.12"
+rand_core = { version = "0.6", features = ["std"] }
+rand = "0.8"
+serde = { version = "1", features = ["derive", "rc"] }
+thiserror = "1"
+tempfile = "3.3"
+
+database = { path = "database" }
+consensus-types = {path = "consensus/types"}
+reachability = {path = "consensus/reachability"}
