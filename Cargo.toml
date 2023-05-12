@@ -26,6 +26,7 @@ starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
+starcoin-types = {git = "https://github.com/starcoinorg/starcoin"}
 rocksdb = "0.21.0"
 bincode = { version = "1", default-features = false }
 faster-hex = "0.6"
