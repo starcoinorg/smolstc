@@ -6,7 +6,7 @@ edition = "2021"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-include = ["src/**/*.rs", "Cargo.toml"]
+include = ["src/*.rs", "src/**/*.rs", "Cargo.toml"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
@@ -31,7 +31,6 @@ default-members = [
 ]
 
 [workspace.dependencies]
-starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
@@ -92,3 +91,10 @@ bcs-ext = { path = "commons/bcs_ext" }
 network-p2p-types = { path = "network-p2p/types" }
 sc-peerset = { path = "network-p2p/peerset" }
 sp-utils = { path = "commons/utils" }
+
+[dependencies]
+network-p2p = { path = "network-p2p" }
+rand = "0.8"
+futures-core = "0.3.4"
+tokio = { version = "^1", features = ["full"] }
+futures = "0.3.12"

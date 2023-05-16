@@ -6009,6 +6009,13 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 [[package]]
 name = "smolstc"
 version = "0.1.0"
+dependencies = [
+ "futures",
+ "futures-core",
+ "network-p2p",
+ "rand 0.8.5",
+ "tokio",
+]
 
 [[package]]
 name = "snow"
