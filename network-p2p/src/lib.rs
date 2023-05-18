@@ -28,7 +28,7 @@ mod peer_info;
 #[allow(clippy::result_unit_err)]
 pub mod protocol;
 #[allow(clippy::single_match)]
-mod request_responses;
+pub mod request_responses;
 #[allow(deprecated)]
 mod service;
 mod transport;

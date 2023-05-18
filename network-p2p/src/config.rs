@@ -192,6 +192,17 @@ impl NetworkConfiguration {
             ..Default::default()
         }
     }
+
+    // for easy testing
+    pub fn new_default(ipv4: Ipv4Addr) -> NetworkConfiguration {
+        NetworkConfiguration {
+            listen_addresses: vec![iter::once(Protocol::Ip4(ipv4))
+                .chain(iter::once(Protocol::Tcp(0)))
+                .collect()],
+            ..Default::default()
+        }
+    }
+
 }
 
 /// The policy for connections to non-reserved peers.
