@@ -6010,10 +6010,14 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 name = "smolstc"
 version = "0.1.0"
 dependencies = [
+ "bcs-ext 1.13.4",
  "futures",
  "futures-core",
  "network-p2p",
+ "network-p2p-types 1.13.4",
  "rand 0.8.5",
+ "serde",
+ "serde_bytes",
  "tokio",
 ]
 

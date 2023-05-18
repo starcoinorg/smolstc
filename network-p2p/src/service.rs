@@ -308,7 +308,7 @@ impl NetworkWorker {
         // Listen on multiaddresses.
         for addr in &params.network_config.listen_addresses {
             if let Err(err) = Swarm::listen_on(&mut swarm, addr.clone()) {
-                warn!(target: "sub-libp2p", "Can't listen on {} because: {:?}", addr, err)
+                println!("sub-libp2p, Can't listen on {} because: {:?}", addr, err);
             }
         }
 
@@ -1119,10 +1119,11 @@ impl Future for NetworkWorker {
                     );
                 }
                 Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::InboundRequest {
+                    peer,
                     protocol,
                     result,
-                    ..
                 })) => {
+                    println!("receive from peer id = {:?}, protocol = {:?}", peer, protocol);
                 }
                 Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::RequestFinished {
                     protocol,
@@ -1230,7 +1231,7 @@ impl Future for NetworkWorker {
                     num_established,
                     ..
                 }) => {
-                    trace!(target: "sub-libp2p", "Libp2p => Disconnected({:?}, {:?})", peer_id, cause);
+                    println!("sub-libp2p, Libp2p => Disconnected({:?}, {:?})", peer_id, cause);
                 }
                 Poll::Ready(SwarmEvent::NewListenAddr { address, .. }) => {
                     trace!(target: "sub-libp2p", "Libp2p => NewListenAddr({})", address)

@@ -93,8 +93,12 @@ sc-peerset = { path = "network-p2p/peerset" }
 sp-utils = { path = "commons/utils" }
 
 [dependencies]
+bcs-ext = { path = "commons/bcs_ext" }
 network-p2p = { path = "network-p2p" }
+network-p2p-types = { path = "network-p2p/types" }
 rand = "0.8"
 futures-core = "0.3.4"
 tokio = { version = "^1", features = ["full"] }
 futures = "0.3.12"
+serde = "1.0.130"
+serde_bytes = "0.11"
