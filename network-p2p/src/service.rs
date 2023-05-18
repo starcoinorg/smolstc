@@ -70,6 +70,7 @@ use libp2p::{
 use log::{error, info, trace, warn, debug};
 use network_p2p_types::IfDisconnected;
 use parking_lot::Mutex;
+use prometheus::proto;
 use sc_peerset::{peersstate, PeersetHandle, ReputationChange};
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -1131,6 +1132,7 @@ impl Future for NetworkWorker {
                     result,
                     ..
                 })) => {
+                    println!("BehaviourOut::RequestFinished: {:?}", protocol);
                 }
                 Poll::Ready(SwarmEvent::Behaviour(BehaviourOut::RandomKademliaStarted)) => {
                     //TODO: add metric
