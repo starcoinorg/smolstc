@@ -24,10 +24,16 @@ pub struct MyResponse {
     name: String,
 }
 
-fn generate_protocol_config() -> (ProtocolConfig, Receiver<IncomingRequest>) {
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct MyNotify {
+    number: i32,
+    name: String,
+}
+
+fn generate_protocol_config(protocol_name: &'static str) -> (ProtocolConfig, Receiver<IncomingRequest>) {
     let (sender, receiver) = mpsc::channel(128);
     (ProtocolConfig {
-        name: Cow::from(PROTOCOL_NAME_REQUEST_RESPONSE),
+        name: Cow::from(protocol_name),
         max_request_size: 1024 * 1024 * 1024 * 10,
         max_response_size: 1024 * 1024 * 1024 * 10,
         request_timeout: Duration::from_secs(10),
@@ -37,7 +43,7 @@ fn generate_protocol_config() -> (ProtocolConfig, Receiver<IncomingRequest>) {
 
 async fn build_worker(
     config: config::NetworkConfiguration,
-) -> (Arc<NetworkService>, JoinHandle<()>) {
+) -> (Arc<NetworkService>, JoinHandle<()>, JoinHandle<()>) {
     println!("config: {:?}", config);
     let worker = NetworkWorker::new(config::Params {
         network_config: config,
@@ -47,26 +53,43 @@ async fn build_worker(
     .unwrap();
 
     let service = worker.service().clone();
-    // let event_stream = service.event_stream("test");
+    let mut event_stream = service.event_stream("test");
 
-    let handle = tokio::task::spawn(async move {
+    let notify_handle = tokio::task::spawn(async move {
+        loop {
+            let item = event_stream.next().await.unwrap();
+            match item {
+                network_p2p::Event::NotificationsReceived { remote, messages } => {
+                    println!("receive notify, peer id = {remote:?}");
+                    messages.into_iter().for_each(|(protocol, buffer)| {
+                        println!("received protocol: {protocol:?}");
+                        let notify = MyNotify::decode(&buffer).unwrap();
+                        println!("notify content: {:?}", notify);
+                    });
+                }
+                _ => ()
+            }
+        }
+    });
+
+    let reqres_handle = tokio::task::spawn(async move {
         futures::pin_mut!(worker);
         let _ = worker.await;
     });
 
-    (service, handle)
+    (service, reqres_handle, notify_handle)
 }
 
-pub async fn build_network() -> (Arc<NetworkService>, JoinHandle<()>, Receiver<IncomingRequest>) {
+pub async fn build_network() -> (Arc<NetworkService>, JoinHandle<()>, JoinHandle<()>, Receiver<IncomingRequest>) {
     let localhost = Ipv4Addr::new(127, 0, 0, 1);
     let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
     println!("listen_addr = {:?}", listen_addr);
 
-    let (protocol_config, receiver) = generate_protocol_config();
+    let (protocol_config, receiver) = generate_protocol_config(PROTOCOL_NAME_REQUEST_RESPONSE);
     // let (sender, receiver) = mpsc::channel(128);
     // protocol_config.inbound_queue = Some(sender);
     
-    let (service, handle)= build_worker(config::NetworkConfiguration {
+    let (service, reqres_handle, notify_handle)= build_worker(config::NetworkConfiguration {
         notifications_protocols: vec![From::from(PROTOCOL_NAME_NOTIFY)],
         listen_addresses: vec![listen_addr.clone()],
         transport: config::TransportConfig::Normal { enable_mdns: true, allow_private_ip: true },
@@ -74,13 +97,13 @@ pub async fn build_network() -> (Arc<NetworkService>, JoinHandle<()>, Receiver<I
         ..config::NetworkConfiguration::new_default(localhost)
     }).await;
 
-    (service, handle, receiver)
+    (service, reqres_handle, notify_handle, receiver)
 }
 
 fn main() {
     let mut rt = tokio::runtime::Runtime::new().unwrap();
     rt.block_on(async {
-        let (service, worker_handle, mut receiver) = build_network().await;
+        let (service, worker_handle, notify_handle, mut receiver) = build_network().await;
 
         println!("peer id = {:?}", service.peer_id());
 
@@ -127,14 +150,24 @@ fn main() {
                 name: String::from("ping"), 
             };
 
-            loop {
+            // ping and pong three times
+            let mut count = 0;
+            while count < 3 {
                 let result = service.request(peer_id, Cow::from(PROTOCOL_NAME_REQUEST_RESPONSE), req.encode().unwrap(), IfDisconnected::TryConnect).await.unwrap();
                 let response = MyResponse::decode(&result);
                 println!("result = {:?}", response);
+                count += 1;
             }
-               
+
+            // broadcast
+            let notify = MyNotify {
+                number: 1003,
+                name: String::from("notify from jack"),
+            };
+            service.broadcast_message(Cow::from(PROTOCOL_NAME_NOTIFY), notify.encode().unwrap()).await;
         }
-        receive_handle.await;
-        worker_handle.await;
+        receive_handle.await.unwrap();
+        notify_handle.await.unwrap();
+        worker_handle.await.unwrap();
     })
 }
