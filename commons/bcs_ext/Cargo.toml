@@ -1,9 +1,0 @@
-[dependencies]
-anyhow = { workspace = true }
-bcs = { workspace = true }
-serde = { workspace = true }
-
-[package]
-edition = { workspace = true }
-name = "bcs-ext"
-version = "1.13.4"
