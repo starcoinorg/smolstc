@@ -29,8 +29,8 @@ default-members = [
 ]
 
 [workspace.dependencies]
-starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
-starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6" }
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6" }
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
 rocksdb = "0.21.0"
 bincode = { version = "1", default-features = false }
@@ -86,20 +86,19 @@ database = { path = "database" }
 consensus-types = {path = "consensus/types"}
 reachability = {path = "consensus/reachability"}
 # bcs-ext = { path = "commons/bcs_ext" }
-network-p2p-types = { path = "network-p2p/types" }
-sc-peerset = { path = "network-p2p/peerset" }
 sp-utils = { path = "commons/utils" }
 
 [dependencies]
-bcs-ext = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
-starcoin-types = { path = "/Users/jack/Documents/code/rust/starcoin/types" }
-# network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
-network-p2p = { path = "/Users/jack/Documents/code/rust/starcoin/network-p2p"}
-network-p2p-types = { path = "/Users/jack/Documents/code/rust/starcoin/network-p2p/types"}
-# network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
+bcs-ext = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+starcoin-types = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-core = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
 rand = "0.8"
 futures-core = "0.3.4"
 tokio = { version = "^1", features = ["full"] }
 futures = "0.3.12"
 serde = "1.0.130"
 serde_bytes = "0.11"
+anyhow = "~1"

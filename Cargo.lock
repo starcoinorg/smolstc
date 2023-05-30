@@ -216,17 +216,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ahash"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c99f64d1e06488f620f932677e24bc6e2897582980441ae90a671415bd7ec2f"
-dependencies = [
- "cfg-if",
- "once_cell",
- "version_check",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -593,16 +582,7 @@ dependencies = [
 [[package]]
 name = "bcs-ext"
 version = "1.13.4"
-dependencies = [
- "anyhow",
- "bcs",
- "serde",
-]
-
-[[package]]
-name = "bcs-ext"
-version = "1.13.4"
-source = "git+https://github.com/starcoinorg/starcoin?rev=397b411ebb390c8d01a1f96a9e353109e8b1a0e6#397b411ebb390c8d01a1f96a9e353109e8b1a0e6"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "bcs",
@@ -679,7 +659,7 @@ dependencies = [
  "lazy_static",
  "lazycell",
  "peeking_take_while",
- "prettyplease",
+ "prettyplease 0.2.6",
  "proc-macro2 1.0.59",
  "quote 1.0.28",
  "regex",
@@ -1381,7 +1361,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "907076dfda823b0b36d2a1bb5f90c96660a5bbcd7729e10727f07858f22c4edc"
 dependencies = [
  "cfg-if",
- "hashbrown 0.12.3",
+ "hashbrown",
  "lock_api",
  "once_cell",
  "parking_lot_core 0.9.7",
@@ -1550,6 +1530,7 @@ checksum = "850878694b7933ca4c9569d30a34b55031b9b139ee1fc7b94a527c4ef960d690"
 [[package]]
 name = "diem-crypto"
 version = "0.0.3"
+source = "git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe#a02de6d0b83abe0abff088683e891df0238102fe"
 dependencies = [
  "aes-gcm 0.8.0",
  "anyhow",
@@ -1558,7 +1539,7 @@ dependencies = [
  "bytes",
  "cc",
  "curve25519-dalek-fiat",
- "diem-crypto-derive 0.0.3",
+ "diem-crypto-derive 0.0.3 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "digest 0.9.0",
  "ed25519-dalek-fiat",
  "hex",
@@ -1566,7 +1547,7 @@ dependencies = [
  "libc",
  "mirai-annotations",
  "once_cell",
- "openrpc-schema 0.1.0",
+ "openrpc-schema",
  "proptest",
  "proptest-derive",
  "rand 0.8.5",
@@ -1601,7 +1582,7 @@ dependencies = [
  "libc",
  "mirai-annotations",
  "once_cell",
- "openrpc-schema 0.1.0 (git+https://github.com/starcoinorg/openrpc-rs?rev=f8ab047e30927cdf2f605b61a219c975d6c4f666)",
+ "openrpc-schema",
  "proptest",
  "proptest-derive",
  "rand 0.8.5",
@@ -1619,6 +1600,7 @@ dependencies = [
 [[package]]
 name = "diem-crypto-derive"
 version = "0.0.3"
+source = "git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe#a02de6d0b83abe0abff088683e891df0238102fe"
 dependencies = [
  "proc-macro2 1.0.59",
  "quote 1.0.28",
@@ -1903,6 +1885,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37ab347416e802de484e4d03c7316c48f1ecb56574dfd4a46a80f173ce1de04d"
 
 [[package]]
+name = "fixedbitset"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
+
+[[package]]
 name = "flate2"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1922,10 +1910,11 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "forkable-jellyfish-merkle"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "backtrace",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "byteorder",
  "hex",
  "mirai-annotations",
@@ -1933,7 +1922,7 @@ dependencies = [
  "num-traits",
  "serde",
  "serde_bytes",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-logger",
  "thiserror",
 ]
@@ -2245,16 +2234,7 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 dependencies = [
- "ahash 0.7.6",
-]
-
-[[package]]
-name = "hashbrown"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
-dependencies = [
- "ahash 0.8.3",
+ "ahash",
 ]
 
 [[package]]
@@ -2576,7 +2556,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
- "hashbrown 0.12.3",
+ "hashbrown",
 ]
 
 [[package]]
@@ -2622,9 +2602,9 @@ version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ab388864246d58a276e60e7569a833d9cc4cd75c66e5ca77c177dad38e59996"
 dependencies = [
- "ahash 0.7.6",
+ "ahash",
  "dashmap",
- "hashbrown 0.12.3",
+ "hashbrown",
  "once_cell",
  "parking_lot 0.12.1",
 ]
@@ -2757,21 +2737,18 @@ checksum = "f7012b1bbb0719e1097c47611d3898568c546d597c2e74d66f6087edd5233ff4"
 
 [[package]]
 name = "libp2p"
-version = "0.51.3"
+version = "0.50.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f210d259724eae82005b5c48078619b7745edb7b76de370b03f8ba59ea103097"
+checksum = "9c7b0104790be871edcf97db9bd2356604984e623a08d825c3f27852290266b8"
 dependencies = [
  "bytes",
  "futures",
  "futures-timer",
  "getrandom 0.2.9",
  "instant",
- "libp2p-allow-block-list",
- "libp2p-connection-limits",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "libp2p-dns",
  "libp2p-identify",
- "libp2p-identity",
  "libp2p-kad",
  "libp2p-mdns",
  "libp2p-metrics",
@@ -2785,32 +2762,45 @@ dependencies = [
  "libp2p-webrtc",
  "libp2p-websocket",
  "libp2p-yamux",
- "multiaddr 0.17.1",
+ "multiaddr 0.16.0",
+ "parking_lot 0.12.1",
  "pin-project 1.1.0",
+ "smallvec",
 ]
 
 [[package]]
-name = "libp2p-allow-block-list"
-version = "0.1.1"
+name = "libp2p-core"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "510daa05efbc25184458db837f6f9a5143888f1caa742426d92e1833ddd38a50"
+checksum = "b6a8fcd392ff67af6cc3f03b1426c41f7f26b6b9aff2dc632c1c56dd649e571f"
 dependencies = [
- "libp2p-core",
- "libp2p-identity",
- "libp2p-swarm",
+ "asn1_der",
+ "bs58 0.4.0",
+ "ed25519-dalek",
+ "either",
+ "fnv",
+ "futures",
+ "futures-timer",
+ "instant",
+ "libsecp256k1",
+ "log",
+ "multiaddr 0.16.0",
+ "multihash 0.16.3",
+ "multistream-select",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "pin-project 1.1.0",
+ "prost",
+ "prost-build",
+ "rand 0.8.5",
+ "rw-stream-sink",
+ "sec1",
+ "sha2 0.10.6",
+ "smallvec",
+ "thiserror",
+ "unsigned-varint 0.7.1",
  "void",
-]
-
-[[package]]
-name = "libp2p-connection-limits"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4caa33f1d26ed664c4fe2cca81a08c8e07d4c1c04f2f4ac7655c2dd85467fda0"
-dependencies = [
- "libp2p-core",
- "libp2p-identity",
- "libp2p-swarm",
- "void",
+ "zeroize",
 ]
 
 [[package]]
@@ -2843,12 +2833,12 @@ dependencies = [
 
 [[package]]
 name = "libp2p-dns"
-version = "0.39.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "146ff7034daae62077c415c2376b8057368042df6ab95f5432ad5e88568b1554"
+checksum = "8e42a271c1b49f789b92f7fc87749fa79ce5c7bdc88cbdfacb818a4bca47fec5"
 dependencies = [
  "futures",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "log",
  "parking_lot 0.12.1",
  "smallvec",
@@ -2857,21 +2847,20 @@ dependencies = [
 
 [[package]]
 name = "libp2p-identify"
-version = "0.42.2"
+version = "0.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5455f472243e63b9c497ff320ded0314254a9eb751799a39c283c6f20b793f3c"
+checksum = "c052d0026f4817b44869bfb6810f4e1112f43aec8553f2cb38881c524b563abf"
 dependencies = [
  "asynchronous-codec 0.6.1",
- "either",
  "futures",
  "futures-timer",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-swarm",
  "log",
- "lru 0.10.0",
- "quick-protobuf",
- "quick-protobuf-codec",
+ "lru 0.8.1",
+ "prost",
+ "prost-build",
+ "prost-codec",
  "smallvec",
  "thiserror",
  "void",
@@ -2883,10 +2872,8 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e2d584751cecb2aabaa56106be6be91338a60a0f4e420cf2af639204f596fc1"
 dependencies = [
- "asn1_der",
  "bs58 0.4.0",
  "ed25519-dalek",
- "libsecp256k1",
  "log",
  "multiaddr 0.17.1",
  "multihash 0.17.0",
@@ -2899,9 +2886,9 @@ dependencies = [
 
 [[package]]
 name = "libp2p-kad"
-version = "0.43.3"
+version = "0.42.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39d5ef876a2b2323d63c258e63c2f8e36f205fe5a11f0b3095d59635650790ff"
+checksum = "2766dcd2be8c87d5e1f35487deb22d765f49c6ae1251b3633efe3b25698bd3d2"
 dependencies = [
  "arrayvec 0.7.2",
  "asynchronous-codec 0.6.1",
@@ -2911,11 +2898,11 @@ dependencies = [
  "futures",
  "futures-timer",
  "instant",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-swarm",
  "log",
- "quick-protobuf",
+ "prost",
+ "prost-build",
  "rand 0.8.5",
  "sha2 0.10.6",
  "smallvec",
@@ -2927,15 +2914,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-mdns"
-version = "0.43.1"
+version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19983e1f949f979a928f2c603de1cf180cc0dc23e4ac93a62651ccb18341460b"
+checksum = "04f378264aade9872d6ccd315c0accc18be3a35d15fc1b9c36e5b6f983b62b5b"
 dependencies = [
  "data-encoding",
  "futures",
  "if-watch",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-swarm",
  "log",
  "rand 0.8.5",
@@ -2948,11 +2934,11 @@ dependencies = [
 
 [[package]]
 name = "libp2p-metrics"
-version = "0.12.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a42ec91e227d7d0dafa4ce88b333cdf5f277253873ab087555c92798db2ddd46"
+checksum = "5ad8a64f29da86005c86a4d2728b8a0719e9b192f4092b609fd8790acb9dec55"
 dependencies = [
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "libp2p-identify",
  "libp2p-kad",
  "libp2p-ping",
@@ -2962,14 +2948,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-mplex"
-version = "0.39.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d34780b514b159e6f3fd70ba3e72664ec89da28dca2d1e7856ee55e2c7031ba"
+checksum = "03805b44107aa013e7cbbfa5627b31c36cbedfdfb00603c0311998882bc4bace"
 dependencies = [
  "asynchronous-codec 0.6.1",
  "bytes",
  "futures",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "log",
  "nohash-hasher",
  "parking_lot 0.12.1",
@@ -2980,18 +2966,18 @@ dependencies = [
 
 [[package]]
 name = "libp2p-noise"
-version = "0.42.2"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3673da89d29936bc6435bafc638e2f184180d554ce844db65915113f86ec5e"
+checksum = "a978cb57efe82e892ec6f348a536bfbd9fee677adbe5689d7a93ad3a9bffbf2e"
 dependencies = [
  "bytes",
  "curve25519-dalek 3.2.0",
  "futures",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "log",
  "once_cell",
- "quick-protobuf",
+ "prost",
+ "prost-build",
  "rand 0.8.5",
  "sha2 0.10.6",
  "snow",
@@ -3003,15 +2989,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-ping"
-version = "0.42.0"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e57759c19c28a73ef1eb3585ca410cefb72c1a709fcf6de1612a378e4219202"
+checksum = "929fcace45a112536e22b3dcfd4db538723ef9c3cb79f672b98be2cc8e25f37f"
 dependencies = [
- "either",
  "futures",
  "futures-timer",
  "instant",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "libp2p-swarm",
  "log",
  "rand 0.8.5",
@@ -3020,16 +3005,15 @@ dependencies = [
 
 [[package]]
 name = "libp2p-quic"
-version = "0.7.0-alpha.3"
+version = "0.7.0-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6b26abd81cd2398382a1edfe739b539775be8a90fa6914f39b2ab49571ec735"
+checksum = "01e7c867e95c8130667b24409d236d37598270e6da69b3baf54213ba31ffca59"
 dependencies = [
  "bytes",
  "futures",
  "futures-timer",
  "if-watch",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-tls",
  "log",
  "parking_lot 0.12.1",
@@ -3042,46 +3026,49 @@ dependencies = [
 
 [[package]]
 name = "libp2p-request-response"
-version = "0.24.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ffdb374267d42dc5ed5bc53f6e601d4a64ac5964779c6e40bb9e4f14c1e30d5"
+checksum = "3236168796727bfcf4927f766393415361e2c644b08bedb6a6b13d957c9a4884"
 dependencies = [
  "async-trait",
+ "bytes",
  "futures",
  "instant",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-swarm",
+ "log",
  "rand 0.8.5",
  "smallvec",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
 name = "libp2p-swarm"
-version = "0.42.2"
+version = "0.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "903b3d592d7694e56204d211f29d31bc004be99386644ba8731fc3e3ef27b296"
+checksum = "b2a35472fe3276b3855c00f1c032ea8413615e030256429ad5349cdf67c6e1a0"
 dependencies = [
  "either",
  "fnv",
  "futures",
  "futures-timer",
  "instant",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-swarm-derive",
  "log",
+ "pin-project 1.1.0",
  "rand 0.8.5",
  "smallvec",
+ "thiserror",
  "tokio",
  "void",
 ]
 
 [[package]]
 name = "libp2p-swarm-derive"
-version = "0.32.0"
+version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fba456131824ab6acd4c7bf61e9c0f0a3014b5fc9868ccb8e10d344594cdc4f"
+checksum = "9d527d5827582abd44a6d80c07ff8b50b4ee238a8979e05998474179e79dc400"
 dependencies = [
  "heck 0.4.1",
  "quote 1.0.28",
@@ -3090,15 +3077,15 @@ dependencies = [
 
 [[package]]
 name = "libp2p-tcp"
-version = "0.39.0"
+version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33d33698596d7722d85d3ab0c86c2c322254fce1241e91208e3679b4eb3026cf"
+checksum = "b4b257baf6df8f2df39678b86c578961d48cc8b68642a12f0f763f56c8e5858d"
 dependencies = [
  "futures",
  "futures-timer",
  "if-watch",
  "libc",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "log",
  "socket2",
  "tokio",
@@ -3112,7 +3099,7 @@ checksum = "ff08d13d0dc66e5e9ba6279c1de417b84fa0d0adc3b03e5732928c180ec02781"
 dependencies = [
  "futures",
  "futures-rustls",
- "libp2p-core",
+ "libp2p-core 0.39.2",
  "libp2p-identity",
  "rcgen 0.10.0",
  "ring",
@@ -3125,9 +3112,9 @@ dependencies = [
 
 [[package]]
 name = "libp2p-webrtc"
-version = "0.4.0-alpha.4"
+version = "0.4.0-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dba48592edbc2f60b4bc7c10d65445b0c3964c07df26fdf493b6880d33be36f8"
+checksum = "cdb6cd86dd68cba72308ea05de1cebf3ba0ae6e187c40548167955d4e3970f6a"
 dependencies = [
  "async-trait",
  "asynchronous-codec 0.6.1",
@@ -3136,13 +3123,13 @@ dependencies = [
  "futures-timer",
  "hex",
  "if-watch",
- "libp2p-core",
- "libp2p-identity",
+ "libp2p-core 0.38.0",
  "libp2p-noise",
  "log",
- "multihash 0.17.0",
- "quick-protobuf",
- "quick-protobuf-codec",
+ "multihash 0.16.3",
+ "prost",
+ "prost-build",
+ "prost-codec",
  "rand 0.8.5",
  "rcgen 0.9.3",
  "serde",
@@ -3156,14 +3143,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-websocket"
-version = "0.41.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "111273f7b3d3510524c752e8b7a5314b7f7a1fee7e68161c01a7d72cbb06db9f"
+checksum = "1d705506030d5c0aaf2882437c70dab437605f21c5f9811978f694e6917a3b54"
 dependencies = [
  "either",
  "futures",
  "futures-rustls",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "log",
  "parking_lot 0.12.1",
  "quicksink",
@@ -3175,13 +3162,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-yamux"
-version = "0.43.1"
+version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dcd21d950662700a385d4c6d68e2f5f54d778e97068cdd718522222ef513bda"
+checksum = "4f63594a0aa818642d9d4915c791945053877253f08a3626f13416b5cd928a29"
 dependencies = [
  "futures",
- "libp2p-core",
+ "libp2p-core 0.38.0",
  "log",
+ "parking_lot 0.12.1",
  "thiserror",
  "yamux",
 ]
@@ -3341,16 +3329,16 @@ version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e999beba7b6e8345721bd280141ed958096a2e4abdf74f67ff4ce49b4b54e47a"
 dependencies = [
- "hashbrown 0.12.3",
+ "hashbrown",
 ]
 
 [[package]]
 name = "lru"
-version = "0.10.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03f1160296536f10c833a82dca22267d5486734230d47bf00bf435885814ba1e"
+checksum = "b6e8aaa3f231bb4bd57b84b2d5dc3ae7f350265df8aa96492e0bc394a1571909"
 dependencies = [
- "hashbrown 0.13.2",
+ "hashbrown",
 ]
 
 [[package]]
@@ -3521,7 +3509,7 @@ dependencies = [
  "move-binary-format",
  "move-borrow-graph",
  "move-core-types",
- "petgraph",
+ "petgraph 0.5.1",
 ]
 
 [[package]]
@@ -3563,7 +3551,7 @@ dependencies = [
  "move-symbol-pool",
  "num-bigint",
  "once_cell",
- "petgraph",
+ "petgraph 0.5.1",
  "regex",
  "sha3",
  "tempfile",
@@ -3583,7 +3571,7 @@ dependencies = [
  "hex",
  "num",
  "once_cell",
- "openrpc-schema 0.1.0 (git+https://github.com/starcoinorg/openrpc-rs?rev=f8ab047e30927cdf2f605b61a219c975d6c4f666)",
+ "openrpc-schema",
  "primitive-types",
  "proptest",
  "proptest-derive",
@@ -3610,7 +3598,7 @@ dependencies = [
  "move-core-types",
  "move-ir-types",
  "once_cell",
- "petgraph",
+ "petgraph 0.5.1",
  "serde",
 ]
 
@@ -3835,7 +3823,7 @@ dependencies = [
  "num",
  "once_cell",
  "paste",
- "petgraph",
+ "petgraph 0.5.1",
  "serde",
 ]
 
@@ -3987,7 +3975,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c346cf9999c631f002d8f977c4eaeaa0e6386f16007202308d0b3757522c2cc"
 dependencies = [
  "core2",
+ "digest 0.10.7",
  "multihash-derive",
+ "sha2 0.10.6",
  "unsigned-varint 0.7.1",
 ]
 
@@ -3998,9 +3988,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "835d6ff01d610179fbce3de1694d007e500bf33a7f29689838941d6bf783ae40"
 dependencies = [
  "core2",
- "digest 0.10.7",
  "multihash-derive",
- "sha2 0.10.6",
  "unsigned-varint 0.7.1",
 ]
 
@@ -4017,6 +4005,12 @@ dependencies = [
  "syn 1.0.109",
  "synstructure",
 ]
+
+[[package]]
+name = "multimap"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
 name = "multistream-select"
@@ -4110,10 +4104,11 @@ dependencies = [
 [[package]]
 name = "network-api"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "async-trait",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "futures",
  "hex",
  "itertools",
@@ -4121,9 +4116,9 @@ dependencies = [
  "network-types",
  "parking_lot 0.12.1",
  "rand 0.8.5",
- "schemars 0.8.8",
+ "schemars",
  "serde",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-logger",
  "starcoin-metrics",
  "starcoin-service-registry",
@@ -4133,12 +4128,13 @@ dependencies = [
 [[package]]
 name = "network-p2p"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "async-std",
  "async-trait",
  "asynchronous-codec 0.5.0",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "bitflags",
  "bs58 0.3.1",
  "bytes",
@@ -4165,7 +4161,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "starcoin-config",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-metrics",
  "starcoin-types",
  "thiserror",
@@ -4177,8 +4173,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "network-p2p-core"
+version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
+dependencies = [
+ "anyhow",
+ "bcs-ext",
+ "futures",
+ "log",
+ "network-p2p-derive",
+ "network-p2p-types",
+ "num_enum",
+ "serde",
+ "starcoin-types",
+]
+
+[[package]]
+name = "network-p2p-derive"
+version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.59",
+ "quote 1.0.28",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "network-p2p-types"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -4187,22 +4211,23 @@ dependencies = [
  "libp2p",
  "rand 0.8.5",
  "sc-peerset",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "serde_json",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-types",
 ]
 
 [[package]]
 name = "network-types"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "network-p2p-types",
- "schemars 0.8.8",
+ "schemars",
  "serde",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-types",
 ]
 
@@ -4417,18 +4442,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 [[package]]
 name = "openrpc-schema"
 version = "0.1.0"
-dependencies = [
- "schemars 0.8.8",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "openrpc-schema"
-version = "0.1.0"
 source = "git+https://github.com/starcoinorg/openrpc-rs?rev=f8ab047e30927cdf2f605b61a219c975d6c4f666#f8ab047e30927cdf2f605b61a219c975d6c4f666"
 dependencies = [
- "schemars 0.8.8 (git+https://github.com/starcoinorg/schemars?rev=9b3705780b8fe9c8676ff82919869ba7405b1062)",
+ "schemars",
  "serde",
  "serde_json",
 ]
@@ -4678,7 +4694,17 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "467d164a6de56270bd7c4d070df81d07beace25012d5103ced4e9ff08d6afdb7"
 dependencies = [
- "fixedbitset",
+ "fixedbitset 0.2.0",
+ "indexmap",
+]
+
+[[package]]
+name = "petgraph"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dd7d28ee937e54fe3080c91faa1c3a46c06de6252988a7f4592ba2310ef22a4"
+dependencies = [
+ "fixedbitset 0.4.2",
  "indexmap",
 ]
 
@@ -4881,6 +4907,16 @@ dependencies = [
 
 [[package]]
 name = "prettyplease"
+version = "0.1.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c8646e95016a7a6c4adea95bafa8a16baab64b583356217f2c85db4a39d9a86"
+dependencies = [
+ "proc-macro2 1.0.59",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "prettyplease"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b69d39aab54d069e7f2fe8cb970493e7834601ca2d8c65fd7bbd183578080d1"
@@ -4976,21 +5012,21 @@ dependencies = [
 
 [[package]]
 name = "prometheus-client"
-version = "0.19.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d6fa99d535dd930d1249e6c79cb3c2915f9172a540fe2b02a4c8f9ca954721e"
+checksum = "83cd1b99916654a69008fd66b4f9397fbe08e6e51dfe23d4417acf5d3b8cb87c"
 dependencies = [
  "dtoa",
  "itoa",
  "parking_lot 0.12.1",
- "prometheus-client-derive-encode",
+ "prometheus-client-derive-text-encode",
 ]
 
 [[package]]
-name = "prometheus-client-derive-encode"
-version = "0.4.1"
+name = "prometheus-client-derive-text-encode"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b6a5217beb0ad503ee7fa752d451c905113d70721b937126158f3106a48cc1"
+checksum = "66a455fbcb954c1a7decf3c586e860fd7889cddf4b8e164be736dbac95a953cd"
 dependencies = [
  "proc-macro2 1.0.59",
  "quote 1.0.28",
@@ -5029,6 +5065,73 @@ dependencies = [
 ]
 
 [[package]]
+name = "prost"
+version = "0.11.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b82eaa1d779e9a4bc1c3217db8ffbeabaae1dca241bf70183242128d48681cd"
+dependencies = [
+ "bytes",
+ "prost-derive",
+]
+
+[[package]]
+name = "prost-build"
+version = "0.11.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "119533552c9a7ffacc21e099c24a0ac8bb19c2a2a3f363de84cd9b844feab270"
+dependencies = [
+ "bytes",
+ "heck 0.4.1",
+ "itertools",
+ "lazy_static",
+ "log",
+ "multimap",
+ "petgraph 0.6.3",
+ "prettyplease 0.1.25",
+ "prost",
+ "prost-types",
+ "regex",
+ "syn 1.0.109",
+ "tempfile",
+ "which",
+]
+
+[[package]]
+name = "prost-codec"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dc34979ff898b6e141106178981ce2596c387ea6e62533facfc61a37fc879c0"
+dependencies = [
+ "asynchronous-codec 0.6.1",
+ "bytes",
+ "prost",
+ "thiserror",
+ "unsigned-varint 0.7.1",
+]
+
+[[package]]
+name = "prost-derive"
+version = "0.11.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "proc-macro2 1.0.59",
+ "quote 1.0.28",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "prost-types"
+version = "0.11.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213622a1460818959ac1181aaeb2dc9c7f63df720db7d788b3e24eacd1983e13"
+dependencies = [
+ "prost",
+]
+
+[[package]]
 name = "protobuf"
 version = "2.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5062,19 +5165,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d6da84cc204722a989e01ba2f6e1e276e190f22263d0cb6ce8526fcdb0d2e1f"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "quick-protobuf-codec"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1693116345026436eb2f10b677806169c1a1260c1c60eaaffe3fb5a29ae23d8b"
-dependencies = [
- "asynchronous-codec 0.6.1",
- "bytes",
- "quick-protobuf",
- "thiserror",
- "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -5550,6 +5640,7 @@ dependencies = [
 [[package]]
 name = "sc-peerset"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "futures",
  "libp2p",
@@ -5562,34 +5653,13 @@ dependencies = [
 [[package]]
 name = "schemars"
 version = "0.8.8"
-dependencies = [
- "dyn-clone",
- "multiaddr 0.17.1",
- "schemars_derive 0.8.8",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "schemars"
-version = "0.8.8"
 source = "git+https://github.com/starcoinorg/schemars?rev=9b3705780b8fe9c8676ff82919869ba7405b1062#9b3705780b8fe9c8676ff82919869ba7405b1062"
 dependencies = [
  "dyn-clone",
  "multiaddr 0.16.0",
- "schemars_derive 0.8.8 (git+https://github.com/starcoinorg/schemars?rev=9b3705780b8fe9c8676ff82919869ba7405b1062)",
+ "schemars_derive",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "schemars_derive"
-version = "0.8.8"
-dependencies = [
- "proc-macro2 1.0.59",
- "quote 1.0.28",
- "serde_derive_internals",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -5934,10 +6004,13 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 name = "smolstc"
 version = "0.1.0"
 dependencies = [
- "bcs-ext 1.13.4 (git+https://github.com/starcoinorg/starcoin?rev=397b411ebb390c8d01a1f96a9e353109e8b1a0e6)",
+ "anyhow",
+ "bcs-ext",
  "futures",
  "futures-core",
  "network-p2p",
+ "network-p2p-core",
+ "network-p2p-derive",
  "network-p2p-types",
  "rand 0.8.5",
  "serde",
@@ -5992,6 +6065,7 @@ dependencies = [
 [[package]]
 name = "sp-utils"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "futures",
  "futures-core",
@@ -6027,19 +6101,20 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "starcoin-account-api"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "async-trait",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "futures",
  "hex",
  "rand 0.8.5",
  "rand_core 0.6.4",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "serde_bytes",
  "serde_json",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-service-registry",
  "starcoin-types",
  "thiserror",
@@ -6048,24 +6123,26 @@ dependencies = [
 [[package]]
 name = "starcoin-accumulator"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "byteorder",
  "itertools",
  "lru 0.7.8",
  "mirai-annotations",
  "once_cell",
  "parking_lot 0.12.1",
- "schemars 0.8.8",
+ "schemars",
  "serde",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-logger",
 ]
 
 [[package]]
 name = "starcoin-config"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "clap 3.2.25",
@@ -6083,11 +6160,11 @@ dependencies = [
  "parking_lot 0.12.1",
  "rand 0.8.5",
  "rand_core 0.6.4",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "serde_json",
  "starcoin-account-api",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-gas",
  "starcoin-gas-algebra-ext",
  "starcoin-logger",
@@ -6106,11 +6183,12 @@ dependencies = [
 [[package]]
 name = "starcoin-crypto"
 version = "1.10.0-rc.2"
+source = "git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe#a02de6d0b83abe0abff088683e891df0238102fe"
 dependencies = [
  "anyhow",
  "bcs",
- "diem-crypto 0.0.3",
- "diem-crypto-derive 0.0.3",
+ "diem-crypto 0.0.3 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
+ "diem-crypto-derive 0.0.3 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "hex",
  "once_cell",
  "rand 0.8.5",
@@ -6118,7 +6196,7 @@ dependencies = [
  "serde",
  "serde-name 0.2.1",
  "serde_bytes",
- "starcoin-crypto-macro 1.10.0-rc.2",
+ "starcoin-crypto-macro 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
 ]
 
 [[package]]
@@ -6143,6 +6221,7 @@ dependencies = [
 [[package]]
 name = "starcoin-crypto-macro"
 version = "1.10.0-rc.2"
+source = "git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe#a02de6d0b83abe0abff088683e891df0238102fe"
 dependencies = [
  "proc-macro2 1.0.59",
  "quote 1.0.28",
@@ -6175,6 +6254,7 @@ dependencies = [
 [[package]]
 name = "starcoin-gas"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "clap 3.2.25",
  "move-binary-format",
@@ -6190,6 +6270,7 @@ dependencies = [
 [[package]]
 name = "starcoin-gas-algebra-ext"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "move-binary-format",
  "move-core-types",
@@ -6204,6 +6285,7 @@ dependencies = [
 [[package]]
 name = "starcoin-logger"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6213,7 +6295,7 @@ dependencies = [
  "log4rs",
  "once_cell",
  "parking_lot 0.12.1",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "slog",
  "slog-async",
@@ -6223,6 +6305,7 @@ dependencies = [
 [[package]]
 name = "starcoin-metrics"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "prometheus",
@@ -6235,15 +6318,16 @@ dependencies = [
 [[package]]
 name = "starcoin-move-compiler"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "move-binary-format",
  "move-command-line-common",
  "move-compiler",
  "once_cell",
- "petgraph",
+ "petgraph 0.5.1",
  "regex",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-logger",
  "starcoin-vm-types",
  "tempfile",
@@ -6253,6 +6337,7 @@ dependencies = [
 [[package]]
 name = "starcoin-natives"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "arrayref",
  "libsecp256k1",
@@ -6269,7 +6354,7 @@ dependencies = [
  "num_enum",
  "ripemd160",
  "smallvec",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-uint",
  "tiny-keccak",
  "walkdir",
@@ -6278,6 +6363,7 @@ dependencies = [
 [[package]]
 name = "starcoin-service-registry"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6287,7 +6373,7 @@ dependencies = [
  "futures-timer",
  "log",
  "once_cell",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "thiserror",
  "tokio",
@@ -6296,6 +6382,7 @@ dependencies = [
 [[package]]
 name = "starcoin-system"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
  "systemstat",
@@ -6304,6 +6391,7 @@ dependencies = [
 [[package]]
 name = "starcoin-time-service"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "log",
  "serde",
@@ -6312,9 +6400,10 @@ dependencies = [
 [[package]]
 name = "starcoin-types"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "byteorder",
  "bytes",
  "forkable-jellyfish-merkle",
@@ -6322,11 +6411,11 @@ dependencies = [
  "num_enum",
  "rand 0.8.5",
  "rand_core 0.6.4",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "serde_json",
  "starcoin-accumulator",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-uint",
  "starcoin-vm-types",
  "thiserror",
@@ -6335,19 +6424,21 @@ dependencies = [
 [[package]]
 name = "starcoin-uint"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "hex",
  "serde",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "uint",
 ]
 
 [[package]]
 name = "starcoin-vm-types"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "bech32",
  "chrono",
  "forkable-jellyfish-merkle",
@@ -6363,12 +6454,12 @@ dependencies = [
  "num_enum",
  "once_cell",
  "rand 0.8.5",
- "schemars 0.8.8",
+ "schemars",
  "serde",
  "serde_bytes",
  "serde_json",
  "starcoin-accumulator",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-gas-algebra-ext",
 ]
 
@@ -6381,9 +6472,10 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stdlib"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "anyhow",
- "bcs-ext 1.13.4",
+ "bcs-ext",
  "clap 3.2.25",
  "fs_extra",
  "include_dir",
@@ -6396,7 +6488,7 @@ dependencies = [
  "serde",
  "sha2 0.10.6",
  "simplelog",
- "starcoin-crypto 1.10.0-rc.2",
+ "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=a02de6d0b83abe0abff088683e891df0238102fe)",
  "starcoin-framework",
  "starcoin-move-compiler",
  "starcoin-vm-types",
@@ -6696,6 +6788,7 @@ dependencies = [
 [[package]]
 name = "timeout-join-handler"
 version = "1.13.4"
+source = "git+https://github.com/starcoinorg/starcoin?rev=cec8d55dee307337e5e75f5bd8c8d3456c6714b6#cec8d55dee307337e5e75f5bd8c8d3456c6714b6"
 dependencies = [
  "thiserror",
 ]
@@ -7083,6 +7176,8 @@ checksum = "d86a8dc7f45e4c1b0d30e43038c38f274e77af056aa5f74b93c2cf9eb3c1c836"
 dependencies = [
  "asynchronous-codec 0.6.1",
  "bytes",
+ "futures-io",
+ "futures-util",
 ]
 
 [[package]]
