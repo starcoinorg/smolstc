@@ -1,7 +1,12 @@
+[package]
+name = "smolstc"
+version = "0.1.0"
+edition = "2021"
+
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-include = ["src/**/*.rs", "Cargo.toml"]
+include = ["src/*.rs", "src/**/*.rs", "Cargo.toml"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
@@ -11,6 +16,7 @@ members=[
     "consensus/types",
     "database",
     "consensus/ghostdag",
+    ".",
 ]
 
 default-members = [
@@ -19,12 +25,12 @@ default-members = [
     "consensus/types",
     "database",
     "consensus/ghostdag",
+    ".",
 ]
 
 [workspace.dependencies]
-starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
-starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
-starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6" }
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6" }
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
 rocksdb = "0.21.0"
 bincode = { version = "1", default-features = false }
@@ -38,6 +44,61 @@ rand = "0.8"
 serde = { version = "1", features = ["derive", "rc"] }
 thiserror = "1"
 tempfile = "3.3"
+anyhow = "~1"
+async-std = "1.12"
+async-trait = "0.1.53"
+asynchronous-codec = "0.5"
+bitflags = "1.3.2"
+bs58 = "0.3.1"
+bytes = "1"
+derive_more = "0.99.14"
+either = "~1"
+fnv = "1.0.6"
+futures = "0.3.12"
+futures-timer = "3.0"
+hex = "0.4"
+ip_network = "0.3.4"
+libp2p = { version = "0.50.0", features = ["dns", "identify", "kad", "macros", "mdns", "mplex", "noise", "ping", "tcp",  "tokio", "yamux", "websocket", "secp256k1"] }
+linked-hash-map = "0.5.6"
+linked_hash_set = "0.1.3"
+log = { version = "0.4.16" }
+lru = "0.7.8"
+once_cell = "1.13.0"
+pin-project = "0.4.27"
+prometheus = "0.13.0"
+serde_json = "~1"
+smallvec = "1.10.0"
+tokio = { version = "^1", features = ["full"] }
+unsigned-varint = { version = "0.6.0", features = [
+    "futures",
+    "asynchronous_codec",
+] }
+void = "1.0.2"
+wasm-timer = "0.2"
+zeroize = "1.3.0"
+bcs = "0.1"
+schemars = { git = "https://github.com/starcoinorg/schemars", rev = "9b3705780b8fe9c8676ff82919869ba7405b1062" }
+futures-core = "0.3.4"
+lazy_static = "1.4.0"
+simple-stopwatch = "0.1.4"
+tracing = "0.1.37"
 database = { path = "database" }
 consensus-types = {path = "consensus/types"}
 reachability = {path = "consensus/reachability"}
+# bcs-ext = { path = "commons/bcs_ext" }
+sp-utils = { path = "commons/utils" }
+
+[dependencies]
+bcs-ext = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+starcoin-types = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+network-p2p-core = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+rand = "0.8"
+futures-core = "0.3.4"
+tokio = { version = "^1", features = ["full"] }
+futures = "0.3.12"
+serde = "1.0.130"
+serde_bytes = "0.11"
+anyhow = "~1"
