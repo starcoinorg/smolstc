@@ -17,7 +17,6 @@ members=[
     "database",
     "consensus/ghostdag",
     ".",
-    "network-p2p",
 ]
 
 default-members = [
@@ -27,7 +26,6 @@ default-members = [
     "database",
     "consensus/ghostdag",
     ".",
-    "network-p2p",
 ]
 
 [workspace.dependencies]
@@ -87,15 +85,18 @@ tracing = "0.1.37"
 database = { path = "database" }
 consensus-types = {path = "consensus/types"}
 reachability = {path = "consensus/reachability"}
-bcs-ext = { path = "commons/bcs_ext" }
+# bcs-ext = { path = "commons/bcs_ext" }
 network-p2p-types = { path = "network-p2p/types" }
 sc-peerset = { path = "network-p2p/peerset" }
 sp-utils = { path = "commons/utils" }
 
 [dependencies]
-bcs-ext = { path = "commons/bcs_ext" }
-network-p2p = { path = "network-p2p" }
-network-p2p-types = { path = "network-p2p/types" }
+bcs-ext = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
+starcoin-types = { path = "/Users/jack/Documents/code/rust/starcoin/types" }
+# network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
+network-p2p = { path = "/Users/jack/Documents/code/rust/starcoin/network-p2p"}
+network-p2p-types = { path = "/Users/jack/Documents/code/rust/starcoin/network-p2p/types"}
+# network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "397b411ebb390c8d01a1f96a9e353109e8b1a0e6"}
 rand = "0.8"
 futures-core = "0.3.4"
 tokio = { version = "^1", features = ["full"] }

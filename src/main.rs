@@ -1,11 +1,12 @@
 use std::{sync::Arc, net::Ipv4Addr, borrow::Cow, time::Duration};
 use futures::{channel::mpsc::{self, Receiver}, StreamExt};
 use network_p2p::{config, NetworkService, NetworkWorker};
-use network_p2p_types::{IfDisconnected, IncomingRequest, OutgoingResponse, ReputationChange, PeerId, parse_str_addr};
+use network_p2p_types::{IfDisconnected, IncomingRequest, OutgoingResponse, ReputationChange, parse_str_addr};
 use serde::{Deserialize, Serialize};
 use bcs_ext::BCSCodec;
 use network_p2p::request_responses::ProtocolConfig;
 use tokio::task::JoinHandle;
+use starcoin_types::startup_info::ChainInfo;
 
 const PROTOCOL_NAME_CHAIN: &str = "/starcoin/chain/1";
 const PROTOCOL_NAME_NOTIFY: &str = "/starcoin/notify/1";
@@ -45,9 +46,11 @@ async fn build_worker(
     config: config::NetworkConfiguration,
 ) -> (Arc<NetworkService>, JoinHandle<()>, JoinHandle<()>) {
     println!("config: {:?}", config);
+
     let worker = NetworkWorker::new(config::Params {
         network_config: config,
         protocol_id: config::ProtocolId::from(PROTOCOL_NAME_CHAIN),
+        chain_info: starcoin_types::startup_info::ChainInfo::random(),
         metrics_registry: None,
     })
     .unwrap();
@@ -94,7 +97,7 @@ pub async fn build_network() -> (Arc<NetworkService>, JoinHandle<()>, JoinHandle
         listen_addresses: vec![listen_addr.clone()],
         transport: config::TransportConfig::Normal { enable_mdns: true, allow_private_ip: true },
         request_response_protocols: vec![protocol_config],
-        ..config::NetworkConfiguration::new_default(localhost)
+        ..config::NetworkConfiguration::new_local()
     }).await;
 
     (service, reqres_handle, notify_handle, receiver)
