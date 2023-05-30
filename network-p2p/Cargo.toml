@@ -1,0 +1,52 @@
+[package]
+edition = { workspace = true }
+name = "network-p2p"
+version = "1.13.4"
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+asynchronous-codec = { workspace = true }
+bitflags = { workspace = true }
+bytes = { workspace = true }
+once_cell = { workspace = true }
+bcs-ext = { package = "bcs-ext", workspace = true }
+async-std = { workspace = true }
+bs58 = { workspace = true }
+derive_more = { workspace = true }
+either = { workspace = true }
+fnv = { workspace = true }
+futures = { workspace = true }
+futures-timer = { workspace = true }
+hex = { workspace = true }
+ip_network = { workspace = true }
+linked-hash-map = { workspace = true }
+linked_hash_set = { workspace = true }
+log = { workspace = true }
+lru = { workspace = true }
+network-p2p-types = { workspace = true }
+parking_lot = { workspace = true }
+pin-project = { workspace = true }
+prometheus = { workspace = true }
+rand = { workspace = true }
+sc-peerset = { workspace = true }
+serde = { features = ["derive"], workspace = true }
+serde_json = { features = ["arbitrary_precision"], workspace = true }
+smallvec = { workspace = true }
+starcoin-crypto = { workspace = true }
+starcoin-config = { workspace = true }
+thiserror = { workspace = true }
+unsigned-varint = { features = [
+    "futures",
+    "asynchronous_codec",
+], workspace = true }
+void = { workspace = true }
+wasm-timer = { workspace = true }
+zeroize = { workspace = true }
+libp2p = { workspace = true, features = ["identify", "kad", "macros"] }
+tokio={ workspace = true}
+tracing={ workspace = true}
+
+[dev-dependencies]
+tempfile = { workspace = true }
+

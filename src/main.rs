@@ -1,4 +1,3 @@
-use starcoin_config::NodeConfig;
 
 pub fn build_network() {
 }
