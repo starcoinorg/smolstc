@@ -95,6 +95,7 @@ network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55d
 network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
 network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
 network-p2p-core = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
+starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin", rev = "cec8d55dee307337e5e75f5bd8c8d3456c6714b6"}
 rand = "0.8"
 futures-core = "0.3.4"
 tokio = { version = "^1", features = ["full"] }

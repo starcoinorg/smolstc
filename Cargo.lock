@@ -6015,6 +6015,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "serde_bytes",
+ "starcoin-service-registry",
  "starcoin-types",
  "tokio",
 ]
