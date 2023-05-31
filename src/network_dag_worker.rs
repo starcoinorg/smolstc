@@ -2,7 +2,6 @@ use network_p2p::{config, NetworkWorker};
 use crate::network_dag_handle::DagDataHandle; 
 
 const PROTOCOL_NAME_CHAIN: &str = "/starcoin/notify/1";
-const PROTOCOL_NAME_NOTIFY: &str = "/starcoin/notify/1";
 
 
 

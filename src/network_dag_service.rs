@@ -1,4 +1,4 @@
-use std::{borrow::Cow, time::Duration};
+use std::{borrow::Cow, time::Duration, net::Ipv4Addr};
 use futures::{channel::mpsc::channel, StreamExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{NetworkWorker, Event, config, config::RequestResponseConfig};
@@ -10,6 +10,16 @@ use anyhow::Result;
 const MAX_REQUEST_SIZE: u64 = 1024 * 1024;
 const MAX_RESPONSE_SIZE: u64 = 1024 * 1024 * 64;
 const REQUEST_BUFFER_SIZE: usize = 128;
+
+// notify
+const PROTOCOL_NAME_NOTIFY: &str = "/starcoin/notify/1";
+
+// request-response
+const PROTOCOL_NAME_REQRES_1: &str = "/starcoin/request_response/1";
+const PROTOCOL_NAME_REQRES_2: &str = "/starcoin/request_response/2";
+
+// broadcast
+const PROTOCOL_NAME_BROADCAST: &str = "/starcoin/request_response/2";
 
 pub enum NetworkType {
   InMemory,
@@ -26,7 +36,17 @@ pub struct NetworkDagServiceFactory;
 impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
   fn create(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) -> anyhow::Result<NetworkDagService> {
       let network_dag_rpc_service = ctx.service_ref::<NetworkDagRpcService>()?.clone();
-      Ok(NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(vec![], vec![],vec![])))
+      let localhost = Ipv4Addr::new(127, 0, 0, 1);
+      let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
+      Ok(NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(
+          // notify
+          vec![Cow::from(PROTOCOL_NAME_NOTIFY)], 
+          
+          // listen addr
+          vec![listen_addr],
+          
+          // request response
+          vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)])))
   }
 }
 
