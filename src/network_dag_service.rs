@@ -1,10 +1,10 @@
-use std::{borrow::Cow, time::Duration, net::Ipv4Addr};
+use std::{borrow::Cow, time::Duration, net::Ipv4Addr, sync::Arc};
 use futures::{channel::mpsc::channel, StreamExt};
 use futures_core::future::BoxFuture;
-use network_p2p::{NetworkWorker, Event, config, config::RequestResponseConfig};
+use network_p2p::{NetworkWorker, Event, config, config::RequestResponseConfig, NetworkService};
 use network_p2p_types::{Multiaddr, ProtocolRequest};
 use starcoin_service_registry::{ActorService, ServiceContext, EventHandler, ServiceRef, ServiceFactory};
-use crate::{network_dag_handle::DagDataHandle, network_dag_trait::NetworkDag, network_dag_worker::build_worker, network_dag_rpc_service::NetworkDagRpcService};
+use crate::{network_dag_handle::DagDataHandle, network_dag_trait::NetworkDag, network_dag_worker::build_worker, network_dag_rpc_service::NetworkDagRpcService, network_dag_verified_client::NetworkDagServiceRef};
 use anyhow::Result;
 
 const MAX_REQUEST_SIZE: u64 = 1024 * 1024;
@@ -22,14 +22,20 @@ const PROTOCOL_NAME_REQRES_2: &str = "/starcoin/request_response/2";
 const PROTOCOL_NAME_BROADCAST: &str = "/starcoin/request_response/2";
 
 pub enum NetworkType {
-  InMemory,
+  InMemory(Vec<Cow<'static, str>>, Vec<Multiaddr>, Vec<Cow<'static, str>>),
 
   /// protocol: notification, listen addr, request-response 
   InP2P(Vec<Cow<'static, str>>, Vec<Multiaddr>, Vec<Cow<'static, str>>)
 }
 
 pub struct NetworkDagService {
-  worker: Option<NetworkWorker<DagDataHandle>>,
+  worker: NetworkWorker<DagDataHandle>,
+}
+
+impl NetworkDagService {
+    pub fn network_service(&self) -> Arc<NetworkService> {
+        self.worker.service().clone()
+    }
 }
 
 pub struct NetworkDagServiceFactory;
@@ -38,7 +44,7 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
       let network_dag_rpc_service = ctx.service_ref::<NetworkDagRpcService>()?.clone();
       let localhost = Ipv4Addr::new(127, 0, 0, 1);
       let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
-      Ok(NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(
+      let network_service = NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(
           // notify
           vec![Cow::from(PROTOCOL_NAME_NOTIFY)], 
           
@@ -46,31 +52,38 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
           vec![listen_addr],
           
           // request response
-          vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)])))
+          vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)]));
+      let network_async_service: NetworkDagServiceRef = NetworkDagServiceRef::new(network_service.network_service());
+      ctx.put_shared(network_async_service)?;
+      Ok(network_service)
   }
 }
 
 impl NetworkDagService {
     pub fn new(rpc_service: ServiceRef<NetworkDagRpcService>, nt: NetworkType) -> Self {
-      match nt {
-          NetworkType::InMemory => {
-              NetworkDagService {
-                worker: None,
-              }
-          },
-          NetworkType::InP2P(notifications, listen_addrs, request_responses) => {
-              let worker = build_worker(config::NetworkConfiguration {
-                  notifications_protocols: notifications,
-                  listen_addresses: listen_addrs,
-                  transport: config::TransportConfig::Normal { enable_mdns: true, allow_private_ip: true },
-                  request_response_protocols: NetworkDagService::generate_request_response_protocol(rpc_service, request_responses),
-                  ..config::NetworkConfiguration::new_local()
-              });
-              NetworkDagService {
-                  worker: Some(worker),
-              }
-          },
-      }
+        let worker = match nt {
+            NetworkType::InMemory(notifications, listen_addrs, request_responses) => {
+                build_worker(config::NetworkConfiguration {
+                    notifications_protocols: notifications,
+                    listen_addresses: listen_addrs,
+                    transport: config::TransportConfig::MemoryOnly,
+                    request_response_protocols: NetworkDagService::generate_request_response_protocol(rpc_service, request_responses),
+                    ..config::NetworkConfiguration::new_local()
+                })
+            },
+            NetworkType::InP2P(notifications, listen_addrs, request_responses) => {
+                build_worker(config::NetworkConfiguration {
+                    notifications_protocols: notifications,
+                    listen_addresses: listen_addrs,
+                    transport: config::TransportConfig::Normal { enable_mdns: true, allow_private_ip: true },
+                    request_response_protocols: NetworkDagService::generate_request_response_protocol(rpc_service, request_responses),
+                    ..config::NetworkConfiguration::new_local()
+                })
+            },
+        };
+        NetworkDagService {
+            worker,
+        }
     } 
 
     fn generate_request_response_protocol(rpc_service: ServiceRef<NetworkDagRpcService>,  request_responses: Vec<Cow<'static, str>>) -> Vec<RequestResponseConfig> {
