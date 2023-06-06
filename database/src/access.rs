@@ -99,7 +99,7 @@ where
     {
         let bin_data = bincode::serialize(&data)?;
         self.cache.insert(key.clone(), data);
-        writer.put(DbKey::new(&self.prefix, key), bin_data)?;
+        writer.put(DbKey::new(&self.prefix, key).as_ref(), bin_data)?;
         Ok(())
     }
 
@@ -116,7 +116,7 @@ where
         self.cache.insert_many(iter);
         for (key, data) in iter_clone {
             let bin_data = bincode::serialize(&data)?;
-            writer.put(DbKey::new(&self.prefix, key.clone()), bin_data)?;
+            writer.put(DbKey::new(&self.prefix, key.clone()).as_ref(), bin_data)?;
         }
         Ok(())
     }
@@ -133,7 +133,7 @@ where
     {
         for (key, data) in iter {
             let bin_data = bincode::serialize(&data)?;
-            writer.put(DbKey::new(&self.prefix, key), bin_data)?;
+            writer.put(DbKey::new(&self.prefix, key).as_ref(), bin_data)?;
         }
         // We must clear the cache in order to avoid invalidated entries
         self.cache.remove_all();
@@ -145,7 +145,7 @@ where
         TKey: Clone + AsRef<[u8]>,
     {
         self.cache.remove(&key);
-        writer.delete(DbKey::new(&self.prefix, key))?;
+        writer.delete(DbKey::new(&self.prefix, key).as_ref())?;
         Ok(())
     }
 
@@ -160,7 +160,7 @@ where
         let key_iter_clone = key_iter.clone();
         self.cache.remove_many(key_iter);
         for key in key_iter_clone {
-            writer.delete(DbKey::new(&self.prefix, key.clone()))?;
+            writer.delete(DbKey::new(&self.prefix, key.clone()).as_ref())?;
         }
         Ok(())
     }

@@ -1,14 +1,13 @@
 use rocksdb::WriteBatch;
+use starcoin_storage::storage::InnerStore;
 
+use crate::db::FLEXI_DAG_NAME;
 use crate::prelude::DB;
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>;
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error>;
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error>;
+    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error>;
 }
 
 pub struct DirectDbWriter<'a> {
@@ -22,16 +21,14 @@ impl<'a> DirectDbWriter<'a> {
 }
 
 impl DbWriter for DirectDbWriter<'_> {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
-        self.db.put(key, value)
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
+        self.db.put(FLEXI_DAG_NAME, key.to_owned(), value).unwrap();
+        Ok(())
     }
 
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
-        self.db.delete(key)
+    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
+        self.db.remove(FLEXI_DAG_NAME, key.to_owned()).unwrap();
+        Ok(())
     }
 }
 
@@ -46,16 +43,12 @@ impl<'a> BatchDbWriter<'a> {
 }
 
 impl DbWriter for BatchDbWriter<'_> {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
         self.batch.put(key, value);
         Ok(())
     }
 
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
         self.batch.delete(key);
         Ok(())
     }
@@ -63,16 +56,12 @@ impl DbWriter for BatchDbWriter<'_> {
 
 impl<T: DbWriter> DbWriter for &mut T {
     #[inline]
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
         (*self).put(key, value)
     }
 
     #[inline]
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
         (*self).delete(key)
     }
 }
