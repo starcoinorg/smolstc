@@ -1,7 +1,7 @@
 use rocksdb::WriteBatch;
 use starcoin_storage::storage::InnerStore;
 
-use crate::db::FLEXI_DAG_NAME;
+use crate::db::FLEXI_DAG_PREFIX_NAME;
 use crate::prelude::DB;
 
 /// Abstraction over direct/batched DB writing
@@ -22,12 +22,16 @@ impl<'a> DirectDbWriter<'a> {
 
 impl DbWriter for DirectDbWriter<'_> {
     fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
-        self.db.put(FLEXI_DAG_NAME, key.to_owned(), value).unwrap();
+        self.db
+            .put(FLEXI_DAG_PREFIX_NAME, key.to_owned(), value)
+            .unwrap();
         Ok(())
     }
 
     fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
-        self.db.remove(FLEXI_DAG_NAME, key.to_owned()).unwrap();
+        self.db
+            .remove(FLEXI_DAG_PREFIX_NAME, key.to_owned())
+            .unwrap();
         Ok(())
     }
 }

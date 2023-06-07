@@ -1,10 +1,10 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{DbKey, DbWriter};
-use crate::db::FLEXI_DAG_NAME;
+use crate::db::FLEXI_DAG_PREFIX_NAME;
 use parking_lot::RwLock;
 use serde::{de::DeserializeOwned, Serialize};
-use starcoin_storage::storage::InnerStore;
+use starcoin_storage::storage::RawDBStorage;
 use std::sync::Arc;
 
 /// A cached DB item with concurrency support
@@ -31,7 +31,11 @@ impl<T> CachedDbItem<T> {
         if let Some(item) = self.cached_item.read().clone() {
             return Ok(item);
         }
-        if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &self.key)? {
+        if let Some(slice) = self
+            .db
+            .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, &self.key)
+            .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
+        {
             let item: T = bincode::deserialize(&slice)?;
             *self.cached_item.write() = Some(item.clone());
             Ok(item)
@@ -65,7 +69,11 @@ where {
         let mut guard = self.cached_item.write();
         let mut item = if let Some(item) = guard.take() {
             item
-        } else if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &self.key)? {
+        } else if let Some(slice) = self
+            .db
+            .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, &self.key)
+            .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
+        {
             let item: T = bincode::deserialize(&slice)?;
             item
         } else {

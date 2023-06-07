@@ -10,6 +10,12 @@ pub enum StoreError {
     #[error("key {0} already exists in store")]
     KeyAlreadyExists(String),
 
+    #[error("column family {0} not exist in db")]
+    CFNotExist(String),
+
+    #[error("IO error {0}")]
+    DBIoError(String),
+
     #[error("rocksdb error {0}")]
     DbError(#[from] rocksdb::Error),
 

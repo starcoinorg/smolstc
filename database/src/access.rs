@@ -1,11 +1,11 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{Cache, DbKey, DbWriter};
-use crate::db::FLEXI_DAG_NAME;
+use crate::db::FLEXI_DAG_PREFIX_NAME;
 use itertools::Itertools;
 use rocksdb::{Direction, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
-use starcoin_storage::storage::InnerStore;
+use starcoin_storage::storage::RawDBStorage;
 use std::{collections::hash_map::RandomState, error::Error, hash::BuildHasher, sync::Arc};
 
 /// A concurrent DB store access with typed caching.
@@ -52,7 +52,8 @@ where
         Ok(self.cache.contains_key(&key)
             || self
                 .db
-                .get_pinned_cf(FLEXI_DAG_NAME, DbKey::new(&self.prefix, key))?
+                .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, DbKey::new(&self.prefix, key))
+                .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
                 .is_some())
     }
 
@@ -65,7 +66,11 @@ where
             Ok(data)
         } else {
             let db_key = DbKey::new(&self.prefix, key.clone());
-            if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &db_key)? {
+            if let Some(slice) = self
+                .db
+                .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, &db_key)
+                .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
+            {
                 let data: TData = bincode::deserialize(&slice)?;
                 self.cache.insert(key, data.clone());
                 Ok(data)
@@ -85,7 +90,7 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
         self.db
             .raw_iterator_cf_opt(
-                FLEXI_DAG_NAME,
+                FLEXI_DAG_PREFIX_NAME,
                 IteratorMode::From(db_key.as_ref(), Direction::Forward),
                 read_opts,
             )
@@ -184,7 +189,7 @@ where
         let keys = self
             .db
             .raw_iterator_cf_opt(
-                FLEXI_DAG_NAME,
+                FLEXI_DAG_PREFIX_NAME,
                 IteratorMode::From(db_key.as_ref(), Direction::Forward),
                 read_opts,
             )
@@ -224,16 +229,17 @@ where
 
         let mut db_iterator = match seek_from {
             Some(seek_key) => self.db.raw_iterator_cf_opt(
-                FLEXI_DAG_NAME,
+                FLEXI_DAG_PREFIX_NAME,
                 IteratorMode::From(
                     DbKey::new(&self.prefix, seek_key).as_ref(),
                     Direction::Forward,
                 ),
                 read_opts,
             ),
-            None => self
-                .db
-                .raw_iterator_cf_opt(FLEXI_DAG_NAME, IteratorMode::Start, read_opts),
+            None => {
+                self.db
+                    .raw_iterator_cf_opt(FLEXI_DAG_PREFIX_NAME, IteratorMode::Start, read_opts)
+            }
         }
         .unwrap();
 
