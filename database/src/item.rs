@@ -1,8 +1,10 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{DbKey, DbWriter};
+use crate::db::FLEXI_DAG_NAME;
 use parking_lot::RwLock;
 use serde::{de::DeserializeOwned, Serialize};
+use starcoin_storage::storage::InnerStore;
 use std::sync::Arc;
 
 /// A cached DB item with concurrency support
@@ -29,7 +31,7 @@ impl<T> CachedDbItem<T> {
         if let Some(item) = self.cached_item.read().clone() {
             return Ok(item);
         }
-        if let Some(slice) = self.db.get_pinned(&self.key)? {
+        if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &self.key)? {
             let item: T = bincode::deserialize(&slice)?;
             *self.cached_item.write() = Some(item.clone());
             Ok(item)
@@ -63,7 +65,7 @@ where {
         let mut guard = self.cached_item.write();
         let mut item = if let Some(item) = guard.take() {
             item
-        } else if let Some(slice) = self.db.get_pinned(&self.key)? {
+        } else if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &self.key)? {
             let item: T = bincode::deserialize(&slice)?;
             item
         } else {

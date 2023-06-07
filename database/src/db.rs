@@ -12,7 +12,9 @@ pub fn open_db(db_path: PathBuf, create_if_missing: bool, parallelism: usize) ->
     let mut config = RocksdbConfig::default();
     config.parallelism = parallelism as u64;
 
-    let db = Arc::new(DB::open_with_cfs(db_path.as_path(), vec![], false, config, None).unwrap());
+    let db = Arc::new(
+        DB::open_with_cfs(db_path.as_path(), vec![FLEXI_DAG_NAME], false, config, None).unwrap(),
+    );
     db
 }
 

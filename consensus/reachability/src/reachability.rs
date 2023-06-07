@@ -4,6 +4,7 @@ use database::prelude::{
     BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB,
 };
 use starcoin_crypto::HashValue as Hash;
+use starcoin_storage::storage::InnerStore;
 
 use consensus_types::blockhash::{self, BlockHashMap, BlockHashes};
 use itertools::Itertools;
@@ -132,7 +133,7 @@ impl ReachabilityStore for DbReachabilityStore {
             .write(BatchDbWriter::new(&mut batch), origin, data)?;
         self.reindex_root
             .write(BatchDbWriter::new(&mut batch), &origin)?;
-        self.db.write(batch)?;
+        self.db.raw_write_batch(batch)?;
 
         Ok(())
     }

@@ -1,9 +1,11 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{Cache, DbKey, DbWriter};
+use crate::db::FLEXI_DAG_NAME;
 use itertools::Itertools;
 use rocksdb::{Direction, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
+use starcoin_storage::storage::InnerStore;
 use std::{collections::hash_map::RandomState, error::Error, hash::BuildHasher, sync::Arc};
 
 /// A concurrent DB store access with typed caching.
@@ -48,19 +50,22 @@ where
         TKey: Clone + AsRef<[u8]>,
     {
         Ok(self.cache.contains_key(&key)
-            || self.db.get_pinned(DbKey::new(&self.prefix, key))?.is_some())
+            || self
+                .db
+                .get_pinned_cf(FLEXI_DAG_NAME, DbKey::new(&self.prefix, key))?
+                .is_some())
     }
 
     pub fn read(&self, key: TKey) -> Result<TData, StoreError>
     where
         TKey: Clone + AsRef<[u8]> + ToString,
-        TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned` has short lifetime
+        TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned_cf` has short lifetime
     {
         if let Some(data) = self.cache.get(&key) {
             Ok(data)
         } else {
             let db_key = DbKey::new(&self.prefix, key.clone());
-            if let Some(slice) = self.db.get_pinned(&db_key)? {
+            if let Some(slice) = self.db.get_pinned_cf(FLEXI_DAG_NAME, &db_key)? {
                 let data: TData = bincode::deserialize(&slice)?;
                 self.cache.insert(key, data.clone());
                 Ok(data)
@@ -73,16 +78,18 @@ where
     pub fn iterator(&self) -> impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_
     where
         TKey: Clone + AsRef<[u8]>,
-        TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned` has short lifetime
+        TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned_cf` has short lifetime
     {
         let db_key = DbKey::prefix_only(&self.prefix);
         let mut read_opts = ReadOptions::default();
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
         self.db
-            .iterator_opt(
+            .raw_iterator_cf_opt(
+                FLEXI_DAG_NAME,
                 IteratorMode::From(db_key.as_ref(), Direction::Forward),
                 read_opts,
             )
+            .unwrap()
             .map(|iter_result| match iter_result {
                 Ok((key, data_bytes)) => match bincode::deserialize(&data_bytes) {
                     Ok(data) => Ok((key[self.prefix.len() + 1..].into(), data)),
@@ -176,17 +183,19 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
         let keys = self
             .db
-            .iterator_opt(
+            .raw_iterator_cf_opt(
+                FLEXI_DAG_NAME,
                 IteratorMode::From(db_key.as_ref(), Direction::Forward),
                 read_opts,
             )
+            .unwrap()
             .map(|iter_result| match iter_result {
                 Ok((key, _)) => Ok::<_, rocksdb::Error>(key),
                 Err(e) => Err(e),
             })
             .collect_vec();
         for key in keys {
-            writer.delete(key.unwrap())?;
+            writer.delete(key.unwrap().as_ref())?;
         }
         Ok(())
     }
@@ -214,15 +223,19 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
 
         let mut db_iterator = match seek_from {
-            Some(seek_key) => self.db.iterator_opt(
+            Some(seek_key) => self.db.raw_iterator_cf_opt(
+                FLEXI_DAG_NAME,
                 IteratorMode::From(
                     DbKey::new(&self.prefix, seek_key).as_ref(),
                     Direction::Forward,
                 ),
                 read_opts,
             ),
-            None => self.db.iterator_opt(IteratorMode::Start, read_opts),
-        };
+            None => self
+                .db
+                .raw_iterator_cf_opt(FLEXI_DAG_NAME, IteratorMode::Start, read_opts),
+        }
+        .unwrap();
 
         if skip_first {
             db_iterator.next();
