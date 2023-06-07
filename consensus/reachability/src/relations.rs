@@ -211,6 +211,7 @@ impl RelationsStore for MemoryRelationsStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use database::prelude::open_db;
 
     #[test]
     fn test_memory_relations_store() {
@@ -220,8 +221,7 @@ mod tests {
     #[test]
     fn test_db_relations_store() {
         let db_tempdir = tempfile::tempdir().unwrap();
-        let db =
-            Arc::new(DB::open_default(db_tempdir.path().to_owned().to_str().unwrap()).unwrap());
+        let db = open_db(db_tempdir.path().to_owned(), 1);
         test_relations_store(DbRelationsStore::new(db, 0, 2));
     }
 
