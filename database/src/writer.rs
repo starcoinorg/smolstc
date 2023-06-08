@@ -2,12 +2,13 @@ use rocksdb::WriteBatch;
 use starcoin_storage::storage::InnerStore;
 
 use crate::db::FLEXI_DAG_PREFIX_NAME;
+use crate::errors::StoreError;
 use crate::prelude::DB;
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error>;
-    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error>;
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError>;
+    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError>;
 }
 
 pub struct DirectDbWriter<'a> {
@@ -21,18 +22,16 @@ impl<'a> DirectDbWriter<'a> {
 }
 
 impl DbWriter for DirectDbWriter<'_> {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         self.db
             .put(FLEXI_DAG_PREFIX_NAME, key.to_owned(), value)
-            .unwrap();
-        Ok(())
+            .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 
-    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
         self.db
             .remove(FLEXI_DAG_PREFIX_NAME, key.to_owned())
-            .unwrap();
-        Ok(())
+            .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 }
 
@@ -47,12 +46,12 @@ impl<'a> BatchDbWriter<'a> {
 }
 
 impl DbWriter for BatchDbWriter<'_> {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         self.batch.put(key, value);
         Ok(())
     }
 
-    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
         self.batch.delete(key);
         Ok(())
     }
@@ -60,12 +59,12 @@ impl DbWriter for BatchDbWriter<'_> {
 
 impl<T: DbWriter> DbWriter for &mut T {
     #[inline]
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), rocksdb::Error> {
+    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         (*self).put(key, value)
     }
 
     #[inline]
-    fn delete(&mut self, key: &[u8]) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
         (*self).delete(key)
     }
 }
