@@ -1,6 +1,6 @@
-use starcoin_crypto::HashValue as Hash;
 use crate::blockhash::{BlockHashMap, BlueWorkType, KType};
 use serde::{Deserialize, Serialize};
+use starcoin_crypto::HashValue as Hash;
 
 /// Represents semi-trusted externally provided Ghostdag data (by a network peer)
 #[derive(Clone, Serialize, Deserialize)]
