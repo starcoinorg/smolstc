@@ -22,11 +22,11 @@ default-members = [
 ]
 
 [workspace.dependencies]
-starcoin-network = {git = "https://github.com/starcoinorg/starcoin"}
-starcoin-logger = {git = "https://github.com/starcoinorg/starcoin"}
-starcoin-config = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
-starcoin-types = {git = "https://github.com/starcoinorg/starcoin"}
+starcoin-types = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
 rocksdb = "0.21.0"
 bincode = { version = "1", default-features = false }
 faster-hex = "0.6"
@@ -41,4 +41,5 @@ thiserror = "1"
 tempfile = "3.3"
 database = { path = "database" }
 consensus-types = {path = "consensus/types"}
+ghostdag={path = "consensus/ghostdag"}
 reachability = {path = "consensus/reachability"}
