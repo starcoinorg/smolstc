@@ -102,6 +102,25 @@
     {
       "type": "lldb",
       "request": "launch",
+      "name": "Debug executable 'smolstc-server'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=smolstc",
+          "--package=smolstc"
+        ],
+        "filter": {
+          "name": "smolstc",
+          "kind": "bin"
+        }
+      },
+      "args": ["server"],
+      "cwd": "${workspaceFolder}"
+    },
+ 
+    {
+      "type": "lldb",
+      "request": "launch",
       "name": "Debug executable 'smolstc'",
       "cargo": {
         "args": [

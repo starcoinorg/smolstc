@@ -2,8 +2,10 @@ use std::sync::Arc;
 
 use network_p2p_core::server::NetworkRpcServer;
 use network_p2p_types::ProtocolRequest;
-use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory};
+use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory, ServiceRequest};
 use crate::network_dag_rpc::{NetworkDagRpcImpl, gen_server::NetworkDagRpc};
+
+
 
 pub struct NetworkDagRpcService {
     rpc_server: Arc<NetworkRpcServer>,

@@ -5,6 +5,7 @@ use futures::FutureExt;
 use network_p2p_core::{RawRpcClient, PeerId};
 use network_p2p_types::IfDisconnected;
 use anyhow::Result;
+use rand::Error;
 
 use crate::network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse};
 
@@ -58,5 +59,9 @@ impl VerifiedDagRpcClient {
     pub async fn broadcast(&self,  protocol_name: Cow<'static, str>, message: Vec<u8>) -> Result<()> {
         self.network_service.broadcast_message(protocol_name, message).await;
         Ok(())
+    }
+
+    pub async fn add_peer(&self, peer: String) -> anyhow::Result<()> {
+        self.network_service.add_reserved_peer(peer).map_err(|e| anyhow::Error::msg(e))
     }
 }

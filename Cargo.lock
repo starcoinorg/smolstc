@@ -6006,6 +6006,7 @@ version = "0.1.0"
 dependencies = [
  "actix",
  "anyhow",
+ "async-std",
  "bcs-ext",
  "consensus-types",
  "database",
@@ -6026,7 +6027,6 @@ dependencies = [
  "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=e19c5631c8f3c39730850080c196e0206834545f)",
  "starcoin-service-registry",
  "starcoin-types",
- "tokio",
 ]
 
 [[package]]

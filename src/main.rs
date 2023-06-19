@@ -10,14 +10,16 @@ mod sync_dag_service;
 
 use std::{path::Path, sync::Arc};
 
+use actix::registry;
+use anyhow::Ok;
 use consensus_types::blockhash;
 use network_dag_rpc_service::NetworkDagRpcService;
-use network_dag_service::{NetworkDagService, NetworkDagServiceFactory};
+use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkShowMultiaddr};
 use reachability::interval::Interval;
 use reachability::reachability::ReachabilityStore;
 use reachability::relations::RelationsStore;
-use starcoin_service_registry::{RegistryService, RegistryAsyncService};
-use sync_dag_service::SyncDagService;
+use starcoin_service_registry::{RegistryService, RegistryAsyncService, ServiceRef};
+use sync_dag_service::{SyncDagService, SyncAddPeers};
 
 // dag
 use ghostdag::protocol::GhostdagManager;
@@ -29,6 +31,7 @@ use database::prelude::{*};
 use parking_lot::RwLock;
 use consensus_types::header::Header;
 use starcoin_crypto::HashValue as Hash;
+use async_std::task;
 
 fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
     let mut header = Header::from_precomputed_hash(hash, parents);
@@ -36,14 +39,52 @@ fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
     header
 }
 
+
+async fn run_sync(registry: &ServiceRef<RegistryService>, peers: Vec<String>) -> anyhow::Result<()> {
+    let sync_service = registry.service_ref::<SyncDagService>().await.unwrap();
+    let _ = sync_service.send(SyncAddPeers {
+        peers
+    }).await;
+
+    return Ok(())
+}
+
+async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()> {
+    let network_service = registry.service_ref::<NetworkDagService>().await.unwrap();
+    let result_multi_addr = network_service.send(NetworkShowMultiaddr).await;
+    match result_multi_addr {
+        std::result::Result::Ok(multi_addr) => {
+            multi_addr.multi_addrs.into_iter().for_each(|info| {
+                println!("addr = {}", info);
+            });
+        },
+        Err(error) => {
+            println!("error = {}", error.to_string());
+        },
+    }
+    return Ok(())
+}
+
 fn main() {
     let system = actix::prelude::System::new();
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(async {
+    task::block_on(async {
+
+        /// init services: network service and sync service
         let registry = RegistryService::launch(); 
         registry.register::<NetworkDagRpcService>().await.unwrap();
         registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
         registry.register::<SyncDagService>().await.unwrap();
+
+        /// to see if sync task or server task?
+        let op = std::env::args().collect::<Vec<_>>();
+        if op.len() > 1 {
+            let cmd = op.get(1).unwrap();
+            if "sync" == cmd {
+                run_sync(&registry, op[2..].to_vec()).await.unwrap();
+            } else if "server" == cmd  {
+                run_server(&registry).await;
+            }
+        }
     });
     system.run().unwrap();
     // let (B, C, D, E, F, H, I, J, K, L, M) = (

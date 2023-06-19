@@ -1,8 +1,16 @@
 use anyhow::Ok;
-use starcoin_service_registry::{ActorService, ServiceFactory};
+use starcoin_service_registry::{ActorService, ServiceFactory, EventHandler, ServiceRequest, ServiceHandler};
 
 use crate::network_dag_verified_client::{VerifiedDagRpcClient, NetworkDagServiceRef};
 
+#[derive(Debug)]
+pub struct SyncAddPeers {
+    pub peers: Vec<String>,
+}
+
+impl ServiceRequest for SyncAddPeers {
+    type Response = ();
+}
 
 pub struct SyncDagService {
   client: VerifiedDagRpcClient,
@@ -13,6 +21,10 @@ impl SyncDagService {
         SyncDagService { 
             client  
         }
+    }
+
+    pub async fn add_peer(&self, peer: String) -> anyhow::Result<()> {
+        self.client.add_peer(peer).await
     }
 }
 
@@ -33,5 +45,13 @@ impl ActorService for SyncDagService {
 
     fn stopped(&mut self, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> anyhow::Result<()> {
         Ok(())
+    }
+}
+
+impl ServiceHandler<Self, SyncAddPeers> for SyncDagService {
+    fn handle(&mut self, msg: SyncAddPeers, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> <SyncAddPeers as ServiceRequest>::Response {
+        msg.peers.into_iter().for_each(|peer| {
+            self.add_peer(peer);
+        });
     }
 }

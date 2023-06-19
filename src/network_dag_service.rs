@@ -3,7 +3,7 @@ use futures::{channel::mpsc::channel, StreamExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{NetworkWorker, Event, config, config::RequestResponseConfig, NetworkService};
 use network_p2p_types::{Multiaddr, ProtocolRequest};
-use starcoin_service_registry::{ActorService, ServiceContext, EventHandler, ServiceRef, ServiceFactory};
+use starcoin_service_registry::{ActorService, ServiceContext, EventHandler, ServiceRef, ServiceFactory, ServiceRequest, ServiceHandler};
 use crate::{network_dag_handle::DagDataHandle, network_dag_trait::NetworkDag, network_dag_worker::build_worker, network_dag_rpc_service::NetworkDagRpcService, network_dag_verified_client::NetworkDagServiceRef};
 use anyhow::Result;
 
@@ -27,9 +27,22 @@ pub enum NetworkType {
   /// protocol: notification, listen addr, request-response 
   InP2P(Vec<Cow<'static, str>>, Vec<Multiaddr>, Vec<Cow<'static, str>>)
 }
+#[derive(Debug)]
+pub struct NetworkShowMultiaddr;
+pub struct NetworkMultiaddrInfo {
+    pub multi_addrs: Vec<String>,
+}
+
+impl ServiceRequest for NetworkShowMultiaddr {
+    type Response = NetworkMultiaddrInfo;
+}
 
 pub struct NetworkDagService {
   worker: NetworkWorker<DagDataHandle>,
+}
+
+pub struct SyncAddPeers {
+    peers: Vec<String>
 }
 
 impl NetworkDagService {
@@ -138,5 +151,28 @@ fn service_name() -> &'static str {
 impl EventHandler<NetworkDagService, Event> for NetworkDagService {
     fn handle_event(&mut self, msg: Event, ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) {
         todo!()
+    }
+}
+
+impl ServiceHandler<NetworkDagService, NetworkShowMultiaddr> for NetworkDagService {
+    fn handle(&mut self, msg: NetworkShowMultiaddr, ctx: &mut ServiceContext<NetworkDagService>) -> <NetworkShowMultiaddr as ServiceRequest>::Response {
+        let result_state = async_std::task::block_on(self.worker.service().network_state());
+        match result_state {
+            Ok(state) => {
+                state.external_addresses.into_iter().for_each(|multi_addr| {
+                    println!("multi addr = {:?}", multi_addr.to_string()); 
+                });
+                return NetworkMultiaddrInfo {
+                    multi_addrs: vec![],
+                };
+            },
+            Err(error) => {
+                println!("an error occured: {:?}", error.to_string());
+                return NetworkMultiaddrInfo {
+                    multi_addrs: vec![],
+                };
+            },
+        }
+
     }
 }
