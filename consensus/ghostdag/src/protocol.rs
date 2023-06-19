@@ -108,7 +108,7 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
             .cloned()
             .map(|hash| if hash.is_origin() { 0u128 } else {
                 //TODO: implement caculate pow work
-                let bits = self.headers_store.get_bits(hash).unwrap();
+                // let bits = self.headers_store.get_bits(hash).unwrap();
                 BlueWorkType::default()
             }
             )
