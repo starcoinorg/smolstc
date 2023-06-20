@@ -14,7 +14,7 @@ use actix::registry;
 use anyhow::Ok;
 use consensus_types::blockhash;
 use network_dag_rpc_service::NetworkDagRpcService;
-use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkShowMultiaddr};
+use network_dag_service::{NetworkDagService, NetworkDagServiceFactory};
 use reachability::interval::Interval;
 use reachability::reachability::ReachabilityStore;
 use reachability::relations::RelationsStore;
@@ -51,17 +51,7 @@ async fn run_sync(registry: &ServiceRef<RegistryService>, peers: Vec<String>) ->
 
 async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()> {
     let network_service = registry.service_ref::<NetworkDagService>().await.unwrap();
-    let result_multi_addr = network_service.send(NetworkShowMultiaddr).await;
-    match result_multi_addr {
-        std::result::Result::Ok(multi_addr) => {
-            multi_addr.multi_addrs.into_iter().for_each(|info| {
-                println!("addr = {}", info);
-            });
-        },
-        Err(error) => {
-            println!("error = {}", error.to_string());
-        },
-    }
+
     return Ok(())
 }
 

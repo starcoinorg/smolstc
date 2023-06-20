@@ -87,15 +87,15 @@ consensus-types = {path = "consensus/types"}
 reachability = {path = "consensus/reachability"}
 
 [dependencies]
-bcs-ext = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-sp-utils = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-starcoin-types = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-network-p2p = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-network-p2p-types = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-network-p2p-core = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-sc-peerset = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
-starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin", rev = "92982649e7406b43d37831c2b4509574d6e29b0b"}
+bcs-ext = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/commons/bcs_ext"}
+sp-utils = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/commons/utils"}
+starcoin-types = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/types"}
+network-p2p = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/network-p2p"}
+network-p2p-types = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/network-p2p/types"}
+network-p2p-derive = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/network-p2p/derive"}
+network-p2p-core = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/network-p2p/core"}
+sc-peerset = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/network-p2p/peerset"}
+starcoin-service-registry = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/commons/service-registry"}
 rand = "0.8"
 futures-core = "0.3.4"
 # tokio = { version = "^1", features = ["full"] }

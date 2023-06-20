@@ -1,5 +1,5 @@
 use std::{borrow::Cow, time::Duration, net::Ipv4Addr, sync::Arc};
-use futures::{channel::mpsc::channel, StreamExt};
+use futures::{channel::mpsc::channel, StreamExt, FutureExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{NetworkWorker, Event, config, config::RequestResponseConfig, NetworkService};
 use network_p2p_types::{Multiaddr, ProtocolRequest};
@@ -27,18 +27,8 @@ pub enum NetworkType {
   /// protocol: notification, listen addr, request-response 
   InP2P(Vec<Cow<'static, str>>, Vec<Multiaddr>, Vec<Cow<'static, str>>)
 }
-#[derive(Debug)]
-pub struct NetworkShowMultiaddr;
-pub struct NetworkMultiaddrInfo {
-    pub multi_addrs: Vec<String>,
-}
-
-impl ServiceRequest for NetworkShowMultiaddr {
-    type Response = NetworkMultiaddrInfo;
-}
-
 pub struct NetworkDagService {
-  worker: NetworkWorker<DagDataHandle>,
+    worker: Option<NetworkWorker<DagDataHandle>>,
 }
 
 pub struct SyncAddPeers {
@@ -47,29 +37,37 @@ pub struct SyncAddPeers {
 
 impl NetworkDagService {
     pub fn network_service(&self) -> Arc<NetworkService> {
-        self.worker.service().clone()
+        match &self.worker {
+            Some(w) => {
+                return w.service().clone();
+            },
+            None => {
+                panic!("the worker must be initialized firstly");
+            },
+        }
     }
 }
 
 pub struct NetworkDagServiceFactory;
 impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
-  fn create(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) -> anyhow::Result<NetworkDagService> {
-      let network_dag_rpc_service = ctx.service_ref::<NetworkDagRpcService>()?.clone();
-      let localhost = Ipv4Addr::new(127, 0, 0, 1);
-      let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
-      let network_service = NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(
-          // notify
-          vec![Cow::from(PROTOCOL_NAME_NOTIFY)], 
-          
-          // listen addr
-          vec![listen_addr],
-          
-          // request response
-          vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)]));
-      let network_async_service: NetworkDagServiceRef = NetworkDagServiceRef::new(network_service.network_service());
-      ctx.put_shared(network_async_service)?;
-      Ok(network_service)
-  }
+    fn create(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) -> anyhow::Result<NetworkDagService> {
+        let network_dag_rpc_service = ctx.service_ref::<NetworkDagRpcService>()?.clone();
+        let localhost = Ipv4Addr::new(127, 0, 0, 1);
+        let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
+        let network_service = NetworkDagService::new(network_dag_rpc_service, NetworkType::InP2P(
+            // notify
+            vec![Cow::from(PROTOCOL_NAME_NOTIFY)], 
+            
+            // listen addr
+            vec![listen_addr],
+            
+            // request response
+            vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)]));
+        let network_async_service: NetworkDagServiceRef = NetworkDagServiceRef::new(network_service.network_service());
+        ctx.put_shared(network_async_service)?;
+
+        Ok(network_service)
+    }
 }
 
 impl NetworkDagService {
@@ -95,7 +93,7 @@ impl NetworkDagService {
             },
         };
         NetworkDagService {
-            worker,
+            worker: Some(worker),
         }
     } 
 
@@ -136,6 +134,11 @@ impl NetworkDag for NetworkDagService {
 /// for now, 
 impl ActorService for NetworkDagService {
   fn started(&mut self, ctx: &mut ServiceContext<Self>) -> Result<()> {
+    let worker = self.worker.take().unwrap();
+
+    ctx.spawn(async {
+        let _ = worker.await;
+    });
     Ok(())
   }
 
@@ -151,28 +154,5 @@ fn service_name() -> &'static str {
 impl EventHandler<NetworkDagService, Event> for NetworkDagService {
     fn handle_event(&mut self, msg: Event, ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) {
         todo!()
-    }
-}
-
-impl ServiceHandler<NetworkDagService, NetworkShowMultiaddr> for NetworkDagService {
-    fn handle(&mut self, msg: NetworkShowMultiaddr, ctx: &mut ServiceContext<NetworkDagService>) -> <NetworkShowMultiaddr as ServiceRequest>::Response {
-        let result_state = async_std::task::block_on(self.worker.service().network_state());
-        match result_state {
-            Ok(state) => {
-                state.external_addresses.into_iter().for_each(|multi_addr| {
-                    println!("multi addr = {:?}", multi_addr.to_string()); 
-                });
-                return NetworkMultiaddrInfo {
-                    multi_addrs: vec![],
-                };
-            },
-            Err(error) => {
-                println!("an error occured: {:?}", error.to_string());
-                return NetworkMultiaddrInfo {
-                    multi_addrs: vec![],
-                };
-            },
-        }
-
     }
 }
