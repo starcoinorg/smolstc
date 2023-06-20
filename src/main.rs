@@ -14,7 +14,7 @@ use actix::registry;
 use anyhow::Ok;
 use consensus_types::blockhash;
 use network_dag_rpc_service::NetworkDagRpcService;
-use network_dag_service::{NetworkDagService, NetworkDagServiceFactory};
+use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkMultiaddr};
 use reachability::interval::Interval;
 use reachability::reachability::ReachabilityStore;
 use reachability::relations::RelationsStore;
@@ -31,7 +31,6 @@ use database::prelude::{*};
 use parking_lot::RwLock;
 use consensus_types::header::Header;
 use starcoin_crypto::HashValue as Hash;
-use async_std::task;
 
 fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
     let mut header = Header::from_precomputed_hash(hash, parents);
@@ -50,21 +49,33 @@ async fn run_sync(registry: &ServiceRef<RegistryService>, peers: Vec<String>) ->
 }
 
 async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()> {
-    let network_service = registry.service_ref::<NetworkDagService>().await.unwrap();
+    let network_service = registry.service_ref::<NetworkDagService>().await.unwrap().clone();
+    async_std::task::spawn(async move {
+        /// to wait the services start` 
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
 
+        let result = network_service.send(NetworkMultiaddr).await.unwrap();
+        result.peers.into_iter().for_each(|peer| {
+            println!("{}", peer);
+        });
+        
+    });
     return Ok(())
 }
 
-fn main() {
-    let system = actix::prelude::System::new();
-    task::block_on(async {
 
+
+fn main() {
+    async_std::task::block_on(async {
+        let system = actix::prelude::System::new();
+        
         /// init services: network service and sync service
         let registry = RegistryService::launch(); 
-        registry.register::<NetworkDagRpcService>().await.unwrap();
-        registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
-        registry.register::<SyncDagService>().await.unwrap();
-
+        {
+            registry.register::<NetworkDagRpcService>().await.unwrap();
+            registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
+            registry.register::<SyncDagService>().await.unwrap();
+        }
         /// to see if sync task or server task?
         let op = std::env::args().collect::<Vec<_>>();
         if op.len() > 1 {
@@ -72,11 +83,11 @@ fn main() {
             if "sync" == cmd {
                 run_sync(&registry, op[2..].to_vec()).await.unwrap();
             } else if "server" == cmd  {
-                run_server(&registry).await;
+                run_server(&registry).await.unwrap();
             }
         }
+        system.run().unwrap();
     });
-    system.run().unwrap();
     // let (B, C, D, E, F, H, I, J, K, L, M) = (
     //     Hash::sha3_256_of(b"B"),
     //     Hash::sha3_256_of(b"C"),

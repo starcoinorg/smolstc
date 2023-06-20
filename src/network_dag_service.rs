@@ -27,12 +27,21 @@ pub enum NetworkType {
   /// protocol: notification, listen addr, request-response 
   InP2P(Vec<Cow<'static, str>>, Vec<Multiaddr>, Vec<Cow<'static, str>>)
 }
-pub struct NetworkDagService {
-    worker: Option<NetworkWorker<DagDataHandle>>,
+
+#[derive(Debug)]
+pub struct NetworkMultiaddr;
+impl ServiceRequest for NetworkMultiaddr {
+    type Response = NetworkMultiaddrInfo;
+}
+#[derive(Debug)]
+pub struct NetworkMultiaddrInfo {
+    pub peers: Vec<String>,
 }
 
-pub struct SyncAddPeers {
-    peers: Vec<String>
+
+pub struct NetworkDagService {
+    worker: Option<NetworkWorker<DagDataHandle>>,
+    network_inner_service: Arc<NetworkService>,
 }
 
 impl NetworkDagService {
@@ -65,7 +74,6 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
             vec![Cow::from(PROTOCOL_NAME_REQRES_1), Cow::from(PROTOCOL_NAME_REQRES_2)]));
         let network_async_service: NetworkDagServiceRef = NetworkDagServiceRef::new(network_service.network_service());
         ctx.put_shared(network_async_service)?;
-
         Ok(network_service)
     }
 }
@@ -92,8 +100,10 @@ impl NetworkDagService {
                 })
             },
         };
+        let network_inner_service = worker.service().clone();
         NetworkDagService {
             worker: Some(worker),
+            network_inner_service: network_inner_service.clone(),
         }
     } 
 
@@ -136,7 +146,7 @@ impl ActorService for NetworkDagService {
   fn started(&mut self, ctx: &mut ServiceContext<Self>) -> Result<()> {
     let worker = self.worker.take().unwrap();
 
-    ctx.spawn(async {
+    async_std::task::spawn(async move {
         let _ = worker.await;
     });
     Ok(())
@@ -154,5 +164,29 @@ fn service_name() -> &'static str {
 impl EventHandler<NetworkDagService, Event> for NetworkDagService {
     fn handle_event(&mut self, msg: Event, ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>) {
         todo!()
+    }
+}
+
+
+impl ServiceHandler<Self, NetworkMultiaddr> for NetworkDagService {
+    fn handle(&mut self, msg: NetworkMultiaddr, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> <NetworkMultiaddr as ServiceRequest>::Response {
+        let result = async_std::task::block_on(self.network_inner_service.network_state());
+        match result {
+            Ok(state) => {
+                let mut peers = vec![];
+                let peer_id = state.peer_id;
+                state.listened_addresses.iter().for_each(| addr| {
+                    peers.push(format!("{}/p2p/{}", addr.to_string(), peer_id));
+                });
+                 return NetworkMultiaddrInfo {
+                    peers,
+                };
+            },
+            Err(error) => {
+                return NetworkMultiaddrInfo {
+                    peers: [].to_vec(),
+                };
+            },
+        }
     }
 }

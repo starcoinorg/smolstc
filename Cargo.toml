@@ -98,8 +98,9 @@ sc-peerset = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/ne
 starcoin-service-registry = { path = "/Users/jack/Documents/code/rust/network-recon/starcoin/commons/service-registry"}
 rand = "0.8"
 futures-core = "0.3.4"
-# tokio = { version = "^1", features = ["full"] }
-async-std = "1.12.0"
+## tokio = { version = "^1", features = ["full"] }
+## async-std = "1.12.0"
+async-std = { version = "1", features = ["attributes", "tokio1"] }
 futures = "0.3.12"
 serde = "1.0.130"
 serde_bytes = "0.11"
