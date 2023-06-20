@@ -61,7 +61,23 @@ impl VerifiedDagRpcClient {
         Ok(())
     }
 
-    pub async fn add_peer(&self, peer: String) -> anyhow::Result<()> {
+    pub fn add_peer(&self, peer: String) -> anyhow::Result<()> {
+        println!("add peer: {}", peer);
         self.network_service.add_reserved_peer(peer).map_err(|e| anyhow::Error::msg(e))
+    }
+
+    pub async fn is_connected(&self) -> bool {
+        let result = self.network_service.known_peers().await;
+        result.iter().for_each(|peer_id| {
+            println!("check connection: {}", peer_id.to_string());
+            loop {
+                let connected = async_std::task::block_on(self.network_service.is_connected(peer_id.clone()));
+                if connected {
+                    println!("check connection: {} is connected.", peer_id.to_string());
+                    break;
+                }
+            }
+        });
+        true
     }
 }

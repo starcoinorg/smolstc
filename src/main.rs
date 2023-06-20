@@ -19,7 +19,7 @@ use reachability::interval::Interval;
 use reachability::reachability::ReachabilityStore;
 use reachability::relations::RelationsStore;
 use starcoin_service_registry::{RegistryService, RegistryAsyncService, ServiceRef};
-use sync_dag_service::{SyncDagService, SyncAddPeers};
+use sync_dag_service::{SyncDagService, SyncConnectToPeers, SyncInitVerifiedClient};
 
 // dag
 use ghostdag::protocol::GhostdagManager;
@@ -41,10 +41,18 @@ fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
 
 async fn run_sync(registry: &ServiceRef<RegistryService>, peers: Vec<String>) -> anyhow::Result<()> {
     let sync_service = registry.service_ref::<SyncDagService>().await.unwrap();
-    let _ = sync_service.send(SyncAddPeers {
-        peers
-    }).await;
 
+    async_std::task::spawn(async move {
+        /// to wait the services start` 
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
+
+        let _ = sync_service.send(SyncInitVerifiedClient).await.unwrap();
+        let _ = sync_service.send(SyncConnectToPeers {
+            peers,
+        }).await.unwrap();
+        
+    });
+ 
     return Ok(())
 }
 
@@ -70,12 +78,15 @@ fn main() {
         let system = actix::prelude::System::new();
         
         /// init services: network service and sync service
+        /// Actix services are initialized in parallel. 
+        /// Therefore, if there are dependencies among them, 
+        /// we must first initialize the Actix services and then 
+        /// initialize the objects related to the dependencies.
         let registry = RegistryService::launch(); 
-        {
-            registry.register::<NetworkDagRpcService>().await.unwrap();
-            registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
-            registry.register::<SyncDagService>().await.unwrap();
-        }
+        registry.register::<NetworkDagRpcService>().await.unwrap();
+        registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
+        registry.register::<SyncDagService>().await.unwrap();
+
         /// to see if sync task or server task?
         let op = std::env::args().collect::<Vec<_>>();
         if op.len() > 1 {

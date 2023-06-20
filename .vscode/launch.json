@@ -117,6 +117,24 @@
       "args": ["server"],
       "cwd": "${workspaceFolder}"
     },
+     {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'smolstc-sync'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=smolstc",
+          "--package=smolstc"
+        ],
+        "filter": {
+          "name": "smolstc",
+          "kind": "bin"
+        }
+      },
+      "args": ["sync", "/ip4/127.0.0.1/tcp/53225/p2p/12D3KooWFdDxXE3VAKR6oK23n4w5QmghtSoj6AyF8opiNchwfrQS"],
+      "cwd": "${workspaceFolder}"
+    },
  
     {
       "type": "lldb",
