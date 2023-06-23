@@ -1,28 +1,48 @@
 use super::protocol::GhostdagManager;
-use starcoin_crypto::HashValue as Hash;
-use std::collections::VecDeque;
 use crate::ghostdata::GhostdagStoreReader;
 use consensus_types::blockhash::BlockHashSet;
 use consensus_types::header::HeaderStoreReader;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
+use starcoin_crypto::HashValue as Hash;
+use std::collections::VecDeque;
 
-
-impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V: HeaderStoreReader> GhostdagManager<T, S, U, V> {
-    pub fn ordered_mergeset_without_selected_parent(&self, selected_parent: Hash, parents: &[Hash]) -> Vec<Hash> {
+impl<
+        T: GhostdagStoreReader,
+        S: RelationsStoreReader,
+        U: ReachabilityService,
+        V: HeaderStoreReader,
+    > GhostdagManager<T, S, U, V>
+{
+    pub fn ordered_mergeset_without_selected_parent(
+        &self,
+        selected_parent: Hash,
+        parents: &[Hash],
+    ) -> Vec<Hash> {
         self.sort_blocks(self.unordered_mergeset_without_selected_parent(selected_parent, parents))
     }
 
-    pub fn unordered_mergeset_without_selected_parent(&self, selected_parent: Hash, parents: &[Hash]) -> BlockHashSet {
-        let mut queue: VecDeque<_> = parents.iter().copied().filter(|p| p != &selected_parent).collect();
+    pub fn unordered_mergeset_without_selected_parent(
+        &self,
+        selected_parent: Hash,
+        parents: &[Hash],
+    ) -> BlockHashSet {
+        let mut queue: VecDeque<_> = parents
+            .iter()
+            .copied()
+            .filter(|p| p != &selected_parent)
+            .collect();
         let mut mergeset: BlockHashSet = queue.iter().copied().collect();
         let mut selected_parent_past = BlockHashSet::new();
 
         while let Some(current) = queue.pop_front() {
-            let current_parents = self.relations_store.get_parents(current).unwrap_or_else(|err| {
-                println!("WUT");
-                panic!("{err:?}");
-            });
+            let current_parents = self
+                .relations_store
+                .get_parents(current)
+                .unwrap_or_else(|err| {
+                    println!("WUT");
+                    panic!("{err:?}");
+                });
 
             // For each parent of the current block we check whether it is in the past of the selected parent. If not,
             // we add it to the resulting merge-set and queue it for further processing.
@@ -35,7 +55,10 @@ impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V:
                     continue;
                 }
 
-                if self.reachability_service.is_dag_ancestor_of(*parent, selected_parent) {
+                if self
+                    .reachability_service
+                    .is_dag_ancestor_of(*parent, selected_parent)
+                {
                     selected_parent_past.insert(*parent);
                     continue;
                 }
