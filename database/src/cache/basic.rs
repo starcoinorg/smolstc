@@ -1,3 +1,4 @@
+use crate::cache::DagCache;
 use indexmap::IndexMap;
 use parking_lot::RwLock;
 use rand::Rng;
@@ -18,9 +19,12 @@ impl<
         TKey: Clone + std::hash::Hash + Eq + Send + Sync,
         TData: Clone + Send + Sync,
         S: BuildHasher + Default,
-    > Cache<TKey, TData, S>
+    > DagCache for Cache<TKey, TData, S>
 {
-    pub fn new(size: u64) -> Self {
+    type Tkey = TKey;
+    type TData = TData;
+
+    fn new_with_capacity(size: u64) -> Self {
         Self {
             map: Arc::new(RwLock::new(IndexMap::with_capacity_and_hasher(
                 size as usize,
@@ -30,15 +34,15 @@ impl<
         }
     }
 
-    pub fn get(&self, key: &TKey) -> Option<TData> {
+    fn get(&self, key: &TKey) -> Option<TData> {
         self.map.read().get(key).cloned()
     }
 
-    pub fn contains_key(&self, key: &TKey) -> bool {
+    fn contains_key(&self, key: &TKey) -> bool {
         self.map.read().contains_key(key)
     }
 
-    pub fn insert(&self, key: TKey, data: TData) {
+    fn insert(&self, key: TKey, data: TData) {
         if self.size == 0 {
             return;
         }
@@ -49,7 +53,7 @@ impl<
         write_guard.insert(key, data);
     }
 
-    pub fn insert_many(&self, iter: &mut impl Iterator<Item = (TKey, TData)>) {
+    fn insert_many(&self, iter: &mut impl Iterator<Item = (TKey, TData)>) {
         if self.size == 0 {
             return;
         }
@@ -62,7 +66,7 @@ impl<
         }
     }
 
-    pub fn remove(&self, key: &TKey) {
+    fn remove(&self, key: &TKey) {
         if self.size == 0 {
             return;
         }
@@ -70,7 +74,7 @@ impl<
         write_guard.swap_remove(key);
     }
 
-    pub fn remove_many(&self, key_iter: &mut impl Iterator<Item = TKey>) {
+    fn remove_many(&self, key_iter: &mut impl Iterator<Item = TKey>) {
         if self.size == 0 {
             return;
         }
@@ -80,7 +84,7 @@ impl<
         }
     }
 
-    pub fn remove_all(&self) {
+    fn remove_all(&self) {
         if self.size == 0 {
             return;
         }

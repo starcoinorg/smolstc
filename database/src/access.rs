@@ -1,40 +1,48 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{Cache, DbKey, DbWriter};
+use crate::cache::DagCache;
 use crate::db::FLEXI_DAG_PREFIX_NAME;
 use itertools::Itertools;
 use rocksdb::{Direction, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
 use starcoin_storage::storage::RawDBStorage;
+use std::marker::PhantomData;
 use std::{collections::hash_map::RandomState, error::Error, hash::BuildHasher, sync::Arc};
 
 /// A concurrent DB store access with typed caching.
 #[derive(Clone)]
 pub struct CachedDbAccess<TKey, TData, S = RandomState>
 where
-    TKey: Clone + std::hash::Hash + Eq + Send + Sync,
-    TData: Clone + Send + Sync,
+    TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>,
+    TData: Clone + Send + Sync + DeserializeOwned,
 {
+    cf_name: &'static str,
+
     db: Arc<DB>,
 
     // Cache
-    cache: Cache<TKey, TData, S>,
+    cache: Cache<TKey>,
 
     // DB bucket/path
     prefix: Vec<u8>,
+
+    _phantom: PhantomData<(TData, S)>,
 }
 
 impl<TKey, TData, S> CachedDbAccess<TKey, TData, S>
 where
-    TKey: Clone + std::hash::Hash + Eq + Send + Sync,
-    TData: Clone + Send + Sync,
+    TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>,
+    TData: Clone + Send + Sync + DeserializeOwned,
     S: BuildHasher + Default,
 {
     pub fn new(db: Arc<DB>, cache_size: u64, prefix: Vec<u8>) -> Self {
         Self {
+            cf_name: FLEXI_DAG_PREFIX_NAME,
             db,
-            cache: Cache::new(cache_size),
+            cache: Cache::new_with_capacity(cache_size),
             prefix,
+            _phantom: Default::default(),
         }
     }
 
@@ -42,7 +50,9 @@ where
     where
         TKey: Copy + AsRef<[u8]>,
     {
-        self.cache.get(&key)
+        self.cache
+            .get(&key)
+            .map(|b| bincode::deserialize(&b).expect("Failed to decode cache data"))
     }
 
     pub fn has(&self, key: TKey) -> Result<bool, StoreError>
@@ -52,8 +62,8 @@ where
         Ok(self.cache.contains_key(&key)
             || self
                 .db
-                .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, DbKey::new(&self.prefix, key))
-                .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
+                .raw_get_pinned_cf(self.cf_name, DbKey::new(&self.prefix, key))
+                .map_err(|_| StoreError::CFNotExist(self.cf_name.to_string()))?
                 .is_some())
     }
 
@@ -63,16 +73,17 @@ where
         TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned_cf` has short lifetime
     {
         if let Some(data) = self.cache.get(&key) {
+            let data = bincode::deserialize(&data)?;
             Ok(data)
         } else {
             let db_key = DbKey::new(&self.prefix, key.clone());
             if let Some(slice) = self
                 .db
-                .raw_get_pinned_cf(FLEXI_DAG_PREFIX_NAME, &db_key)
-                .map_err(|_| StoreError::CFNotExist(FLEXI_DAG_PREFIX_NAME.to_string()))?
+                .raw_get_pinned_cf(self.cf_name, &db_key)
+                .map_err(|_| StoreError::CFNotExist(self.cf_name.to_string()))?
             {
                 let data: TData = bincode::deserialize(&slice)?;
-                self.cache.insert(key, data.clone());
+                self.cache.insert(key, slice.to_vec());
                 Ok(data)
             } else {
                 Err(StoreError::KeyNotFound(db_key))
@@ -90,7 +101,7 @@ where
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));
         self.db
             .raw_iterator_cf_opt(
-                FLEXI_DAG_PREFIX_NAME,
+                self.cf_name,
                 IteratorMode::From(db_key.as_ref(), Direction::Forward),
                 read_opts,
             )
@@ -110,7 +121,7 @@ where
         TData: Serialize,
     {
         let bin_data = bincode::serialize(&data)?;
-        self.cache.insert(key.clone(), data);
+        self.cache.insert(key.clone(), bin_data.clone());
         writer.put(DbKey::new(&self.prefix, key).as_ref(), bin_data)?;
         Ok(())
     }
@@ -124,18 +135,17 @@ where
         TKey: Clone + AsRef<[u8]>,
         TData: Serialize,
     {
-        let iter_clone = iter.clone();
-        self.cache.insert_many(iter);
-        for (key, data) in iter_clone {
+        for (key, data) in iter {
             let bin_data = bincode::serialize(&data)?;
-            writer.put(DbKey::new(&self.prefix, key.clone()).as_ref(), bin_data)?;
+            self.cache.insert(key.clone(), bin_data.clone());
+            writer.put(DbKey::new(&self.prefix, key).as_ref(), bin_data)?;
         }
         Ok(())
     }
 
     /// Write directly from an iterator and do not cache any data. NOTE: this action also clears the cache
     pub fn write_many_without_cache(
-        &self,
+        &mut self,
         mut writer: impl DbWriter,
         iter: &mut impl Iterator<Item = (TKey, TData)>,
     ) -> Result<(), StoreError>
@@ -147,7 +157,7 @@ where
             let bin_data = bincode::serialize(&data)?;
             writer.put(DbKey::new(&self.prefix, key).as_ref(), bin_data)?;
         }
-        // We must clear the cache in order to avoid invalidated entries
+        // The cache must be cleared in order to avoid invalidated entries
         self.cache.remove_all();
         Ok(())
     }
@@ -183,6 +193,7 @@ where
     {
         self.cache.remove_all();
         //TODO: Consider using column families to make it faster
+        // currently all key-values are saved in FLEX_DAG_DATA_PREFIX CF
         let db_key = DbKey::prefix_only(&self.prefix);
         let mut read_opts = ReadOptions::default();
         read_opts.set_iterate_range(rocksdb::PrefixRange(db_key.as_ref()));

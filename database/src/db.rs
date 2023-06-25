@@ -2,7 +2,7 @@ use starcoin_config::RocksdbConfig;
 pub(crate) use starcoin_storage::{db_storage::DBStorage, FLEXI_DAG_PREFIX_NAME};
 use std::{path::PathBuf, sync::Arc};
 
-/// The DB type used for Kaspad stores
+/// The DB type used for FlexiDAG stores
 pub type DB = DBStorage;
 
 /// Creates or loads an existing DB from the provided directory path.
