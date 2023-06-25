@@ -1,11 +1,4 @@
-#[cfg(feature = "basic-cache")]
-mod basic;
-#[cfg(feature = "basic-cache")]
-pub use basic::*;
-
-#[cfg(not(feature = "basic-cache"))]
 mod stc_cache;
-#[cfg(not(feature = "basic-cache"))]
 pub use stc_cache::*;
 
 pub trait DagCache {
