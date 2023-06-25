@@ -3,10 +3,9 @@ use std::sync::Arc;
 
 use consensus_types::blockhash::BlockHashes;
 use database::prelude::DB;
-use ghostdag::ghostdata::{DbGhostdagStore, GhostdagStore, GhostdagData};
+use ghostdag::ghostdata::{DbGhostdagStore, GhostdagStore, GhostdagData, GhostdagStoreReader};
 use reachability::relations::{DbRelationsStore, RelationsStore, RelationsStoreReader};
 use starcoin_crypto::HashValue as Hash;
-use anyhow::{Result, Result::Ok, Ok};
 
 struct FlexiDagConsensus {
     relation_store: DbRelationsStore,
@@ -78,7 +77,10 @@ impl FlexiDagConsensus {
         let result_children = self.relation_store.get_children(begin);
         match result_children {
             std::result::Result::Ok(children) => {
+                children.iter().for_each(|child| {
+                    let result_max_parent_score = self.get_max_parent_score(*child);
 
+                });
             },
             Err(_) => {
 
@@ -87,5 +89,23 @@ impl FlexiDagConsensus {
         }
        
         Ok(0.into())
+    }
+
+    fn get_max_parent_score(&self, hash: Hash) -> anyhow::Result<u64> {
+        let parents = self.relation_store.get_parents(hash)?;
+
+        let mut max_score = 0u64;
+        let _ = parents.into_iter().max_by(|a, b| {
+            let a_score = self.flexi_strore.get_blue_score(*a).expect("for now, the parent should exist!")
+            let b_score = self.flexi_strore.get_blue_score(*b).expect("for now, the parent should exist!")
+            let result = a_score.cmp(&b_score);
+            match result {
+                std::cmp::Ordering::Less => max_score = b_score,
+                std::cmp::Ordering::Equal | std::cmp::Ordering::Greater => max_score = a_score,
+            };
+            result
+        });
+
+        return Ok(max_score);
     }
 }
