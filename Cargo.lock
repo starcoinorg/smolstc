@@ -4197,7 +4197,7 @@ dependencies = [
 
 [[package]]
 name = "network-p2p-derive"
-version = "1.13.4"
+version = "1.13.5"
 dependencies = [
  "anyhow",
  "proc-macro2 1.0.59",
@@ -6023,6 +6023,7 @@ dependencies = [
  "parking_lot 0.12.1",
  "rand 0.8.5",
  "reachability",
+ "rocksdb",
  "sc-peerset",
  "serde",
  "serde_bytes",

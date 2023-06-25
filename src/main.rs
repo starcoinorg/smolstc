@@ -7,6 +7,7 @@ mod network_dag_rpc_service;
 mod network_dag_rpc;
 mod network_dag_verified_client;
 mod sync_dag_service;
+mod flexi_dag;
 
 use std::{path::Path, sync::Arc};
 

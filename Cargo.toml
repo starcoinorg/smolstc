@@ -112,3 +112,4 @@ consensus-types = { path = "consensus/types" }
 database = { path = "database" }
 parking_lot = "0.12"
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
+rocksdb = "0.21.0"
