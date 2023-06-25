@@ -14,6 +14,7 @@ use std::{path::Path, sync::Arc};
 use actix::registry;
 use anyhow::Ok;
 use consensus_types::blockhash;
+use flexi_dag::FlexiDagConsensus;
 use network_dag_rpc_service::NetworkDagRpcService;
 use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkMultiaddr};
 use reachability::interval::Interval;
@@ -75,31 +76,36 @@ async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()
 
 
 fn main() {
-    async_std::task::block_on(async {
-        let system = actix::prelude::System::new();
+    // async_std::task::block_on(async {
+    //     let system = actix::prelude::System::new();
         
-        /// init services: network service and sync service
-        /// Actix services are initialized in parallel. 
-        /// Therefore, if there are dependencies among them, 
-        /// we must first initialize the Actix services and then 
-        /// initialize the objects related to the dependencies.
-        let registry = RegistryService::launch(); 
-        registry.register::<NetworkDagRpcService>().await.unwrap();
-        registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
-        registry.register::<SyncDagService>().await.unwrap();
+    //     /// init services: network service and sync service
+    //     /// Actix services are initialized in parallel. 
+    //     /// Therefore, if there are dependencies among them, 
+    //     /// we must first initialize the Actix services and then 
+    //     /// initialize the objects related to the dependencies.
+    //     let registry = RegistryService::launch(); 
+    //     registry.register::<NetworkDagRpcService>().await.unwrap();
+    //     registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
+    //     registry.register::<SyncDagService>().await.unwrap();
 
-        /// to see if sync task or server task?
-        let op = std::env::args().collect::<Vec<_>>();
-        if op.len() > 1 {
-            let cmd = op.get(1).unwrap();
-            if "sync" == cmd {
-                run_sync(&registry, op[2..].to_vec()).await.unwrap();
-            } else if "server" == cmd  {
-                run_server(&registry).await.unwrap();
-            }
-        }
-        system.run().unwrap();
-    });
+    //     /// to see if sync task or server task?
+    //     let op = std::env::args().collect::<Vec<_>>();
+    //     if op.len() > 1 {
+    //         let cmd = op.get(1).unwrap();
+    //         if "sync" == cmd {
+    //             run_sync(&registry, op[2..].to_vec()).await.unwrap();
+    //         } else if "server" == cmd  {
+    //             run_server(&registry).await.unwrap();
+    //         }
+    //     }
+    //     system.run().unwrap();
+    // });
+
+    let mut flexi = FlexiDagConsensus::setup_for_test();
+    let result = flexi.scoring_from_genesis();
+    println!("{:?}, bmax = {}, its score is {}", result, flexi.bmax, flexi.bmax_score);
+
     // let (B, C, D, E, F, H, I, J, K, L, M) = (
     //     Hash::sha3_256_of(b"B"),
     //     Hash::sha3_256_of(b"C"),

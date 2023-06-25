@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+
 use bcs_ext::BCSCodec;
-use network_p2p::{business_layer_handle::BusinessLayerHandle, protocol::rep};
-use sc_peerset::SetId;
+use network_p2p::{business_layer_handle::{BusinessLayerHandle, HandshakeResult}, protocol::{rep, generic_proto::NotificationsSink}};
+use sc_peerset::{SetId, ReputationChange};
 use crate::network_dag_data::{NodeData, NodeStatus};
 use anyhow::{anyhow, Ok};
 
@@ -63,25 +65,23 @@ impl BusinessLayerHandle for DagDataHandle {
     fn handshake(
         &self,
         peer_id: network_p2p_types::PeerId,
-        set_id: SetId,
-        protocol_name: std::borrow::Cow<'static, str>,
         received_handshake: Vec<u8>,
-        notifications_sink: network_p2p::protocol::generic_proto::NotificationsSink,
-    ) -> Result<network_p2p::protocol::CustomMessageOutcome, network_p2p_types::ReputationChange> {
-        match NodeData::decode(&received_handshake) {
-            std::result::Result::Ok(node_data) => {
-                return std::result::Result::Ok(network_p2p::protocol::CustomMessageOutcome::NotificationStreamOpened { 
-                    remote: peer_id, 
-                    protocol: protocol_name, 
-                    notifications_sink: notifications_sink, 
-                    generic_data: node_data.status.encode().unwrap(), 
-                    notif_protocols: [].to_vec(), 
-                    rpc_protocols: [].to_vec()  
-               });
-            },
-            Err(_error) => {
-                return std::result::Result::Err(rep::BAD_PROTOCOL);
-            },
-      }
+    ) -> Result<HandshakeResult, ReputationChange> {
+      todo!()
+      //   match NodeData::decode(&received_handshake) {
+      //       std::result::Result::Ok(node_data) => {
+      //           return std::result::Result::Ok(network_p2p::protocol::CustomMessageOutcome::NotificationStreamOpened { 
+      //               remote: peer_id, 
+      //               protocol: Cow::from("/starcoin/test/1"), 
+      //               notifications_sink: NotificationsSink, 
+      //               generic_data: node_data.status.encode().unwrap(), 
+      //               notif_protocols: [].to_vec(), 
+      //               rpc_protocols: [].to_vec()  
+      //          });
+      //       },
+      //       Err(_error) => {
+      //           return std::result::Result::Err(rep::BAD_PROTOCOL);
+      //       },
+      // }
     }
 }
