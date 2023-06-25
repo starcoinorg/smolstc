@@ -1,9 +1,7 @@
 use rocksdb::WriteBatch;
 use starcoin_storage::storage::InnerStore;
 
-use crate::db::FLEXI_DAG_PREFIX_NAME;
-use crate::errors::StoreError;
-use crate::prelude::DB;
+use crate::{db::FLEXI_DAG_PREFIX_NAME, errors::StoreError, prelude::DB};
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {

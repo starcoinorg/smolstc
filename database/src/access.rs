@@ -1,14 +1,15 @@
 use crate::{db::DB, errors::StoreError};
 
 use super::prelude::{Cache, DbKey, DbWriter};
-use crate::cache::DagCache;
-use crate::db::FLEXI_DAG_PREFIX_NAME;
+use crate::{cache::DagCache, db::FLEXI_DAG_PREFIX_NAME};
 use itertools::Itertools;
 use rocksdb::{Direction, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
 use starcoin_storage::storage::RawDBStorage;
-use std::marker::PhantomData;
-use std::{collections::hash_map::RandomState, error::Error, hash::BuildHasher, sync::Arc};
+use std::{
+    collections::hash_map::RandomState, error::Error, hash::BuildHasher, marker::PhantomData,
+    sync::Arc,
+};
 
 /// A concurrent DB store access with typed caching.
 #[derive(Clone)]

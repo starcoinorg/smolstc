@@ -1,11 +1,9 @@
 use super::DagCache;
-use starcoin_storage::{cache_storage::CacheStorage, storage::InnerStore, FLEXI_DAG_PREFIX_NAME};
-use std::marker::PhantomData;
-use std::sync::Arc;
+use starcoin_storage::{cache_storage::CacheStorage, storage::InnerStoreV2};
+use std::{marker::PhantomData, sync::Arc};
 
 #[derive(Clone)]
 pub struct Cache<TKey> {
-    cf_name: &'static str,
     cache: Arc<CacheStorage>,
     _phantom: PhantomData<TKey>,
 }
@@ -16,7 +14,6 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
 
     fn new_with_capacity(size: u64) -> Self {
         Self {
-            cf_name: FLEXI_DAG_PREFIX_NAME,
             cache: Arc::new(CacheStorage::new_with_capacity(size as usize, None)),
             _phantom: Default::default(),
         }
@@ -24,7 +21,7 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
 
     fn get(&self, key: &Self::TKey) -> Option<Self::TData> {
         self.cache
-            .get(self.cf_name, key.as_ref().to_vec())
+            .get_v2(None, key.as_ref().to_vec())
             .expect("Failed on cache read")
     }
 
@@ -34,13 +31,13 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
 
     fn insert(&self, key: Self::TKey, data: Self::TData) {
         self.cache
-            .put(self.cf_name, key.as_ref().to_vec(), data)
+            .put_v2(None, key.as_ref().to_vec(), data)
             .expect("Failed to write cache");
     }
 
     fn remove(&self, key: &Self::TKey) {
         self.cache
-            .remove(self.cf_name, key.as_ref().to_vec())
+            .remove_v2(None, key.as_ref().to_vec())
             .expect("Failed to remove from cache")
     }
 
