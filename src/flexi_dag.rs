@@ -156,7 +156,7 @@ impl FlexiDagConsensus {
         let parents = self.relation_store.get_parents(hash)?;
 
         if parents.is_empty() {
-            return Err(anyhow::anyhow!("发生了一个错误"));
+            return Err(anyhow::anyhow!("the node must have parent(s)"));
         }
 
         let mut max_score = 0u64;
