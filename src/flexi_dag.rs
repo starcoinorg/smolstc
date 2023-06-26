@@ -9,12 +9,12 @@ use starcoin_crypto::HashValue as Hash;
 use std::cmp::Ordering::{Equal, Greater, Less};
 
 #[derive(Debug, PartialEq, Eq, Ord)]
-pub struct FlexiNode {
+pub struct FlexiBlock {
     pub hash: Hash,
     pub score: u64,
 }
 
-impl std::cmp::PartialOrd for FlexiNode {
+impl std::cmp::PartialOrd for FlexiBlock {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.score != other.score {
             other.score.partial_cmp(&self.score)
@@ -116,9 +116,9 @@ impl FlexiDagConsensus {
 
         let flexi_strore = DbGhostdagStore::new(db.clone(), 0.into(), 1024 * 1024 * 10); 
         let k = 3;
-        let mut genesis_node = GhostdagData::new_with_selected_parent(genesis, k);
-        genesis_node.blue_score = 0; 
-        flexi_strore.insert(genesis, Arc::new(genesis_node));
+        let mut genesis_block = GhostdagData::new_with_selected_parent(genesis, k);
+        genesis_block.blue_score = 0; 
+        flexi_strore.insert(genesis, Arc::new(genesis_block));
        FlexiDagConsensus {
             relation_store, 
             flexi_strore,
@@ -153,20 +153,21 @@ impl FlexiDagConsensus {
         return Ok(())
     }
 
-    fn insert_node(&mut self, child: Hash, result_max_parent: anyhow::Result<(u64, Hash)>) -> anyhow::Result<u64> {
+    fn insert_block(&mut self, child: Hash, result_max_parent: anyhow::Result<(u64, Hash, Vec<Hash>)>) -> anyhow::Result<u64> {
         match result_max_parent {
-            Ok((score, selected_parent)) => {
-                let mut node = GhostdagData::new_with_selected_parent(selected_parent, self.k);
-                node.blue_score = score + 1;
-                if self.bmax_score < node.blue_score {
-                    self.bmax_score = node.blue_score;
+            Ok((score, selected_parent, sub_parents)) => {
+                let mut block = GhostdagData::new_with_selected_parent(selected_parent, self.k);
+                block.mergeset_blues = Arc::new(sub_parents); 
+                block.blue_score = score + 1;
+                if self.bmax_score < block.blue_score {
+                    self.bmax_score = block.blue_score;
                     self.bmax = child.clone();
                 } else if self.bmax_score == score && self.bmax.cmp(&child) == std::cmp::Ordering::Greater {
                     self.bmax = child.clone();
                 }
-                let max_score = node.blue_score;
-                println!("{} score {}", child, node.blue_score);
-                self.flexi_strore.insert(child.clone(), Arc::new(node)).expect("insert a node should be successful"); 
+                let max_score = block.blue_score;
+                println!("{} score {}", child, block.blue_score);
+                self.flexi_strore.insert(child.clone(), Arc::new(block)).expect("insert a block should be successful"); 
                 return anyhow::Result::Ok(max_score);
             },
             Err(error) => {
@@ -186,7 +187,7 @@ impl FlexiDagConsensus {
                         Ok(has) => {
                             if !has {
                                 let result_max_parent = self.scoring_by_parent(child.clone());
-                                self.insert_node(child.clone(), result_max_parent).expect("the insertion of a child must be successful");
+                                self.insert_block(child.clone(), result_max_parent).expect("the insertion of a child must be successful");
                             }
                         }
                         Err(error) => {
@@ -206,16 +207,16 @@ impl FlexiDagConsensus {
         }
     }
 
-    fn scoring_by_parent(&mut self, hash: Hash) -> anyhow::Result<(u64, Hash)> {
+    fn scoring_by_parent(&mut self, hash: Hash) -> anyhow::Result<(u64, Hash, Vec<Hash>)> {
         let parents = self.relation_store.get_parents(hash)?;
 
         if parents.is_empty() {
-            return Err(anyhow::anyhow!("the node must have parent(s)"));
+            return Err(anyhow::anyhow!("the block must have parent(s)"));
         }
 
         let mut candidate_parents = vec![]; 
         parents.iter().for_each(|hash| {
-            candidate_parents.push(FlexiNode {
+            candidate_parents.push(FlexiBlock {
                 hash: hash.clone(),
                 score: self.ensure_parent_score(hash.clone()).expect("for now, the parent should exist!"),
             });
@@ -228,15 +229,19 @@ impl FlexiDagConsensus {
         let init_score = selected_parent.score;
         max_score += init_score;
 
-        for node in &candidate_parents[1..] {
-            if node.score == init_score {
+        let mut index = 1;
+        let mut sub_parents = vec![];
+        for block in &candidate_parents[1..] {
+            if block.score == init_score && index <= self.k {
                 max_score += init_score;
+                index += 1;
+                sub_parents.push(block.hash);
             } else {
                 break;
             }
         }
 
-        return Ok((max_score, selected_parent.hash));
+        return Ok((max_score, selected_parent.hash, sub_parents));
     }
 
     fn ensure_parent_score(&mut self, hash: Hash) -> anyhow::Result<u64> {
@@ -246,13 +251,39 @@ impl FlexiDagConsensus {
                     return anyhow::Result::Ok(self.flexi_strore.get_blue_score(hash).expect("for now, the parent should exist!"));
                 } else {
                     let result_max_parent = self.scoring_by_parent(hash.clone());
-                    return self.insert_node(hash, result_max_parent);
+                    return self.insert_block(hash, result_max_parent);
                 }
 
-            },
+            }
             Err(error) => {
                 panic!("failed to having-query the db: {}", error.to_string());
             }
         }
+    }
+
+    pub fn chain(&mut self) -> anyhow::Result<Vec<Hash>> {
+        self.scoring_from_genesis()?;
+
+        let mut chain = vec![self.bmax];
+
+        let mut next_block = self.bmax;
+        loop {
+            let result_block = self.flexi_strore.get_data(next_block);
+            match result_block {
+                Ok(block) => {
+                    chain.push(block.selected_parent);
+                    chain.extend((*block.mergeset_blues).clone());
+                    next_block = block.selected_parent;
+                }
+                Err(error) => {
+                    return Err(anyhow::anyhow!("failed to get data from dag db: {}", error.to_string()));
+                }
+            }
+            if next_block == 0.into() {
+                break;
+            }
+        }
+
+        return Ok(chain);
     }
 }
