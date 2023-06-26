@@ -69,7 +69,7 @@ impl FlexiDagConsensus {
         let parent = BlockHashes::new([f, k].to_vec());
         relation_store.insert(m, parent).unwrap();
 
-        let mut flexi_strore = DbGhostdagStore::new(db.clone(), 0.into(), 1024 * 1024 * 10); 
+        let flexi_strore = DbGhostdagStore::new(db.clone(), 0.into(), 1024 * 1024 * 10); 
         let k = 3;
         let mut genesis_node = GhostdagData::new_with_selected_parent(genesis, k);
         genesis_node.blue_score = 0; 
@@ -134,18 +134,27 @@ impl FlexiDagConsensus {
         let result_children = self.relation_store.get_children(begin);
         match result_children {
             std::result::Result::Ok(children) => {
-                let mut children = (*children).clone().into_iter().collect::<HashSet<_>>();
+                let mut children = (*children).clone();
                 children.retain(|item| item != &0.into());
                 children.iter().for_each(|child| {
-                    let result_max_parent = self.scoring_by_parent(child.clone());
-                    self.insert_node(child.clone(), result_max_parent);
+                    match self.flexi_strore.has(child.clone()) {
+                        Ok(has) => {
+                            if !has {
+                                let result_max_parent = self.scoring_by_parent(child.clone());
+                                self.insert_node(child.clone(), result_max_parent).expect("the insertion of a child must be successful");
+                            }
+                        }
+                        Err(error) => {
+                            panic!("some exception happened when trying to get a score: {}", error.to_string())
+                        }
+                    }
                });
                 return Ok(children.into_iter().collect::<Vec<_>>());
             },
             Err(error) => {
                 println!("some exception happened when getting children: {}", error.to_string());
-                if let StoreError::KeyNotFound(key) = &error {
-                    return Ok([].into());
+                if let StoreError::KeyNotFound(_) = &error {
+                    return Ok([].into()); // for end of the loop
                 }
                 return Err(anyhow::anyhow!("some exception happened when getting children: {}", error.to_string()));
             },
