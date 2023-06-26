@@ -14,7 +14,7 @@ use std::{path::Path, sync::Arc};
 use actix::registry;
 use anyhow::Ok;
 use consensus_types::blockhash;
-use flexi_dag::FlexiDagConsensus;
+use flexi_dag::{FlexiDagConsensus, FlexiNode};
 use network_dag_rpc_service::NetworkDagRpcService;
 use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkMultiaddr};
 use reachability::interval::Interval;
@@ -106,6 +106,20 @@ fn main() {
     let result = flexi.scoring_from_genesis();
     println!("{:?}, bmax = {}, its score is {}", result, flexi.bmax, flexi.bmax_score);
 
+    // let n1 = FlexiNode {
+    //     hash: 0.into(),
+    //     score: 100,
+    // };
+    // let n2 = FlexiNode {
+    //     hash: 1.into(),
+    //     score: 100,
+    // };
+
+    // let mut v = [n1, n2];
+    // v.sort();
+    // println!("{v:?}");
+
+ 
     // let (B, C, D, E, F, H, I, J, K, L, M) = (
     //     Hash::sha3_256_of(b"B"),
     //     Hash::sha3_256_of(b"C"),

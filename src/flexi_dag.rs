@@ -6,6 +6,39 @@ use database::prelude::{DB, StoreError};
 use ghostdag::ghostdata::{DbGhostdagStore, GhostdagStore, GhostdagData, GhostdagStoreReader};
 use reachability::relations::{DbRelationsStore, RelationsStore, RelationsStoreReader};
 use starcoin_crypto::HashValue as Hash;
+use std::cmp::Ordering::{Equal, Greater, Less};
+
+#[derive(Debug, PartialEq, Eq, Ord)]
+pub struct FlexiNode {
+    pub hash: Hash,
+    pub score: u64,
+}
+
+impl std::cmp::PartialOrd for FlexiNode {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if self.score != other.score {
+            other.score.partial_cmp(&self.score)
+        } else {
+            self.hash.partial_cmp(&other.hash)
+        }
+    }
+
+    fn lt(&self, other: &Self) -> bool {
+        matches!(self.partial_cmp(other), Some(Less))
+    }
+
+    fn le(&self, other: &Self) -> bool {
+        matches!(self.partial_cmp(other), Some(Less | Equal))
+    }
+
+    fn gt(&self, other: &Self) -> bool {
+        matches!(self.partial_cmp(other), Some(Greater))
+    }
+
+    fn ge(&self, other: &Self) -> bool {
+        matches!(self.partial_cmp(other), Some(Greater | Equal))
+    }
+}
 
 pub struct FlexiDagConsensus {
     relation_store: DbRelationsStore,
@@ -69,13 +102,24 @@ impl FlexiDagConsensus {
         let parent = BlockHashes::new([f, k].to_vec());
         relation_store.insert(m, parent).unwrap();
 
+        println!("b = {}", b);
+        println!("c = {}", c);
+        println!("d = {}", d);
+        println!("e = {}", e);
+        println!("f = {}", f);
+        println!("h = {}", h);
+        println!("i = {}", i);
+        println!("j = {}", j);
+        println!("k = {}", k);
+        println!("l = {}", l);
+        println!("m = {}", m);
+
         let flexi_strore = DbGhostdagStore::new(db.clone(), 0.into(), 1024 * 1024 * 10); 
         let k = 3;
         let mut genesis_node = GhostdagData::new_with_selected_parent(genesis, k);
         genesis_node.blue_score = 0; 
         flexi_strore.insert(genesis, Arc::new(genesis_node));
-
-        FlexiDagConsensus {
+       FlexiDagConsensus {
             relation_store, 
             flexi_strore,
             k,
@@ -121,6 +165,7 @@ impl FlexiDagConsensus {
                     self.bmax = child.clone();
                 }
                 let max_score = node.blue_score;
+                println!("{} score {}", child, node.blue_score);
                 self.flexi_strore.insert(child.clone(), Arc::new(node)).expect("insert a node should be successful"); 
                 return anyhow::Result::Ok(max_score);
             },
@@ -168,26 +213,30 @@ impl FlexiDagConsensus {
             return Err(anyhow::anyhow!("the node must have parent(s)"));
         }
 
-        let mut max_score = 0u64;
-        let mut selected_parent = parents.get(0).expect("for now, the parent should exist!");
-        let _ = parents.iter().max_by(|a, b| {
-            let a_score = self.ensure_parent_score(*a.clone()).expect("for now, the parent should exist!");
-            let b_score = self.ensure_parent_score(*b.clone()).expect("for now, the parent should exist!");
-            let result = a_score.cmp(&b_score);
-            match result {
-                std::cmp::Ordering::Less => {
-                    max_score = b_score;
-                    selected_parent = b.clone();
-                }
-                std::cmp::Ordering::Equal | std::cmp::Ordering::Greater => {
-                    max_score = a_score;
-                    selected_parent = a.clone();
-                }
-            };
-            result
+        let mut candidate_parents = vec![]; 
+        parents.iter().for_each(|hash| {
+            candidate_parents.push(FlexiNode {
+                hash: hash.clone(),
+                score: self.ensure_parent_score(hash.clone()).expect("for now, the parent should exist!"),
+            });
         });
 
-        return Ok((max_score, selected_parent.clone()));
+        candidate_parents.sort();
+
+        let mut max_score = 0u64;
+        let selected_parent = candidate_parents.get(0).expect("for now, the parent should exist!");
+        let init_score = selected_parent.score;
+        max_score += init_score;
+
+        for node in &candidate_parents[1..] {
+            if node.score == init_score {
+                max_score += init_score;
+            } else {
+                break;
+            }
+        }
+
+        return Ok((max_score, selected_parent.hash));
     }
 
     fn ensure_parent_score(&mut self, hash: Hash) -> anyhow::Result<u64> {
