@@ -284,6 +284,88 @@ impl FlexiDagConsensus {
             }
         }
 
+        self.chain_uncle_block(&mut chain);
+
         return Ok(chain);
+    }
+
+    fn chain_uncle_block(&self, chain: &mut Vec<Hash>) {
+        let mut blue_uncle_blocks = vec![];
+        chain.iter().for_each(|blue_block| {
+            let result_parents = self.relation_store.get_parents(blue_block.clone());
+            match result_parents {
+                Ok(parents) => {
+                    parents.iter().for_each(|parent| {
+                        if chain.contains(parent) {
+                            return;
+                        }
+
+                        let connected_blocks = self.collect_connected_blocks(parent.clone()).expect("failed to collect connected blocks!");
+                        let mut blue_count = 0;
+                        connected_blocks.iter().for_each(|block| {
+                            if chain.contains(block) {
+                                blue_count += 1;
+                            }
+                        });
+                        if self.k <= blue_count {
+                            blue_uncle_blocks.push(parent.clone());
+                        }
+                    });
+                }
+                Err(error) => {
+                    panic!("some exeption happened when chaining uncle block: {}", error.to_string());
+                }
+            }
+        });
+
+        chain.extend(blue_uncle_blocks);
+        chain.sort_by(|a, b| {
+            let block_a = FlexiBlock {
+                hash: a.clone(),
+                score: self.flexi_strore.get_blue_score(a.clone()).expect("blue score must exist"),
+            };
+            let block_b = FlexiBlock {
+                hash: b.clone(),
+                score: self.flexi_strore.get_blue_score(b.clone()).expect("blue score must exist"),
+            };
+            return block_a.cmp(&block_b);
+        });
+    }
+
+    fn collect_connected_blocks(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
+        let mut connected_blocks = vec![];
+
+        // parents
+        let mut next_blocks = vec![hash];
+        while !next_blocks.is_empty() {
+            let mut parents = vec![];
+            next_blocks.into_iter().for_each(|block| {
+                let result_parents = self.relation_store.get_parents(block).expect("the parent must exist");
+                parents.extend(result_parents.iter().cloned().collect::<HashSet<_>>().into_iter().filter(|block| block != &0.into()));
+            });
+            next_blocks = parents.clone();
+            connected_blocks.extend(parents);
+        }
+
+        // children
+        let mut next_blocks = vec![hash];
+        while !next_blocks.is_empty() {
+            let mut children = vec![];
+            next_blocks.into_iter().for_each(|block| {
+                let result_children = self.relation_store.get_children(block);
+                match result_children {
+                    Ok(connected_children) => {
+                        children.extend(connected_children.iter().cloned().collect::<HashSet<_>>().into_iter().filter(|block| block != &0.into()));
+                    }
+                    Err(error) => {
+                        panic!("failed to get the children");
+                    }
+                }
+            });
+            next_blocks = children.clone();
+            connected_blocks.extend(children);
+        }
+
+        return Ok(connected_blocks);
     }
 }
