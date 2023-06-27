@@ -118,8 +118,8 @@ impl FlexiDagConsensus {
         let k = 3;
         let mut genesis_block = GhostdagData::new_with_selected_parent(genesis, k);
         genesis_block.blue_score = 0; 
-        flexi_strore.insert(genesis, Arc::new(genesis_block));
-       FlexiDagConsensus {
+        flexi_strore.insert(genesis, Arc::new(genesis_block)).expect("insert muse be successful!");
+        FlexiDagConsensus {
             relation_store, 
             flexi_strore,
             k,
@@ -284,12 +284,10 @@ impl FlexiDagConsensus {
             }
         }
 
-        self.chain_uncle_block(&mut chain);
-
-        return Ok(chain);
+        return self.chain_uncle_block(chain);
     }
 
-    fn chain_uncle_block(&self, chain: &mut Vec<Hash>) {
+    fn chain_uncle_block(&self, mut chain: Vec<Hash>) -> anyhow::Result<Vec<Hash>> {
         let mut blue_uncle_blocks = vec![];
         chain.iter().for_each(|blue_block| {
             let result_parents = self.relation_store.get_parents(blue_block.clone());
@@ -319,17 +317,17 @@ impl FlexiDagConsensus {
         });
 
         chain.extend(blue_uncle_blocks);
-        chain.sort_by(|a, b| {
-            let block_a = FlexiBlock {
-                hash: a.clone(),
-                score: self.flexi_strore.get_blue_score(a.clone()).expect("blue score must exist"),
-            };
-            let block_b = FlexiBlock {
-                hash: b.clone(),
-                score: self.flexi_strore.get_blue_score(b.clone()).expect("blue score must exist"),
-            };
-            return block_a.cmp(&block_b);
-        });
+        let mut flexi_chain = chain.into_iter().map(|hash| {
+            FlexiBlock {
+                hash: hash.clone(),
+                score: self.flexi_strore.get_blue_score(hash.clone()).expect("blue score must exist"),
+            }
+        })
+        .collect::<Vec<_>>();
+
+        flexi_chain.sort();
+
+        Ok(flexi_chain.into_iter().map(|block| block.hash).collect::<Vec<_>>())
     }
 
     fn collect_connected_blocks(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
@@ -358,7 +356,7 @@ impl FlexiDagConsensus {
                         children.extend(connected_children.iter().cloned().collect::<HashSet<_>>().into_iter().filter(|block| block != &0.into()));
                     }
                     Err(error) => {
-                        panic!("failed to get the children");
+                        panic!("failed to get the children: {}", error.to_string());
                     }
                 }
             });
