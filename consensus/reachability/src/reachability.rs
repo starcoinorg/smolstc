@@ -1,14 +1,16 @@
 use crate::interval::Interval;
 
-use database::prelude::{BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB};
+use database::prelude::{
+    BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB,
+};
 use starcoin_crypto::HashValue as Hash;
 
+use consensus_types::blockhash::{self, BlockHashMap, BlockHashes};
 use itertools::Itertools;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use rocksdb::WriteBatch;
 use serde::{Deserialize, Serialize};
 use std::{collections::hash_map::Entry::Vacant, iter::once, sync::Arc};
-use consensus_types::blockhash::{self, BlockHashes, BlockHashMap};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ReachabilityData {
@@ -21,7 +23,13 @@ pub struct ReachabilityData {
 
 impl ReachabilityData {
     pub fn new(parent: Hash, interval: Interval, height: u64) -> Self {
-        Self { children: Arc::new(vec![]), parent, interval, height, future_covering_set: Arc::new(vec![]) }
+        Self {
+            children: Arc::new(vec![]),
+            parent,
+            interval,
+            height,
+            future_covering_set: Arc::new(vec![]),
+        }
     }
 }
 
@@ -38,10 +46,21 @@ pub trait ReachabilityStoreReader {
 /// since reachability writes are not append-only and thus need to be guarded.
 pub trait ReachabilityStore: ReachabilityStoreReader {
     fn init(&mut self, origin: Hash, capacity: Interval) -> Result<(), StoreError>;
-    fn insert(&mut self, hash: Hash, parent: Hash, interval: Interval, height: u64) -> Result<(), StoreError>;
+    fn insert(
+        &mut self,
+        hash: Hash,
+        parent: Hash,
+        interval: Interval,
+        height: u64,
+    ) -> Result<(), StoreError>;
     fn set_interval(&mut self, hash: Hash, interval: Interval) -> Result<(), StoreError>;
     fn append_child(&mut self, hash: Hash, child: Hash) -> Result<u64, StoreError>;
-    fn insert_future_covering_item(&mut self, hash: Hash, fci: Hash, insertion_index: usize) -> Result<(), StoreError>;
+    fn insert_future_covering_item(
+        &mut self,
+        hash: Hash,
+        fci: Hash,
+        insertion_index: usize,
+    ) -> Result<(), StoreError>;
     fn get_height(&self, hash: Hash) -> Result<u64, StoreError>;
     fn set_reindex_root(&mut self, root: Hash) -> Result<(), StoreError>;
     fn get_reindex_root(&self) -> Result<Hash, StoreError>;
@@ -68,13 +87,24 @@ impl DbReachabilityStore {
     }
 
     pub fn new_with_alternative_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
-        assert_ne!(DEFAULT_PREFIX_END, prefix_end, "this prefix end is already used as the default one");
+        assert_ne!(
+            DEFAULT_PREFIX_END, prefix_end,
+            "this prefix end is already used as the default one"
+        );
         Self::new_with_prefix_end(db, cache_size, prefix_end)
     }
 
     fn new_with_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
-        let store_prefix = STORE_PREFIX.iter().copied().chain(once(prefix_end)).collect_vec();
-        let reindex_root_prefix = REINDEX_ROOT_KEY.iter().copied().chain(once(prefix_end)).collect_vec();
+        let store_prefix = STORE_PREFIX
+            .iter()
+            .copied()
+            .chain(once(prefix_end))
+            .collect_vec();
+        let reindex_root_prefix = REINDEX_ROOT_KEY
+            .iter()
+            .copied()
+            .chain(once(prefix_end))
+            .collect_vec();
         Self {
             db: Arc::clone(&db),
             access: CachedDbAccess::new(Arc::clone(&db), cache_size, store_prefix),
@@ -92,28 +122,42 @@ impl ReachabilityStore for DbReachabilityStore {
     fn init(&mut self, origin: Hash, capacity: Interval) -> Result<(), StoreError> {
         debug_assert!(!self.access.has(origin)?);
 
-        let data = Arc::new(ReachabilityData::new(Hash::new(blockhash::NONE), capacity, 0));
+        let data = Arc::new(ReachabilityData::new(
+            Hash::new(blockhash::NONE),
+            capacity,
+            0,
+        ));
         let mut batch = WriteBatch::default();
-        self.access.write(BatchDbWriter::new(&mut batch), origin, data)?;
-        self.reindex_root.write(BatchDbWriter::new(&mut batch), &origin)?;
+        self.access
+            .write(BatchDbWriter::new(&mut batch), origin, data)?;
+        self.reindex_root
+            .write(BatchDbWriter::new(&mut batch), &origin)?;
         self.db.write(batch)?;
 
         Ok(())
     }
 
-    fn insert(&mut self, hash: Hash, parent: Hash, interval: Interval, height: u64) -> Result<(), StoreError> {
+    fn insert(
+        &mut self,
+        hash: Hash,
+        parent: Hash,
+        interval: Interval,
+        height: u64,
+    ) -> Result<(), StoreError> {
         if self.access.has(hash)? {
             return Err(StoreError::KeyAlreadyExists(hash.to_string()));
         }
         let data = Arc::new(ReachabilityData::new(parent, interval, height));
-        self.access.write(DirectDbWriter::new(&self.db), hash, data)?;
+        self.access
+            .write(DirectDbWriter::new(&self.db), hash, data)?;
         Ok(())
     }
 
     fn set_interval(&mut self, hash: Hash, interval: Interval) -> Result<(), StoreError> {
         let mut data = self.access.read(hash)?;
         Arc::make_mut(&mut data).interval = interval;
-        self.access.write(DirectDbWriter::new(&self.db), hash, data)?;
+        self.access
+            .write(DirectDbWriter::new(&self.db), hash, data)?;
         Ok(())
     }
 
@@ -122,15 +166,22 @@ impl ReachabilityStore for DbReachabilityStore {
         let height = data.height;
         let mut_data = Arc::make_mut(&mut data);
         Arc::make_mut(&mut mut_data.children).push(child);
-        self.access.write(DirectDbWriter::new(&self.db), hash, data)?;
+        self.access
+            .write(DirectDbWriter::new(&self.db), hash, data)?;
         Ok(height)
     }
 
-    fn insert_future_covering_item(&mut self, hash: Hash, fci: Hash, insertion_index: usize) -> Result<(), StoreError> {
+    fn insert_future_covering_item(
+        &mut self,
+        hash: Hash,
+        fci: Hash,
+        insertion_index: usize,
+    ) -> Result<(), StoreError> {
         let mut data = self.access.read(hash)?;
         let mut_data = Arc::make_mut(&mut data);
         Arc::make_mut(&mut mut_data.future_covering_set).insert(insertion_index, fci);
-        self.access.write(DirectDbWriter::new(&self.db), hash, data)?;
+        self.access
+            .write(DirectDbWriter::new(&self.db), hash, data)?;
         Ok(())
     }
 
@@ -139,7 +190,8 @@ impl ReachabilityStore for DbReachabilityStore {
     }
 
     fn set_reindex_root(&mut self, root: Hash) -> Result<(), StoreError> {
-        self.reindex_root.write(DirectDbWriter::new(&self.db), &root)
+        self.reindex_root
+            .write(DirectDbWriter::new(&self.db), &root)
     }
 
     fn get_reindex_root(&self) -> Result<Hash, StoreError> {
@@ -177,17 +229,28 @@ pub struct StagingReachabilityStore<'a> {
 
 impl<'a> StagingReachabilityStore<'a> {
     pub fn new(store_read: RwLockUpgradableReadGuard<'a, DbReachabilityStore>) -> Self {
-        Self { store_read, staging_writes: BlockHashMap::new(), staging_reindex_root: None }
+        Self {
+            store_read,
+            staging_writes: BlockHashMap::new(),
+            staging_reindex_root: None,
+        }
     }
 
-    pub fn commit(self, batch: &mut WriteBatch) -> Result<RwLockWriteGuard<'a, DbReachabilityStore>, StoreError> {
+    pub fn commit(
+        self,
+        batch: &mut WriteBatch,
+    ) -> Result<RwLockWriteGuard<'a, DbReachabilityStore>, StoreError> {
         let mut store_write = RwLockUpgradableReadGuard::upgrade(self.store_read);
         for (k, v) in self.staging_writes {
             let data = Arc::new(v);
-            store_write.access.write(BatchDbWriter::new(batch), k, data)?
+            store_write
+                .access
+                .write(BatchDbWriter::new(batch), k, data)?
         }
         if let Some(root) = self.staging_reindex_root {
-            store_write.reindex_root.write(BatchDbWriter::new(batch), &root)?;
+            store_write
+                .reindex_root
+                .write(BatchDbWriter::new(batch), &root)?;
         }
         Ok(store_write)
     }
@@ -200,7 +263,13 @@ impl ReachabilityStore for StagingReachabilityStore<'_> {
         Ok(())
     }
 
-    fn insert(&mut self, hash: Hash, parent: Hash, interval: Interval, height: u64) -> Result<(), StoreError> {
+    fn insert(
+        &mut self,
+        hash: Hash,
+        parent: Hash,
+        interval: Interval,
+        height: u64,
+    ) -> Result<(), StoreError> {
         if self.store_read.has(hash)? {
             return Err(StoreError::KeyAlreadyExists(hash.to_string()));
         }
@@ -239,7 +308,12 @@ impl ReachabilityStore for StagingReachabilityStore<'_> {
         Ok(height)
     }
 
-    fn insert_future_covering_item(&mut self, hash: Hash, fci: Hash, insertion_index: usize) -> Result<(), StoreError> {
+    fn insert_future_covering_item(
+        &mut self,
+        hash: Hash,
+        fci: Hash,
+        insertion_index: usize,
+    ) -> Result<(), StoreError> {
         if let Some(data) = self.staging_writes.get_mut(&hash) {
             Arc::make_mut(&mut data.future_covering_set).insert(insertion_index, fci);
             return Ok(());
@@ -299,7 +373,9 @@ impl ReachabilityStoreReader for StagingReachabilityStore<'_> {
         if let Some(data) = self.staging_writes.get(&hash) {
             Ok(BlockHashes::clone(&data.children))
         } else {
-            Ok(BlockHashes::clone(&self.store_read.access.read(hash)?.children))
+            Ok(BlockHashes::clone(
+                &self.store_read.access.read(hash)?.children,
+            ))
         }
     }
 
@@ -307,7 +383,9 @@ impl ReachabilityStoreReader for StagingReachabilityStore<'_> {
         if let Some(data) = self.staging_writes.get(&hash) {
             Ok(BlockHashes::clone(&data.future_covering_set))
         } else {
-            Ok(BlockHashes::clone(&self.store_read.access.read(hash)?.future_covering_set))
+            Ok(BlockHashes::clone(
+                &self.store_read.access.read(hash)?.future_covering_set,
+            ))
         }
     }
 }
@@ -325,7 +403,10 @@ impl Default for MemoryReachabilityStore {
 
 impl MemoryReachabilityStore {
     pub fn new() -> Self {
-        Self { map: BlockHashMap::new(), reindex_root: None }
+        Self {
+            map: BlockHashMap::new(),
+            reindex_root: None,
+        }
     }
 
     fn get_data_mut(&mut self, hash: Hash) -> Result<&mut ReachabilityData, StoreError> {
@@ -350,7 +431,13 @@ impl ReachabilityStore for MemoryReachabilityStore {
         Ok(())
     }
 
-    fn insert(&mut self, hash: Hash, parent: Hash, interval: Interval, height: u64) -> Result<(), StoreError> {
+    fn insert(
+        &mut self,
+        hash: Hash,
+        parent: Hash,
+        interval: Interval,
+        height: u64,
+    ) -> Result<(), StoreError> {
         if let Vacant(e) = self.map.entry(hash) {
             e.insert(ReachabilityData::new(parent, interval, height));
             Ok(())
@@ -371,7 +458,12 @@ impl ReachabilityStore for MemoryReachabilityStore {
         Ok(data.height)
     }
 
-    fn insert_future_covering_item(&mut self, hash: Hash, fci: Hash, insertion_index: usize) -> Result<(), StoreError> {
+    fn insert_future_covering_item(
+        &mut self,
+        hash: Hash,
+        fci: Hash,
+        insertion_index: usize,
+    ) -> Result<(), StoreError> {
         let data = self.get_data_mut(hash)?;
         Arc::make_mut(&mut data.future_covering_set).insert(insertion_index, fci);
         Ok(())
@@ -389,7 +481,9 @@ impl ReachabilityStore for MemoryReachabilityStore {
     fn get_reindex_root(&self) -> Result<Hash, StoreError> {
         match self.reindex_root {
             Some(root) => Ok(root),
-            None => Err(StoreError::KeyNotFound(DbKey::prefix_only(REINDEX_ROOT_KEY))),
+            None => Err(StoreError::KeyNotFound(DbKey::prefix_only(
+                REINDEX_ROOT_KEY,
+            ))),
         }
     }
 }

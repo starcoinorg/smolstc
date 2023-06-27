@@ -3,11 +3,10 @@ pub mod inquirer;
 pub mod interval;
 pub mod reachability;
 pub mod reachability_service;
-pub mod relations;
-mod tree;
 mod reindex;
+pub mod relations;
 mod tests;
-
+mod tree;
 
 use database::prelude::StoreError;
 use thiserror::Error;

@@ -1,8 +1,8 @@
 use super::interval::Interval;
 use super::{tree::*, *};
-use starcoin_crypto::HashValue as Hash;
-use consensus_types::{blockhash, perf};
 use crate::reachability::{ReachabilityStore, ReachabilityStoreReader};
+use consensus_types::{blockhash, perf};
+use starcoin_crypto::HashValue as Hash;
 
 /// Init the reachability store to match the state required by the algorithmic layer.
 /// The function first checks the store for possibly being initialized already.
@@ -10,7 +10,11 @@ pub fn init(store: &mut (impl ReachabilityStore + ?Sized)) -> Result<()> {
     init_with_params(store, Hash::new(blockhash::ORIGIN), Interval::maximal())
 }
 
-pub(super) fn init_with_params(store: &mut (impl ReachabilityStore + ?Sized), origin: Hash, capacity: Interval) -> Result<()> {
+pub(super) fn init_with_params(
+    store: &mut (impl ReachabilityStore + ?Sized),
+    origin: Hash,
+    capacity: Interval,
+) -> Result<()> {
     if store.has(origin)? {
         return Ok(());
     }
@@ -27,7 +31,14 @@ pub fn add_block(
     selected_parent: Hash,
     mergeset_iterator: HashIterator,
 ) -> Result<()> {
-    add_block_with_params(store, new_block, selected_parent, mergeset_iterator, None, None)
+    add_block_with_params(
+        store,
+        new_block,
+        selected_parent,
+        mergeset_iterator,
+        None,
+        None,
+    )
 }
 
 fn add_block_with_params(
@@ -49,7 +60,11 @@ fn add_block_with_params(
     Ok(())
 }
 
-fn add_dag_block(store: &mut (impl ReachabilityStore + ?Sized), new_block: Hash, mergeset_iterator: HashIterator) -> Result<()> {
+fn add_dag_block(
+    store: &mut (impl ReachabilityStore + ?Sized),
+    new_block: Hash,
+    mergeset_iterator: HashIterator,
+) -> Result<()> {
     // Update the future covering set for blocks in the mergeset
     for merged_block in mergeset_iterator {
         insert_to_future_covering_set(store, merged_block, new_block)?;
@@ -57,8 +72,16 @@ fn add_dag_block(store: &mut (impl ReachabilityStore + ?Sized), new_block: Hash,
     Ok(())
 }
 
-fn insert_to_future_covering_set(store: &mut (impl ReachabilityStore + ?Sized), merged_block: Hash, new_block: Hash) -> Result<()> {
-    match binary_search_descendant(store, store.get_future_covering_set(merged_block)?.as_slice(), new_block)? {
+fn insert_to_future_covering_set(
+    store: &mut (impl ReachabilityStore + ?Sized),
+    merged_block: Hash,
+    new_block: Hash,
+) -> Result<()> {
+    match binary_search_descendant(
+        store,
+        store.get_future_covering_set(merged_block)?.as_slice(),
+        new_block,
+    )? {
         // We expect the query to not succeed, and to only return the correct insertion index.
         // The existences of a `future covering item` (`FCI`) which is a chain ancestor of `new_block`
         // contradicts `merged_block ∈ mergeset(new_block)`. Similarly, the existence of an FCI
@@ -75,7 +98,10 @@ fn insert_to_future_covering_set(store: &mut (impl ReachabilityStore + ?Sized), 
 /// the `virtual selected parent` (`VSP`). This might affect internal reachability heuristics such
 /// as moving the reindex point. The consensus runtime is expected to call this function
 /// for a new header selected tip which is `header only` / `pending UTXO verification`, or for a completely resolved `VSP`.
-pub fn hint_virtual_selected_parent(store: &mut (impl ReachabilityStore + ?Sized), hint: Hash) -> Result<()> {
+pub fn hint_virtual_selected_parent(
+    store: &mut (impl ReachabilityStore + ?Sized),
+    hint: Hash,
+) -> Result<()> {
     try_advancing_reindex_root(
         store,
         hint,
@@ -86,34 +112,58 @@ pub fn hint_virtual_selected_parent(store: &mut (impl ReachabilityStore + ?Sized
 
 /// Checks if the `this` block is a strict chain ancestor of the `queried` block (aka `this ∈ chain(queried)`).
 /// Note that this results in `false` if `this == queried`
-pub fn is_strict_chain_ancestor_of(store: &(impl ReachabilityStoreReader + ?Sized), this: Hash, queried: Hash) -> Result<bool> {
-    Ok(store.get_interval(this)?.strictly_contains(store.get_interval(queried)?))
+pub fn is_strict_chain_ancestor_of(
+    store: &(impl ReachabilityStoreReader + ?Sized),
+    this: Hash,
+    queried: Hash,
+) -> Result<bool> {
+    Ok(store
+        .get_interval(this)?
+        .strictly_contains(store.get_interval(queried)?))
 }
 
 /// Checks if `this` block is a chain ancestor of `queried` block (aka `this ∈ chain(queried) ∪ {queried}`).
 /// Note that we use the graph theory convention here which defines that a block is also an ancestor of itself.
-pub fn is_chain_ancestor_of(store: &(impl ReachabilityStoreReader + ?Sized), this: Hash, queried: Hash) -> Result<bool> {
-    Ok(store.get_interval(this)?.contains(store.get_interval(queried)?))
+pub fn is_chain_ancestor_of(
+    store: &(impl ReachabilityStoreReader + ?Sized),
+    this: Hash,
+    queried: Hash,
+) -> Result<bool> {
+    Ok(store
+        .get_interval(this)?
+        .contains(store.get_interval(queried)?))
 }
 
 /// Returns true if `this` is a DAG ancestor of `queried` (aka `queried ∈ future(this) ∪ {this}`).
 /// Note: this method will return true if `this == queried`.
 /// The complexity of this method is O(log(|future_covering_set(this)|))
-pub fn is_dag_ancestor_of(store: &(impl ReachabilityStoreReader + ?Sized), this: Hash, queried: Hash) -> Result<bool> {
+pub fn is_dag_ancestor_of(
+    store: &(impl ReachabilityStoreReader + ?Sized),
+    this: Hash,
+    queried: Hash,
+) -> Result<bool> {
     // First, check if `this` is a chain ancestor of queried
     if is_chain_ancestor_of(store, this, queried)? {
         return Ok(true);
     }
     // Otherwise, use previously registered future blocks to complete the
     // DAG reachability test
-    match binary_search_descendant(store, store.get_future_covering_set(this)?.as_slice(), queried)? {
+    match binary_search_descendant(
+        store,
+        store.get_future_covering_set(this)?.as_slice(),
+        queried,
+    )? {
         SearchOutput::Found(_, _) => Ok(true),
         SearchOutput::NotFound(_) => Ok(false),
     }
 }
 
 /// Finds the child of `ancestor` which is also a chain ancestor of `descendant`.
-pub fn get_next_chain_ancestor(store: &(impl ReachabilityStoreReader + ?Sized), descendant: Hash, ancestor: Hash) -> Result<Hash> {
+pub fn get_next_chain_ancestor(
+    store: &(impl ReachabilityStoreReader + ?Sized),
+    descendant: Hash,
+    ancestor: Hash,
+) -> Result<Hash> {
     if descendant == ancestor {
         // The next ancestor does not exist
         return Err(ReachabilityError::BadQuery);
@@ -177,16 +227,23 @@ fn binary_search_descendant(
 }
 
 fn assert_hashes_ordered(store: &(impl ReachabilityStoreReader + ?Sized), ordered_hashes: &[Hash]) {
-    let intervals: Vec<Interval> = ordered_hashes.iter().cloned().map(|c| store.get_interval(c).unwrap()).collect();
-    debug_assert!(intervals.as_slice().windows(2).all(|w| w[0].end < w[1].start))
+    let intervals: Vec<Interval> = ordered_hashes
+        .iter()
+        .cloned()
+        .map(|c| store.get_interval(c).unwrap())
+        .collect();
+    debug_assert!(intervals
+        .as_slice()
+        .windows(2)
+        .all(|w| w[0].end < w[1].start))
 }
 
 #[cfg(test)]
 mod tests {
-    use consensus_types::blockhash::ORIGIN;
-    use crate::reachability::MemoryReachabilityStore;
     use super::super::tests::*;
     use super::*;
+    use crate::reachability::MemoryReachabilityStore;
+    use consensus_types::blockhash::ORIGIN;
 
     #[test]
     fn test_add_tree_blocks() {

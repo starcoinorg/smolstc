@@ -1,9 +1,12 @@
 //!
 //! Tree-related functions internal to the module
 //!
-use super::{extensions::ReachabilityStoreIntervalExtensions, inquirer::*, reindex::ReindexOperationContext, *};
-use starcoin_crypto::HashValue as Hash;
+use super::{
+    extensions::ReachabilityStoreIntervalExtensions, inquirer::*, reindex::ReindexOperationContext,
+    *,
+};
 use crate::reachability::ReachabilityStore;
+use starcoin_crypto::HashValue as Hash;
 
 /// Adds `new_block` as a child of `parent` in the tree structure. If this block
 /// has no remaining interval to allocate, a reindexing is triggered. When a reindexing
@@ -40,7 +43,11 @@ pub fn add_tree_block(
 /// Note that we assume that almost always the chain between the reindex root and the common
 /// ancestor is longer than the chain between block and the common ancestor, hence we iterate
 /// from `block`.
-pub fn find_common_tree_ancestor(store: &(impl ReachabilityStore + ?Sized), block: Hash, reindex_root: Hash) -> Result<Hash> {
+pub fn find_common_tree_ancestor(
+    store: &(impl ReachabilityStore + ?Sized),
+    block: Hash,
+    reindex_root: Hash,
+) -> Result<Hash> {
     let mut current = block;
     loop {
         if is_chain_ancestor_of(store, current, reindex_root)? {
@@ -118,7 +125,8 @@ pub fn try_advancing_reindex_root(
     let current = store.get_reindex_root()?;
 
     // Find the possible new root
-    let (mut ancestor, next) = find_next_reindex_root(store, current, hint, reindex_depth, reindex_slack)?;
+    let (mut ancestor, next) =
+        find_next_reindex_root(store, current, hint, reindex_depth, reindex_slack)?;
 
     // No update to root, return
     if current == next {

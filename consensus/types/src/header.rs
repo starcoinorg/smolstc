@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use crate::blockhash::{BlockLevel, BlueWorkType, BLOCK_VERSION};
 use database::prelude::DB;
 use database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
 use database::prelude::{StoreError, StoreResult};
-use starcoin_crypto::HashValue as Hash;
 use rocksdb::WriteBatch;
-use crate::blockhash::{BLOCK_VERSION, BlockLevel, BlueWorkType};
 use serde::{Deserialize, Serialize};
+use starcoin_crypto::HashValue as Hash;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -62,8 +62,9 @@ impl Header {
     }
 
     /// Finalizes the header and recomputes the header hash
-    pub fn finalize(&mut self) {unimplemented!()}
-    
+    pub fn finalize(&mut self) {
+        unimplemented!()
+    }
 
     pub fn direct_parents(&self) -> &[Hash] {
         if self.parents_by_level.is_empty() {
@@ -111,7 +112,12 @@ pub struct HeaderWithBlockLevel {
 
 pub trait HeaderStore: HeaderStoreReader {
     // This is append only
-    fn insert(&self, hash: Hash, header: Arc<Header>, block_level: BlockLevel) -> Result<(), StoreError>;
+    fn insert(
+        &self,
+        hash: Hash,
+        header: Arc<Header>,
+        block_level: BlockLevel,
+    ) -> Result<(), StoreError>;
 }
 
 const HEADERS_STORE_PREFIX: &[u8] = b"headers";
@@ -137,7 +143,11 @@ impl DbHeadersStore {
     pub fn new(db: Arc<DB>, cache_size: u64) -> Self {
         Self {
             db: Arc::clone(&db),
-            compact_headers_access: CachedDbAccess::new(Arc::clone(&db), cache_size, COMPACT_HEADER_DATA_STORE_PREFIX.to_vec()),
+            compact_headers_access: CachedDbAccess::new(
+                Arc::clone(&db),
+                cache_size,
+                COMPACT_HEADER_DATA_STORE_PREFIX.to_vec(),
+            ),
             headers_access: CachedDbAccess::new(db, cache_size, HEADERS_STORE_PREFIX.to_vec()),
         }
     }
@@ -160,7 +170,14 @@ impl DbHeadersStore {
         if self.headers_access.has(hash)? {
             return Err(StoreError::KeyAlreadyExists(hash.to_string()));
         }
-        self.headers_access.write(BatchDbWriter::new(batch), hash, HeaderWithBlockLevel { header: header.clone(), block_level })?;
+        self.headers_access.write(
+            BatchDbWriter::new(batch),
+            hash,
+            HeaderWithBlockLevel {
+                header: header.clone(),
+                block_level,
+            },
+        )?;
         self.compact_headers_access.write(
             BatchDbWriter::new(batch),
             hash,
@@ -240,7 +257,14 @@ impl HeaderStore for DbHeadersStore {
                 blue_score: header.blue_score,
             },
         )?;
-        self.headers_access.write(DirectDbWriter::new(&self.db), hash, HeaderWithBlockLevel { header, block_level })?;
+        self.headers_access.write(
+            DirectDbWriter::new(&self.db),
+            hash,
+            HeaderWithBlockLevel {
+                header,
+                block_level,
+            },
+        )?;
         Ok(())
     }
 }

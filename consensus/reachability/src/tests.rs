@@ -2,14 +2,14 @@
 //! Test utils for reachability
 //!
 use super::{inquirer::*, tree::*};
+use crate::interval::Interval;
+use crate::reachability::{ReachabilityStore, ReachabilityStoreReader};
+use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap, BlockHashSet};
+use consensus_types::perf;
 use database::prelude::StoreError;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
 use thiserror::Error;
-use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap, BlockHashSet};
-use consensus_types::perf;
-use crate::interval::Interval;
-use crate::reachability::{ReachabilityStore, ReachabilityStoreReader};
 
 /// A struct with fluent API to streamline reachability store building
 pub struct StoreBuilder<'a, T: ReachabilityStore + ?Sized> {
@@ -22,8 +22,14 @@ impl<'a, T: ReachabilityStore + ?Sized> StoreBuilder<'a, T> {
     }
 
     pub fn add_block(&mut self, hash: Hash, parent: Hash) -> &mut Self {
-        let parent_height = if !parent.is_none() { self.store.append_child(parent, hash).unwrap() } else { 0 };
-        self.store.insert(hash, parent, Interval::empty(), parent_height + 1).unwrap();
+        let parent_height = if !parent.is_none() {
+            self.store.append_child(parent, hash).unwrap()
+        } else {
+            0
+        };
+        self.store
+            .insert(hash, parent, Interval::empty(), parent_height + 1)
+            .unwrap();
         self
     }
 }
@@ -45,7 +51,11 @@ impl<'a, T: ReachabilityStore + ?Sized> TreeBuilder<'a, T> {
     }
 
     pub fn new_with_params(store: &'a mut T, reindex_depth: u64, reindex_slack: u64) -> Self {
-        Self { store, reindex_depth, reindex_slack }
+        Self {
+            store,
+            reindex_depth,
+            reindex_slack,
+        }
     }
 
     pub fn init(&mut self) -> &mut Self {
@@ -59,8 +69,16 @@ impl<'a, T: ReachabilityStore + ?Sized> TreeBuilder<'a, T> {
     }
 
     pub fn add_block(&mut self, hash: Hash, parent: Hash) -> &mut Self {
-        add_tree_block(self.store, hash, parent, self.reindex_depth, self.reindex_slack).unwrap();
-        try_advancing_reindex_root(self.store, hash, self.reindex_depth, self.reindex_slack).unwrap();
+        add_tree_block(
+            self.store,
+            hash,
+            parent,
+            self.reindex_depth,
+            self.reindex_slack,
+        )
+        .unwrap();
+        try_advancing_reindex_root(self.store, hash, self.reindex_depth, self.reindex_slack)
+            .unwrap();
         self
     }
 
@@ -89,7 +107,10 @@ pub struct DagBuilder<'a, T: ReachabilityStore + ?Sized> {
 
 impl<'a, T: ReachabilityStore + ?Sized> DagBuilder<'a, T> {
     pub fn new(store: &'a mut T) -> Self {
-        Self { store, map: BlockHashMap::new() }
+        Self {
+            store,
+            map: BlockHashMap::new(),
+        }
     }
 
     pub fn init(&mut self) -> &mut Self {
@@ -99,16 +120,32 @@ impl<'a, T: ReachabilityStore + ?Sized> DagBuilder<'a, T> {
 
     pub fn add_block(&mut self, block: DagBlock) -> &mut Self {
         // Select by height (longest chain) just for the sake of internal isolated tests
-        let selected_parent = block.parents.iter().cloned().max_by_key(|p| self.store.get_height(*p).unwrap()).unwrap();
+        let selected_parent = block
+            .parents
+            .iter()
+            .cloned()
+            .max_by_key(|p| self.store.get_height(*p).unwrap())
+            .unwrap();
         let mergeset = self.mergeset(&block, selected_parent);
-        add_block(self.store, block.hash, selected_parent, &mut mergeset.iter().cloned()).unwrap();
+        add_block(
+            self.store,
+            block.hash,
+            selected_parent,
+            &mut mergeset.iter().cloned(),
+        )
+        .unwrap();
         hint_virtual_selected_parent(self.store, block.hash).unwrap();
         self.map.insert(block.hash, block);
         self
     }
 
     fn mergeset(&self, block: &DagBlock, selected_parent: Hash) -> Vec<Hash> {
-        let mut queue: VecDeque<Hash> = block.parents.iter().copied().filter(|p| *p != selected_parent).collect();
+        let mut queue: VecDeque<Hash> = block
+            .parents
+            .iter()
+            .copied()
+            .filter(|p| *p != selected_parent)
+            .collect();
         let mut mergeset: BlockHashSet = queue.iter().copied().collect();
         let mut past = BlockHashSet::new();
 
@@ -147,7 +184,12 @@ pub enum TestError {
     NonConsecutiveSiblingIntervals(Interval, Interval),
 
     #[error("child interval out of parent bounds")]
-    IntervalOutOfParentBounds { parent: Hash, child: Hash, parent_interval: Interval, child_interval: Interval },
+    IntervalOutOfParentBounds {
+        parent: Hash,
+        child: Hash,
+        parent_interval: Interval,
+        child_interval: Interval,
+    },
 }
 
 pub trait StoreValidationExtensions {
@@ -195,7 +237,12 @@ impl<T: ReachabilityStoreReader + ?Sized> StoreValidationExtensions for T {
             for child in children.iter().cloned() {
                 let child_interval = self.get_interval(child)?;
                 if !parent_interval.strictly_contains(child_interval) {
-                    return Err(TestError::IntervalOutOfParentBounds { parent, child, parent_interval, child_interval });
+                    return Err(TestError::IntervalOutOfParentBounds {
+                        parent,
+                        child,
+                        parent_interval,
+                        child_interval,
+                    });
                 }
             }
 
@@ -204,7 +251,10 @@ impl<T: ReachabilityStoreReader + ?Sized> StoreValidationExtensions for T {
                 let sibling_interval = self.get_interval(siblings[0])?;
                 let current_interval = self.get_interval(siblings[1])?;
                 if sibling_interval.end + 1 != current_interval.start {
-                    return Err(TestError::NonConsecutiveSiblingIntervals(sibling_interval, current_interval));
+                    return Err(TestError::NonConsecutiveSiblingIntervals(
+                        sibling_interval,
+                        current_interval,
+                    ));
                 }
             }
         }

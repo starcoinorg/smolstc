@@ -1,12 +1,12 @@
-use std::cmp::Ordering;
-use starcoin_crypto::HashValue as Hash;
-use serde::{Deserialize, Serialize};
+use super::protocol::GhostdagManager;
+use crate::ghostdata::GhostdagStoreReader;
 use consensus_types::blockhash::BlueWorkType;
 use consensus_types::header::HeaderStoreReader;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
-use crate::ghostdata::GhostdagStoreReader;
-use super::protocol::GhostdagManager;
+use serde::{Deserialize, Serialize};
+use starcoin_crypto::HashValue as Hash;
+use std::cmp::Ordering;
 
 #[derive(Eq, Clone, Serialize, Deserialize)]
 pub struct SortableBlock {
@@ -34,15 +34,25 @@ impl PartialOrd for SortableBlock {
 
 impl Ord for SortableBlock {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.blue_work.cmp(&other.blue_work).then_with(|| self.hash.cmp(&other.hash))
+        self.blue_work
+            .cmp(&other.blue_work)
+            .then_with(|| self.hash.cmp(&other.hash))
     }
 }
 
-impl<T: GhostdagStoreReader, S: RelationsStoreReader, U: ReachabilityService, V: HeaderStoreReader> GhostdagManager<T, S, U, V> {
+impl<
+        T: GhostdagStoreReader,
+        S: RelationsStoreReader,
+        U: ReachabilityService,
+        V: HeaderStoreReader,
+    > GhostdagManager<T, S, U, V>
+{
     pub fn sort_blocks(&self, blocks: impl IntoIterator<Item = Hash>) -> Vec<Hash> {
         let mut sorted_blocks: Vec<Hash> = blocks.into_iter().collect();
-        sorted_blocks
-            .sort_by_cached_key(|block| SortableBlock { hash: *block, blue_work: self.ghostdag_store.get_blue_work(*block).unwrap() });
+        sorted_blocks.sort_by_cached_key(|block| SortableBlock {
+            hash: *block,
+            blue_work: self.ghostdag_store.get_blue_work(*block).unwrap(),
+        });
         sorted_blocks
     }
 }

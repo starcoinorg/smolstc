@@ -1,37 +1,37 @@
-mod network_dag_service;
-mod network_dag_handle;
-mod network_dag_trait;
-mod network_dag_worker;
-mod network_dag_data;
-mod network_dag_rpc_service;
-mod network_dag_rpc;
-mod network_dag_verified_client;
-mod sync_dag_service;
 mod flexi_dag;
+mod network_dag_data;
+mod network_dag_handle;
+mod network_dag_rpc;
+mod network_dag_rpc_service;
+mod network_dag_service;
+mod network_dag_trait;
+mod network_dag_verified_client;
+mod network_dag_worker;
+mod sync_dag_service;
 
 use std::{path::Path, sync::Arc};
 
 use actix::registry;
 use anyhow::Ok;
 use consensus_types::blockhash;
-use flexi_dag::{FlexiDagConsensus, FlexiBlock};
+use flexi_dag::{FlexiBlock, FlexiDagConsensus};
 use network_dag_rpc_service::NetworkDagRpcService;
 use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkMultiaddr};
 use reachability::interval::Interval;
 use reachability::reachability::ReachabilityStore;
 use reachability::relations::RelationsStore;
-use starcoin_service_registry::{RegistryService, RegistryAsyncService, ServiceRef};
-use sync_dag_service::{SyncDagService, SyncConnectToPeers, SyncInitVerifiedClient};
+use starcoin_service_registry::{RegistryAsyncService, RegistryService, ServiceRef};
+use sync_dag_service::{SyncConnectToPeers, SyncDagService, SyncInitVerifiedClient};
 
 // dag
-use ghostdag::protocol::GhostdagManager;
-use ghostdag::ghostdata::{MemoryGhostdagStore, GhostdagStore, GhostdagData};
-use reachability::{reachability::MemoryReachabilityStore, relations::MemoryRelationsStore};
-use reachability::reachability_service::MTReachabilityService;
 use consensus_types::header::DbHeadersStore;
-use database::prelude::{*};
-use parking_lot::RwLock;
 use consensus_types::header::Header;
+use database::prelude::*;
+use ghostdag::ghostdata::{GhostdagData, GhostdagStore, MemoryGhostdagStore};
+use ghostdag::protocol::GhostdagManager;
+use parking_lot::RwLock;
+use reachability::reachability_service::MTReachabilityService;
+use reachability::{reachability::MemoryReachabilityStore, relations::MemoryRelationsStore};
 use starcoin_crypto::HashValue as Hash;
 
 fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
@@ -40,51 +40,54 @@ fn build_header_for_test(hash: Hash, parents: Vec<Hash>) -> Header {
     header
 }
 
-
-async fn run_sync(registry: &ServiceRef<RegistryService>, peers: Vec<String>) -> anyhow::Result<()> {
+async fn run_sync(
+    registry: &ServiceRef<RegistryService>,
+    peers: Vec<String>,
+) -> anyhow::Result<()> {
     let sync_service = registry.service_ref::<SyncDagService>().await.unwrap();
 
     async_std::task::spawn(async move {
-        /// to wait the services start` 
+        /// to wait the services start`
         async_std::task::sleep(std::time::Duration::from_secs(3)).await;
 
         let _ = sync_service.send(SyncInitVerifiedClient).await.unwrap();
-        let _ = sync_service.send(SyncConnectToPeers {
-            peers,
-        }).await.unwrap();
-        
+        let _ = sync_service
+            .send(SyncConnectToPeers { peers })
+            .await
+            .unwrap();
     });
- 
-    return Ok(())
+
+    return Ok(());
 }
 
 async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()> {
-    let network_service = registry.service_ref::<NetworkDagService>().await.unwrap().clone();
+    let network_service = registry
+        .service_ref::<NetworkDagService>()
+        .await
+        .unwrap()
+        .clone();
     async_std::task::spawn(async move {
-        /// to wait the services start` 
+        /// to wait the services start`
         async_std::task::sleep(std::time::Duration::from_secs(3)).await;
 
         let result = network_service.send(NetworkMultiaddr).await.unwrap();
         result.peers.into_iter().for_each(|peer| {
             println!("{}", peer);
         });
-        
     });
-    return Ok(())
+    return Ok(());
 }
-
-
 
 fn main() {
     // async_std::task::block_on(async {
     //     let system = actix::prelude::System::new();
-        
+
     //     /// init services: network service and sync service
-    //     /// Actix services are initialized in parallel. 
-    //     /// Therefore, if there are dependencies among them, 
-    //     /// we must first initialize the Actix services and then 
+    //     /// Actix services are initialized in parallel.
+    //     /// Therefore, if there are dependencies among them,
+    //     /// we must first initialize the Actix services and then
     //     /// initialize the objects related to the dependencies.
-    //     let registry = RegistryService::launch(); 
+    //     let registry = RegistryService::launch();
     //     registry.register::<NetworkDagRpcService>().await.unwrap();
     //     registry.register_by_factory::<NetworkDagService, NetworkDagServiceFactory>().await.unwrap();
     //     registry.register::<SyncDagService>().await.unwrap();
@@ -118,7 +121,6 @@ fn main() {
     // let result = flexi.scoring_from_genesis();
     // println!("{:?}, bmax = {}, its score is {}", result, flexi.bmax, flexi.bmax_score);
 
-
     // let n1 = FlexiNode {
     //     hash: 0.into(),
     //     score: 100,
@@ -132,7 +134,6 @@ fn main() {
     // v.sort();
     // println!("{v:?}");
 
- 
     // let (B, C, D, E, F, H, I, J, K, L, M) = (
     //     Hash::sha3_256_of(b"B"),
     //     Hash::sha3_256_of(b"C"),
@@ -162,7 +163,7 @@ fn main() {
     // relation_store.insert(L, Arc::new(vec![D, I])).unwrap();
 
     // let db = DB::open_default(Path::new("./jack_db")).unwrap();
-    // let header_store: Arc<DbHeadersStore> = Arc::new(DbHeadersStore::new(Arc::new(db), 128)); 
+    // let header_store: Arc<DbHeadersStore> = Arc::new(DbHeadersStore::new(Arc::new(db), 128));
 
     // let mut inner_reach_store = MemoryReachabilityStore::new();
     // (&mut inner_reach_store as &mut dyn ReachabilityStore).init(Hash::new(blockhash::ORIGIN), Interval::new(1, 3)).unwrap();
@@ -186,11 +187,11 @@ fn main() {
     // let reach_service = MTReachabilityService::new(memory_reach_store);
 
     // let k = 3;
-    // let ghost_manager = GhostdagManager::new(Hash::new(blockhash::ORIGIN), 
-    //                                     k, 
-    //                                     Arc::clone(&ghost_strore), 
-    //                                     relation_store, 
-    //                                     Arc::clone(&header_store), 
+    // let ghost_manager = GhostdagManager::new(Hash::new(blockhash::ORIGIN),
+    //                                     k,
+    //                                     Arc::clone(&ghost_strore),
+    //                                     relation_store,
+    //                                     Arc::clone(&header_store),
     //                                     reach_service);
 
     // let dag = Arc::new(ghost_manager.genesis_ghostdag_data());
@@ -211,7 +212,6 @@ fn main() {
     // let dag = ghost_manager.ghostdag(&[Hash::new(blockhash::ORIGIN)]);
     // ghost_strore.insert(B, Arc::new(dag.clone())).unwrap();
 
-
     // // let dag = ghost_manager.ghostdag(&[Hash::new(blockhash::ORIGIN)]);
     // // ghost_strore.insert(2.into(), Arc::new(dag)).unwrap();
 
@@ -227,8 +227,7 @@ fn main() {
     // // // let dag = Arc::new(GhostdagData::new_with_selected_parent(3.into(), k));
     // // // ghost_strore.insert(4.into(), Arc::clone(&dag)).unwrap();
 
-
     // // let result = dag.consensus_ordered_mergeset(ghost_strore.as_ref()).collect::<Vec<_>>();
-    
+
     // println!("success!");
 }

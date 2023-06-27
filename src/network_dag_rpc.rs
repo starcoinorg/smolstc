@@ -1,9 +1,9 @@
-use futures::FutureExt;
-use network_p2p_derive::net_rpc;
-use futures_core::future::BoxFuture;
-use network_p2p_types::peer_id::PeerId;
-use serde::{Serialize, Deserialize};
 use anyhow::Result;
+use futures::FutureExt;
+use futures_core::future::BoxFuture;
+use network_p2p_derive::net_rpc;
+use network_p2p_types::peer_id::PeerId;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -25,18 +25,19 @@ pub struct MyNotify {
 
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
-    fn send_request(&self,  peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
+    fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
 }
 
 #[derive(Default)]
 #[allow(clippy::upper_case_acronyms)]
 pub struct NetworkDagRpcImpl;
 impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
-    fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse> >  {
+    fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>> {
         println!("peer id = {peer_id:?}, request = {request:?}");
         futures::future::ready(Ok(MyResponse {
             number: request.number * 2,
             name: request.name + " from response",
-        })).boxed()
+        }))
+        .boxed()
     }
 }

@@ -1,7 +1,9 @@
 use anyhow::Ok;
-use starcoin_service_registry::{ActorService, ServiceFactory, EventHandler, ServiceRequest, ServiceHandler};
+use starcoin_service_registry::{
+    ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRequest,
+};
 
-use crate::network_dag_verified_client::{VerifiedDagRpcClient, NetworkDagServiceRef};
+use crate::network_dag_verified_client::{NetworkDagServiceRef, VerifiedDagRpcClient};
 
 #[derive(Debug)]
 pub struct SyncInitVerifiedClient;
@@ -20,19 +22,19 @@ impl ServiceRequest for SyncConnectToPeers {
 }
 
 pub struct SyncDagService {
-   client: Option<VerifiedDagRpcClient>,
+    client: Option<VerifiedDagRpcClient>,
 }
 
 impl SyncDagService {
     pub fn new() -> Self {
-        SyncDagService { 
-            client: None,  
-        }
+        SyncDagService { client: None }
     }
 }
 
 impl ServiceFactory<SyncDagService> for SyncDagService {
-    fn create(ctx: &mut starcoin_service_registry::ServiceContext<SyncDagService>) -> anyhow::Result<SyncDagService> {
+    fn create(
+        ctx: &mut starcoin_service_registry::ServiceContext<SyncDagService>,
+    ) -> anyhow::Result<SyncDagService> {
         Ok(SyncDagService::new())
     }
 }
@@ -42,17 +44,27 @@ impl ActorService for SyncDagService {
         std::any::type_name::<Self>()
     }
 
-    fn started(&mut self, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> anyhow::Result<()> {
+    fn started(
+        &mut self,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn stopped(&mut self, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> anyhow::Result<()> {
+    fn stopped(
+        &mut self,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 }
 
 impl ServiceHandler<Self, SyncInitVerifiedClient> for SyncDagService {
-    fn handle(&mut self, msg: SyncInitVerifiedClient, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> <SyncInitVerifiedClient as ServiceRequest>::Response {
+    fn handle(
+        &mut self,
+        msg: SyncInitVerifiedClient,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> <SyncInitVerifiedClient as ServiceRequest>::Response {
         if let Some(_) = self.client {
             return Ok(());
         }
@@ -65,13 +77,16 @@ impl ServiceHandler<Self, SyncInitVerifiedClient> for SyncDagService {
             Err(error) => {
                 return Err(anyhow::Error::msg(error.to_string()));
             }
-        } 
+        }
     }
 }
 
-
 impl ServiceHandler<Self, SyncConnectToPeers> for SyncDagService {
-    fn handle(&mut self, msg: SyncConnectToPeers, ctx: &mut starcoin_service_registry::ServiceContext<Self>) -> <SyncConnectToPeers as ServiceRequest>::Response {
+    fn handle(
+        &mut self,
+        msg: SyncConnectToPeers,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> <SyncConnectToPeers as ServiceRequest>::Response {
         match &self.client {
             Some(client) => {
                 msg.peers.into_iter().for_each(|peer| {
@@ -83,7 +98,9 @@ impl ServiceHandler<Self, SyncConnectToPeers> for SyncDagService {
                 return Ok(());
             }
             None => {
-                return Err(anyhow::Error::msg("the verified client is None".to_string()));
+                return Err(anyhow::Error::msg(
+                    "the verified client is None".to_string(),
+                ));
             }
         }
     }

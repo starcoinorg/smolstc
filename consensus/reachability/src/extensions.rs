@@ -1,7 +1,7 @@
 use super::interval::Interval;
+use crate::reachability::ReachabilityStoreReader;
 use database::prelude::StoreResult;
 use starcoin_crypto::hash::HashValue as Hash;
-use crate::reachability::ReachabilityStoreReader;
 
 pub(super) trait ReachabilityStoreIntervalExtensions {
     fn interval_children_capacity(&self, block: Hash) -> StoreResult<Interval>;
