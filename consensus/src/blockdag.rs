@@ -109,3 +109,29 @@ impl BlockDAG {
             .unwrap();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use database::prelude::open_db;
+    use starcoin_types::block::BlockHeader;
+    use std::env;
+    use std::fs;
+    #[test]
+    fn base_test() {
+        let genesis = Header::new(BlockHeader::random(), vec![Hash::new(ORIGIN)]);
+        let genesis_hash = genesis.hash();
+        let k = 16;
+        let db_path = env::temp_dir().join("smolstc");
+        fs::remove_dir_all(db_path.clone()).expect("Failed to delete temporary directory");
+        println!("db path:{}", db_path.to_string_lossy());
+        let db = open_db(db_path, true, 1);
+        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+
+        let block = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![genesis_hash],
+        );
+        dag.commit_header(block);
+    }
+}
