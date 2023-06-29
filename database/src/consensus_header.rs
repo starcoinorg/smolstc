@@ -1,3 +1,12 @@
+use crate::{
+    db::DB,
+    errors::{StoreError, StoreResult},
+    writer::{BatchDbWriter, DirectDbWriter},
+};
+use starcoin_crypto::HashValue as Hash;
+use starcoin_storage::batch::WriteBatch;
+use std::sync::Arc;
+
 pub trait HeaderStoreReader {
     fn get_daa_score(&self, hash: Hash) -> Result<u64, StoreError>;
     fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError>;

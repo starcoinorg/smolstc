@@ -1,10 +1,10 @@
-use super::ordering::*;
 use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
 use crate::util::Refs;
 use consensus_types::blockhash::{
     self, BlockHashExtensions, BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType,
 };
 use consensus_types::header::HeaderStoreReader;
+use consensus_types::ordering::*;
 use reachability::reachability_service::ReachabilityService;
 use reachability::relations::RelationsStoreReader;
 use starcoin_crypto::HashValue as Hash;
@@ -293,6 +293,15 @@ impl<
                     .into(),
             }
         }
+    }
+
+    pub fn sort_blocks(&self, blocks: impl IntoIterator<Item = Hash>) -> Vec<Hash> {
+        let mut sorted_blocks: Vec<Hash> = blocks.into_iter().collect();
+        sorted_blocks.sort_by_cached_key(|block| SortableBlock {
+            hash: *block,
+            blue_work: self.ghostdag_store.get_blue_work(*block).unwrap(),
+        });
+        sorted_blocks
     }
 }
 

@@ -1,5 +1,5 @@
+use crate::prelude::{BatchDbWriter, CachedDbAccess, DbKey, DirectDbWriter, StoreError, DB};
 use consensus_types::blockhash::{BlockHashMap, BlockHashes, BlockLevel};
-use database::prelude::{BatchDbWriter, CachedDbAccess, DbKey, DirectDbWriter, StoreError, DB};
 use itertools::Itertools;
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;

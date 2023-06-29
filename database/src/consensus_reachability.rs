@@ -1,38 +1,17 @@
-use crate::interval::Interval;
-
-use database::prelude::{
+use crate::prelude::{
     BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB,
 };
 use starcoin_crypto::HashValue as Hash;
 use starcoin_storage::storage::RawDBStorage;
 
-use consensus_types::blockhash::{self, BlockHashMap, BlockHashes};
+use consensus_types::{
+    blockhash::{self, BlockHashMap, BlockHashes},
+    interval::Interval,
+};
 use itertools::Itertools;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use rocksdb::WriteBatch;
-use serde::{Deserialize, Serialize};
 use std::{collections::hash_map::Entry::Vacant, iter::once, sync::Arc};
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ReachabilityData {
-    pub children: BlockHashes,
-    pub parent: Hash,
-    pub interval: Interval,
-    pub height: u64,
-    pub future_covering_set: BlockHashes,
-}
-
-impl ReachabilityData {
-    pub fn new(parent: Hash, interval: Interval, height: u64) -> Self {
-        Self {
-            children: Arc::new(vec![]),
-            parent,
-            interval,
-            height,
-            future_covering_set: Arc::new(vec![]),
-        }
-    }
-}
 
 /// Reader API for `ReachabilityStore`.
 pub trait ReachabilityStoreReader {
