@@ -2076,6 +2076,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-retry"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde5a672a61f96552aa5ed9fd9c81c3fbdae4be9b1e205d6eaf17c83705adc0f"
+dependencies = [
+ "futures",
+ "pin-project-lite 0.2.9",
+ "tokio",
+]
+
+[[package]]
 name = "futures-rustls"
 version = "0.22.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6081,6 +6092,7 @@ dependencies = [
  "starcoin-crypto 1.10.0-rc.2 (git+https://github.com/starcoinorg/starcoin-crypto?rev=e19c5631c8f3c39730850080c196e0206834545f)",
  "starcoin-service-registry",
  "starcoin-types 1.13.5 (git+https://github.com/starcoinorg/starcoin?rev=ad4933aba600d8c7b864d65a5adb3b67692afcb2)",
+ "stream-task",
 ]
 
 [[package]]
@@ -6714,6 +6726,26 @@ dependencies = [
  "starcoin-vm-types 1.13.5 (git+https://github.com/starcoinorg/starcoin?rev=5772b323b08397875a3a0806307d7f6f6f735476)",
  "tempfile",
  "walkdir",
+]
+
+[[package]]
+name = "stream-task"
+version = "1.13.5"
+source = "git+https://github.com/starcoinorg/starcoin?rev=5772b323b08397875a3a0806307d7f6f6f735476#5772b323b08397875a3a0806307d7f6f6f735476"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "futures",
+ "futures-retry",
+ "futures-timer",
+ "log",
+ "parking_lot 0.12.1",
+ "pin-project 0.4.30",
+ "pin-utils",
+ "schemars",
+ "serde",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

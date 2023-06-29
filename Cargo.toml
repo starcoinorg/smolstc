@@ -37,6 +37,7 @@ network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin",rev = "57
 network-p2p-core = { git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
 sc-peerset = { git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
 starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
+stream-task = { git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
 rocksdb = "0.21.0"
 bincode = { version = "1", default-features = false }
 faster-hex = "0.6"

@@ -18,8 +18,6 @@ starcoin-types = { workspace = true }
 starcoin-crypto = { workspace = true }
 rand = "0.8"
 futures-core = "0.3.4"
-## tokio = { version = "^1", features = ["full"] }
-## async-std = "1.12.0"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 futures = "0.3.12"
 serde = "1.0.130"
@@ -31,7 +29,6 @@ consensus-types = { path = "../consensus/types" }
 consensus = { path = "../consensus" }
 database = { path = "../database" }
 parking_lot = "0.12"
-# starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
-# starcoin-crypto = { workspace = true }
 rocksdb = "0.21.0"
 ghostdag = { path = "../consensus/ghostdag" }
+stream-task = { workspace = true }
