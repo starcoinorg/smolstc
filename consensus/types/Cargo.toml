@@ -10,3 +10,4 @@ starcoin-crypto.workspace = true
 serde.workspace = true
 database.workspace = true
 rocksdb.workspace = true
+starcoin-types.workspace = true

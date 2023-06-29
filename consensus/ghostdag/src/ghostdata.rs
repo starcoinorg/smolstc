@@ -12,7 +12,7 @@ use starcoin_crypto::HashValue as Hash;
 use std::iter::once;
 use std::{cell::RefCell, sync::Arc};
 
-#[derive(Clone, Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct GhostdagData {
     pub blue_score: u64,
     pub blue_work: BlueWorkType,

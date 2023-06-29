@@ -139,8 +139,8 @@ impl<
                     0u128
                 } else {
                     //TODO: implement caculate pow work
-                    // let bits = self.headers_store.get_bits(hash).unwrap();
-                    BlueWorkType::default()
+                    let difficulty = self.headers_store.get_difficulty(hash).unwrap();
+                    1024u128
                 }
             })
             .sum();
