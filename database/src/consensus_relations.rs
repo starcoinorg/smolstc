@@ -211,7 +211,7 @@ impl RelationsStore for MemoryRelationsStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use database::prelude::open_db;
+    use crate::prelude::open_db;
 
     #[test]
     fn test_memory_relations_store() {

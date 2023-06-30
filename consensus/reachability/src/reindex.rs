@@ -570,11 +570,10 @@ fn split_children(children: &std::sync::Arc<Vec<Hash>>, pivot: Hash) -> Result<(
 mod tests {
     use super::super::tests::*;
     use super::*;
-    use crate::{
-        interval::Interval,
-        reachability::{MemoryReachabilityStore, ReachabilityStoreReader},
-    };
     use consensus_types::blockhash;
+    use consensus_types::interval::Interval;
+    use database::prelude::{MemoryReachabilityStore, ReachabilityStoreReader};
+
     #[test]
     fn test_count_subtrees() {
         let mut store = MemoryReachabilityStore::new();

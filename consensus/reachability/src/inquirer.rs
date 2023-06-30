@@ -242,8 +242,8 @@ fn assert_hashes_ordered(store: &(impl ReachabilityStoreReader + ?Sized), ordere
 mod tests {
     use super::super::tests::*;
     use super::*;
-    use crate::reachability::MemoryReachabilityStore;
     use consensus_types::blockhash::ORIGIN;
+    use database::prelude::MemoryReachabilityStore;
 
     #[test]
     fn test_add_tree_blocks() {

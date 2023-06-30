@@ -404,23 +404,27 @@ mod tests {
         data.add_red(5.into());
         data.add_red(6.into());
 
+        let wrapper: GhostDagDataWrapper = data.clone().into();
+
         let mut expected: Vec<Hash> = vec![4.into(), 2.into(), 5.into(), 3.into(), 6.into()];
         assert_eq!(
             expected,
-            data.ascending_mergeset_without_selected_parent(&store)
+            wrapper
+                .ascending_mergeset_without_selected_parent(&store)
                 .map(|b| b.hash)
                 .collect::<Vec<Hash>>()
         );
 
         itertools::assert_equal(
             once(1.into()).chain(expected.iter().cloned()),
-            data.consensus_ordered_mergeset(&store),
+            wrapper.consensus_ordered_mergeset(&store),
         );
 
         expected.reverse();
         assert_eq!(
             expected,
-            data.descending_mergeset_without_selected_parent(&store)
+            wrapper
+                .descending_mergeset_without_selected_parent(&store)
                 .map(|b| b.hash)
                 .collect::<Vec<Hash>>()
         );
