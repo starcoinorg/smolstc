@@ -1,4 +1,5 @@
 use crate::blockhash::BlockHashes;
+use crate::interval::Interval;
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;

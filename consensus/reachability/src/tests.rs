@@ -2,11 +2,10 @@
 //! Test utils for reachability
 //!
 use super::{inquirer::*, tree::*};
-use crate::interval::Interval;
-use crate::reachability::{ReachabilityStore, ReachabilityStoreReader};
 use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap, BlockHashSet};
+use consensus_types::interval::Interval;
 use consensus_types::perf;
-use database::prelude::StoreError;
+use database::prelude::{ReachabilityStore, ReachabilityStoreReader, StoreError};
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
 use thiserror::Error;

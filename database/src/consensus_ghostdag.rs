@@ -1,10 +1,19 @@
-use crate::errors::{StoreError, StoreResult};
+use crate::db::DB;
+use crate::errors::StoreError;
 use crate::key::DbKey;
-use crate::prelude::DirectDbWriter;
-use consensus_types::blockhash::{BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap};
+use crate::prelude::{CachedDbAccess, DirectDbWriter};
+use crate::writer::BatchDbWriter;
+use consensus_types::blockhash::{
+    BlockHashMap, BlockHashes, BlockLevel, BlueWorkType, HashKTypeMap,
+};
 use consensus_types::ghostdata::{CompactGhostdagData, GhostdagData};
+use consensus_types::ordering::SortableBlock;
+use itertools::EitherOrBoth::{Both, Left, Right};
+use itertools::Itertools;
+use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
 use std::cell::RefCell;
+use std::iter::once;
 use std::sync::Arc;
 
 pub trait GhostdagStoreReader {
@@ -30,6 +39,90 @@ pub trait GhostdagStore: GhostdagStoreReader {
     /// Additionally, this means writes are semantically "append-only", which is why
     /// we can keep the `insert` method non-mutable on self. See "Parallel Processing.md" for an overview.
     fn insert(&self, hash: Hash, data: Arc<GhostdagData>) -> Result<(), StoreError>;
+}
+
+pub struct GhostDagDataWrapper(GhostdagData);
+
+impl From<GhostdagData> for GhostDagDataWrapper {
+    fn from(value: GhostdagData) -> Self {
+        Self(value)
+    }
+}
+
+impl GhostDagDataWrapper {
+    /// Returns an iterator to the mergeset in ascending blue work order (tie-breaking by hash)
+    pub fn ascending_mergeset_without_selected_parent<'a>(
+        &'a self,
+        store: &'a (impl GhostdagStoreReader + ?Sized),
+    ) -> impl Iterator<Item = SortableBlock> + '_ {
+        self.0
+            .mergeset_blues
+            .iter()
+            .skip(1) // Skip the selected parent
+            .cloned()
+            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
+            .merge_join_by(
+                self.0
+                    .mergeset_reds
+                    .iter()
+                    .cloned()
+                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
+                |a, b| a.cmp(b),
+            )
+            .map(|r| match r {
+                Left(b) | Right(b) => b,
+                Both(_, _) => panic!("distinct blocks are never equal"),
+            })
+    }
+
+    /// Returns an iterator to the mergeset in descending blue work order (tie-breaking by hash)
+    pub fn descending_mergeset_without_selected_parent<'a>(
+        &'a self,
+        store: &'a (impl GhostdagStoreReader + ?Sized),
+    ) -> impl Iterator<Item = SortableBlock> + '_ {
+        self.0
+            .mergeset_blues
+            .iter()
+            .skip(1) // Skip the selected parent
+            .rev() // Reverse since blues and reds are stored with ascending blue work order
+            .cloned()
+            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
+            .merge_join_by(
+                self.0
+                    .mergeset_reds
+                    .iter()
+                    .rev() // Reverse
+                    .cloned()
+                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
+                |a, b| b.cmp(a), // Reverse
+            )
+            .map(|r| match r {
+                Left(b) | Right(b) => b,
+                Both(_, _) => panic!("distinct blocks are never equal"),
+            })
+    }
+
+    /// Returns an iterator to the mergeset in topological consensus order -- starting with the selected parent,
+    /// and adding the mergeset in increasing blue work order. Note that this is a topological order even though
+    /// the selected parent has highest blue work by def -- since the mergeset is in its anticone.
+    pub fn consensus_ordered_mergeset<'a>(
+        &'a self,
+        store: &'a (impl GhostdagStoreReader + ?Sized),
+    ) -> impl Iterator<Item = Hash> + '_ {
+        once(self.0.selected_parent).chain(
+            self.ascending_mergeset_without_selected_parent(store)
+                .map(|s| s.hash),
+        )
+    }
+
+    /// Returns an iterator to the mergeset in topological consensus order without the selected parent
+    pub fn consensus_ordered_mergeset_without_selected_parent<'a>(
+        &'a self,
+        store: &'a (impl GhostdagStoreReader + ?Sized),
+    ) -> impl Iterator<Item = Hash> + '_ {
+        self.ascending_mergeset_without_selected_parent(store)
+            .map(|s| s.hash)
+    }
 }
 
 const STORE_PREFIX: &[u8] = b"block-ghostdag-data";
@@ -276,6 +369,7 @@ impl GhostdagStoreReader for MemoryGhostdagStore {
 mod tests {
     use super::*;
     use consensus_types::blockhash::BlockHashSet;
+    use std::iter::once;
 
     #[test]
     fn test_mergeset_iterators() {

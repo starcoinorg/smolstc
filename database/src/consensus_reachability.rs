@@ -7,6 +7,7 @@ use starcoin_storage::storage::RawDBStorage;
 use consensus_types::{
     blockhash::{self, BlockHashMap, BlockHashes},
     interval::Interval,
+    reachability::ReachabilityData,
 };
 use itertools::Itertools;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};

@@ -16,6 +16,10 @@ pub mod prelude {
     pub use super::{
         access::CachedDbAccess,
         cache::Cache,
+        consensus_ghostdag::*,
+        consensus_header::*,
+        consensus_reachability::*,
+        consensus_relations::*,
         item::CachedDbItem,
         key::{DbKey, SEP, SEP_SIZE},
         writer::{BatchDbWriter, DbWriter, DirectDbWriter},

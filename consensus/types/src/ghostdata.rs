@@ -1,16 +1,11 @@
 use crate::{
-    blockhash::{BlockHashMap, BlockLevel},
+    blockhash::BlockHashMap,
     blockhash::{BlockHashes, BlueWorkType, HashKTypeMap, KType},
-    ordering::SortableBlock,
-    truested::ExternalGhostdagData,
-};
-use itertools::{
-    EitherOrBoth::{Both, Left, Right},
-    Itertools,
+    trusted::ExternalGhostdagData,
 };
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue as Hash;
-use std::{cell::RefCell, iter::once, sync::Arc};
+use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct GhostdagData {
@@ -94,54 +89,6 @@ impl GhostdagData {
         self.mergeset_blues.len() + self.mergeset_reds.len()
     }
 
-    /// Returns an iterator to the mergeset in ascending blue work order (tie-breaking by hash)
-    pub fn ascending_mergeset_without_selected_parent<'a>(
-        &'a self,
-        store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = SortableBlock> + '_ {
-        self.mergeset_blues
-            .iter()
-            .skip(1) // Skip the selected parent
-            .cloned()
-            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
-            .merge_join_by(
-                self.mergeset_reds
-                    .iter()
-                    .cloned()
-                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
-                |a, b| a.cmp(b),
-            )
-            .map(|r| match r {
-                Left(b) | Right(b) => b,
-                Both(_, _) => panic!("distinct blocks are never equal"),
-            })
-    }
-
-    /// Returns an iterator to the mergeset in descending blue work order (tie-breaking by hash)
-    pub fn descending_mergeset_without_selected_parent<'a>(
-        &'a self,
-        store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = SortableBlock> + '_ {
-        self.mergeset_blues
-            .iter()
-            .skip(1) // Skip the selected parent
-            .rev() // Reverse since blues and reds are stored with ascending blue work order
-            .cloned()
-            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
-            .merge_join_by(
-                self.mergeset_reds
-                    .iter()
-                    .rev() // Reverse
-                    .cloned()
-                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
-                |a, b| b.cmp(a), // Reverse
-            )
-            .map(|r| match r {
-                Left(b) | Right(b) => b,
-                Both(_, _) => panic!("distinct blocks are never equal"),
-            })
-    }
-
     /// Returns an iterator to the mergeset with no specified order (excluding the selected parent)
     pub fn unordered_mergeset_without_selected_parent(&self) -> impl Iterator<Item = Hash> + '_ {
         self.mergeset_blues
@@ -149,28 +96,6 @@ impl GhostdagData {
             .skip(1) // Skip the selected parent
             .cloned()
             .chain(self.mergeset_reds.iter().cloned())
-    }
-
-    /// Returns an iterator to the mergeset in topological consensus order -- starting with the selected parent,
-    /// and adding the mergeset in increasing blue work order. Note that this is a topological order even though
-    /// the selected parent has highest blue work by def -- since the mergeset is in its anticone.
-    pub fn consensus_ordered_mergeset<'a>(
-        &'a self,
-        store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = Hash> + '_ {
-        once(self.selected_parent).chain(
-            self.ascending_mergeset_without_selected_parent(store)
-                .map(|s| s.hash),
-        )
-    }
-
-    /// Returns an iterator to the mergeset in topological consensus order without the selected parent
-    pub fn consensus_ordered_mergeset_without_selected_parent<'a>(
-        &'a self,
-        store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = Hash> + '_ {
-        self.ascending_mergeset_without_selected_parent(store)
-            .map(|s| s.hash)
     }
 
     /// Returns an iterator to the mergeset with no specified order (including the selected parent)

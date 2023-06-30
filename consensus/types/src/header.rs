@@ -1,8 +1,5 @@
-use crate::blockhash::{BlockLevel, ORIGIN};
-use database::prelude::DB;
-use database::prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter};
-use database::prelude::{StoreError, StoreResult};
-use rocksdb::WriteBatch;
+use std::sync::Arc;
+use crate::blockhash::{BlockLevel, BlueWorkType, BLOCK_VERSION};
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue as Hash;
 use starcoin_types::block::BlockHeader;

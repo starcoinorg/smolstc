@@ -1,9 +1,7 @@
 mod extensions;
 pub mod inquirer;
-pub mod reachability;
 pub mod reachability_service;
 mod reindex;
-pub mod relations;
 pub mod relations_service;
 
 mod tests;

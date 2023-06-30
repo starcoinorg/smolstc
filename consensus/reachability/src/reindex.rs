@@ -1,9 +1,9 @@
-use crate::reachability::ReachabilityStore;
 use crate::{
-    extensions::ReachabilityStoreIntervalExtensions, inquirer::get_next_chain_ancestor_unchecked,
-    interval::Interval, *,
+    extensions::ReachabilityStoreIntervalExtensions, inquirer::get_next_chain_ancestor_unchecked, *,
 };
 use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap};
+use consensus_types::interval::Interval;
+use database::prelude::ReachabilityStore;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
 

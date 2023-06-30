@@ -1,12 +1,13 @@
-use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
 use crate::util::Refs;
 use consensus_types::blockhash::{
     self, BlockHashExtensions, BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType,
 };
-use consensus_types::header::HeaderStoreReader;
+use consensus_types::ghostdata::GhostdagData;
 use consensus_types::ordering::*;
+use database::prelude::GhostdagStoreReader;
+use database::prelude::HeaderStoreReader;
+use database::prelude::RelationsStoreReader;
 use reachability::reachability_service::ReachabilityService;
-use reachability::relations::RelationsStoreReader;
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;
 

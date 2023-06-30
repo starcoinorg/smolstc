@@ -1,5 +1,6 @@
-use crate::{inquirer, reachability::ReachabilityStoreReader, Result};
+use crate::{inquirer, Result};
 use consensus_types::blockhash;
+use database::prelude::ReachabilityStoreReader;
 use parking_lot::RwLock;
 use starcoin_crypto::{HashValue as Hash, HashValue};
 use std::ops::Deref;
