@@ -1,20 +1,22 @@
-use crate::db::DB;
-use crate::errors::StoreError;
-use crate::key::DbKey;
-use crate::prelude::{CachedDbAccess, DirectDbWriter};
-use crate::writer::BatchDbWriter;
-use consensus_types::blockhash::{
-    BlockHashMap, BlockHashes, BlockLevel, BlueWorkType, HashKTypeMap,
+use crate::{
+    db::DB,
+    errors::StoreError,
+    key::DbKey,
+    prelude::{CachedDbAccess, DirectDbWriter},
+    writer::BatchDbWriter,
 };
-use consensus_types::ghostdata::{CompactGhostdagData, GhostdagData};
-use consensus_types::ordering::SortableBlock;
-use itertools::EitherOrBoth::{Both, Left, Right};
-use itertools::Itertools;
+use consensus_types::{
+    blockhash::{BlockHashMap, BlockHashes, BlockLevel, BlueWorkType, HashKTypeMap},
+    ghostdata::{CompactGhostdagData, GhostdagData},
+    ordering::SortableBlock,
+};
+use itertools::{
+    EitherOrBoth::{Both, Left, Right},
+    Itertools,
+};
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
-use std::cell::RefCell;
-use std::iter::once;
-use std::sync::Arc;
+use std::{cell::RefCell, iter::once, sync::Arc};
 
 pub trait GhostdagStoreReader {
     fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError>;

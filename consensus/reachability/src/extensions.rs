@@ -1,6 +1,5 @@
 use consensus_types::interval::Interval;
-use database::prelude::ReachabilityStoreReader;
-use database::prelude::StoreResult;
+use database::{consensus::ReachabilityStoreReader, prelude::StoreResult};
 use starcoin_crypto::hash::HashValue as Hash;
 
 pub(super) trait ReachabilityStoreIntervalExtensions {

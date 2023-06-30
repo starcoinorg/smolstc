@@ -16,14 +16,17 @@ pub mod prelude {
     pub use super::{
         access::CachedDbAccess,
         cache::Cache,
-        consensus_ghostdag::*,
-        consensus_header::*,
-        consensus_reachability::*,
-        consensus_relations::*,
         item::CachedDbItem,
         key::{DbKey, SEP, SEP_SIZE},
         writer::{BatchDbWriter, DbWriter, DirectDbWriter},
     };
     pub use db::{open_db, DB};
     pub use errors::{StoreError, StoreResult, StoreResultEmptyTuple, StoreResultExtensions};
+}
+
+pub mod consensus {
+    pub use super::{
+        consensus_ghostdag::*, consensus_header::*, consensus_reachability::*,
+        consensus_relations::*,
+    };
 }

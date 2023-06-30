@@ -1,7 +1,6 @@
 use super::{tree::*, *};
-use consensus_types::interval::Interval;
-use consensus_types::{blockhash, perf};
-use database::prelude::{ReachabilityStore, ReachabilityStoreReader};
+use consensus_types::{blockhash, interval::Interval, perf};
+use database::consensus::{ReachabilityStore, ReachabilityStoreReader};
 use starcoin_crypto::HashValue as Hash;
 
 /// Init the reachability store to match the state required by the algorithmic layer.
@@ -240,10 +239,9 @@ fn assert_hashes_ordered(store: &(impl ReachabilityStoreReader + ?Sized), ordere
 
 #[cfg(test)]
 mod tests {
-    use super::super::tests::*;
-    use super::*;
+    use super::{super::tests::*, *};
     use consensus_types::blockhash::ORIGIN;
-    use database::prelude::MemoryReachabilityStore;
+    use database::consensus::MemoryReachabilityStore;
 
     #[test]
     fn test_add_tree_blocks() {

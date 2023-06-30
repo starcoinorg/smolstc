@@ -1,10 +1,9 @@
 use crate::{inquirer, Result};
 use consensus_types::blockhash;
-use database::prelude::ReachabilityStoreReader;
+use database::consensus::ReachabilityStoreReader;
 use parking_lot::RwLock;
 use starcoin_crypto::{HashValue as Hash, HashValue};
-use std::ops::Deref;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 pub trait ReachabilityService {
     fn is_chain_ancestor_of(&self, this: Hash, queried: Hash) -> bool;
@@ -231,7 +230,7 @@ mod tests {
     use super::*;
     use crate::tests::TreeBuilder;
     use consensus_types::interval::Interval;
-    use database::prelude::MemoryReachabilityStore;
+    use database::consensus::MemoryReachabilityStore;
 
     #[test]
     fn test_forward_iterator() {

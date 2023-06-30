@@ -5,7 +5,7 @@ use super::{
     extensions::ReachabilityStoreIntervalExtensions, inquirer::*, reindex::ReindexOperationContext,
     *,
 };
-use database::prelude::ReachabilityStore;
+use database::consensus::ReachabilityStore;
 use starcoin_crypto::HashValue as Hash;
 
 /// Adds `new_block` as a child of `parent` in the tree structure. If this block

@@ -1,9 +1,11 @@
 use crate::{
     extensions::ReachabilityStoreIntervalExtensions, inquirer::get_next_chain_ancestor_unchecked, *,
 };
-use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap};
-use consensus_types::interval::Interval;
-use database::prelude::ReachabilityStore;
+use consensus_types::{
+    blockhash::{BlockHashExtensions, BlockHashMap},
+    interval::Interval,
+};
+use database::consensus::ReachabilityStore;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
 
@@ -568,11 +570,9 @@ fn split_children(children: &std::sync::Arc<Vec<Hash>>, pivot: Hash) -> Result<(
 
 #[cfg(test)]
 mod tests {
-    use super::super::tests::*;
-    use super::*;
-    use consensus_types::blockhash;
-    use consensus_types::interval::Interval;
-    use database::prelude::{MemoryReachabilityStore, ReachabilityStoreReader};
+    use super::{super::tests::*, *};
+    use consensus_types::{blockhash, interval::Interval};
+    use database::consensus::{MemoryReachabilityStore, ReachabilityStoreReader};
 
     #[test]
     fn test_count_subtrees() {

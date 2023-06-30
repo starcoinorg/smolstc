@@ -1,11 +1,13 @@
-use crate::prelude::CachedDbAccess;
 use crate::{
     db::DB,
     errors::{StoreError, StoreResult},
+    prelude::CachedDbAccess,
     writer::{BatchDbWriter, DirectDbWriter},
 };
-use consensus_types::blockhash::BlockLevel;
-use consensus_types::header::{CompactHeaderData, Header, HeaderWithBlockLevel};
+use consensus_types::{
+    blockhash::BlockLevel,
+    header::{CompactHeaderData, Header, HeaderWithBlockLevel},
+};
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;

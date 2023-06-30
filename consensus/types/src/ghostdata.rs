@@ -1,6 +1,5 @@
 use crate::{
-    blockhash::BlockHashMap,
-    blockhash::{BlockHashes, BlueWorkType, HashKTypeMap, KType},
+    blockhash::{BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType},
     trusted::ExternalGhostdagData,
 };
 use serde::{Deserialize, Serialize};

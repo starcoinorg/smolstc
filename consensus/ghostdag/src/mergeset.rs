@@ -1,8 +1,6 @@
 use super::protocol::GhostdagManager;
 use consensus_types::blockhash::BlockHashSet;
-use database::prelude::GhostdagStoreReader;
-use database::prelude::HeaderStoreReader;
-use database::prelude::RelationsStoreReader;
+use database::consensus::{GhostdagStoreReader, HeaderStoreReader, RelationsStoreReader};
 use reachability::reachability_service::ReachabilityService;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
