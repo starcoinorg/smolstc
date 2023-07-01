@@ -28,10 +28,11 @@ impl RawRpcClient for NetworkDagServiceRef {
         message: Vec<u8>,
     ) -> futures_core::future::BoxFuture<anyhow::Result<Vec<u8>>> {
         async move {
+            let protocol = format!("{}{}", "/starcoin/rpc/", rpc_path);
             self.network_service
                 .request(
                     peer_id.into(),
-                    rpc_path,
+                    protocol,
                     message,
                     IfDisconnected::ImmediateError,
                 )
