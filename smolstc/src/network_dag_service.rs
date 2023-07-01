@@ -1,7 +1,7 @@
 use crate::{
     network_dag_handle::DagDataHandle, network_dag_rpc_service::NetworkDagRpcService,
     network_dag_trait::NetworkDag, network_dag_verified_client::NetworkDagServiceRef,
-    network_dag_worker::build_worker,
+    network_dag_worker::build_worker, network_dag_rpc::gen_client,
 };
 use anyhow::Result;
 use futures::{channel::mpsc::channel, FutureExt, StreamExt};
@@ -87,10 +87,11 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
                 // listen addr
                 vec![listen_addr],
                 // request response
-                vec![
-                    Cow::from(PROTOCOL_NAME_REQRES_1),
-                    Cow::from(PROTOCOL_NAME_REQRES_2),
-                ],
+                gen_client::get_rpc_info().iter().cloned().map(|path| {
+                    let protocol_name: Cow<'static, str> =
+                    format!("{}{}", "/starcoin/rpc/", path).into();
+                    protocol_name
+                }).collect::<Vec<Cow<'static, str>>>(),
             ),
         );
         let network_async_service: NetworkDagServiceRef =
