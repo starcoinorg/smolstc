@@ -19,11 +19,11 @@ const MAX_RESPONSE_SIZE: u64 = 1024 * 1024 * 64;
 const REQUEST_BUFFER_SIZE: usize = 128;
 
 // notify
-const PROTOCOL_NAME_NOTIFY: &str = "/starcoin/notify/1";
+pub const PROTOCOL_NAME_NOTIFY: &str = "/starcoin/notify/1";
 
 // request-response
-const PROTOCOL_NAME_REQRES_1: &str = "/starcoin/request_response/1";
-const PROTOCOL_NAME_REQRES_2: &str = "/starcoin/request_response/2";
+pub const PROTOCOL_NAME_REQRES_1: &str = "/starcoin/request_response/1";
+pub const PROTOCOL_NAME_REQRES_2: &str = "/starcoin/request_response/2";
 
 // broadcast
 const PROTOCOL_NAME_BROADCAST: &str = "/starcoin/request_response/2";

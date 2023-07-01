@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::network_dag_data::{NodeData, NodeStatus};
+use crate::{network_dag_data::{NodeData, NodeStatus}, network_dag_service::{PROTOCOL_NAME_NOTIFY, PROTOCOL_NAME_REQRES_1, PROTOCOL_NAME_REQRES_2}};
 use anyhow::{anyhow, Ok};
 use bcs_ext::BCSCodec;
 use network_p2p::{
@@ -68,21 +68,14 @@ impl BusinessLayerHandle for DagDataHandle {
         peer_id: network_p2p_types::PeerId,
         received_handshake: Vec<u8>,
     ) -> Result<HandshakeResult, ReputationChange> {
-        todo!()
-        //   match NodeData::decode(&received_handshake) {
-        //       std::result::Result::Ok(node_data) => {
-        //           return std::result::Result::Ok(network_p2p::protocol::CustomMessageOutcome::NotificationStreamOpened {
-        //               remote: peer_id,
-        //               protocol: Cow::from("/starcoin/test/1"),
-        //               notifications_sink: NotificationsSink,
-        //               generic_data: node_data.status.encode().unwrap(),
-        //               notif_protocols: [].to_vec(),
-        //               rpc_protocols: [].to_vec()
-        //          });
-        //       },
-        //       Err(_error) => {
-        //           return std::result::Result::Err(rep::BAD_PROTOCOL);
-        //       },
-        // }
-    }
+        return std::result::Result::Ok(HandshakeResult {
+            who: peer_id,
+            generic_data: self.node_data.encode().unwrap(),
+            notif_protocols: vec![Cow::from(PROTOCOL_NAME_NOTIFY)],
+            rpc_protocols: vec![
+                Cow::from(PROTOCOL_NAME_REQRES_1),
+                Cow::from(PROTOCOL_NAME_REQRES_2),
+            ],
+        });
+   }
 }
