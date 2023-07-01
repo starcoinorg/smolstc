@@ -55,3 +55,4 @@ consensus-types = {path = "consensus/types"}
 ghostdag={path = "consensus/ghostdag"}
 reachability = {path = "consensus/reachability"}
 schemars = { git = "https://github.com/starcoinorg/schemars", rev = "9b3705780b8fe9c8676ff82919869ba7405b1062" }
+hex = "0.4"

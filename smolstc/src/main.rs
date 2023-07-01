@@ -43,11 +43,16 @@ async fn run_sync(
 
         /// connect to the other node
         let _ = sync_service.send(SyncInitVerifiedClient).await.unwrap();
+
+        /// wait for the client's initialization
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
         let _ = sync_service
             .send(SyncConnectToPeers { peers })
             .await
             .unwrap();
 
+        /// wait for the connection initialization
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
         /// run the sync procedure
         let result = sync_service.send(CheckSync).await.unwrap();
     });

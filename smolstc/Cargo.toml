@@ -33,3 +33,4 @@ rocksdb = "0.21.0"
 ghostdag = { path = "../consensus/ghostdag" }
 stream-task = { workspace = true }
 schemars = { workspace = true }
+hex = { workspace = true }

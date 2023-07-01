@@ -106,13 +106,27 @@ impl BlockIdFetcher for VerifiedDagRpcClient {
     ) -> futures_core::future::BoxFuture<Result<Vec<SyncBlockIds>>> {
         let peer_id = match peer {
             Some(peer_id) => peer_id,
-            None => todo!("fixme: select from peer selector!"),
+            None => {
+                /// this is must be selected in peer selector which will select a proper peer by some ways. 
+                /// here I pick a peer id for testing the sync procedure simply
+                let result = async_std::task::block_on(async {
+                    let peerset = self.network_service.known_peers().await;
+                    return peerset.into_iter().next().unwrap().into();
+                });
+                result
+            }
         };
         let req = GetBlockIds {
             start_number,
             reverse,
             max_size,
         };
-        self.client.get_block_ids(peer_id, req)
+        async_std::task::block_on(async {
+            self.client.send_request(peer_id.clone(), MyReqeust {
+                number: 10,
+                name: String::from("jack"),
+            });
+        });
+       self.client.get_block_ids(peer_id, req)
     }
 }

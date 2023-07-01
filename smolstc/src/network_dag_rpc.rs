@@ -11,8 +11,8 @@ use crate::sync_dag_protocol::{GetBlockIds, SyncBlockIds};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
-    number: i32,
-    name: String,
+    pub number: i32,
+    pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]

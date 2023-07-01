@@ -6077,6 +6077,7 @@ dependencies = [
  "futures",
  "futures-core",
  "ghostdag",
+ "hex",
  "network-p2p",
  "network-p2p-core",
  "network-p2p-derive",
