@@ -1,5 +1,6 @@
-use crate::block_id_fetcher::BlockIdFetcher;
+use crate::{block_id_fetcher::BlockIdFetcher, sync_dag_types::DagBlockIdAndNumber};
 use anyhow::{format_err, Result};
+use futures::FutureExt;
 use starcoin_types::block::{BlockIdAndNumber, BlockNumber};
 use std::sync::Arc;
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
@@ -26,21 +27,48 @@ impl FindAncestorTask {
 }
 
 impl TaskState for FindAncestorTask {
-    type Item = BlockIdAndNumber;
+    type Item = DagBlockIdAndNumber;
 
     fn new_sub_task(self) -> futures_core::future::BoxFuture<'static, Result<Vec<Self::Item>>> {
-        todo!()
+        async move {
+            let current_number = self.start_number;
+            let block_ids = self
+                .fetcher
+                .fetch_block_ids(None, current_number, true, self.batch_size)
+                .await?;
+            let id_and_numbers = block_ids
+                .into_iter()
+                .enumerate()
+                .map(|(idx, block_info)| DagBlockIdAndNumber {
+                    id: block_info.block_hash,
+                    number: current_number.saturating_sub(idx as u64),
+                    parents: block_info.parents,
+                })
+                .collect();
+            Ok(id_and_numbers)
+        }
+        .boxed()
     }
 
     fn next(&self) -> Option<Self> {
-        todo!()
+        //this should never happen, because all node's genesis block should same.
+        if self.start_number == 0 {
+            return None;
+        }
+
+        let next_number = self.start_number.saturating_sub(self.batch_size);
+        Some(Self {
+            start_number: next_number,
+            batch_size: self.batch_size,
+            fetcher: self.fetcher.clone(),
+        })
     }
 }
 
 
 pub struct AncestorCollector {
     // accumulator: Arc<MerkleAccumulator>, // accumulator is temporarily commented.
-    ancestor: Option<BlockIdAndNumber>,
+    ancestor: Option<DagBlockIdAndNumber>,
 }
 
 impl AncestorCollector {
@@ -52,10 +80,10 @@ impl AncestorCollector {
     }
 }
 
-impl TaskResultCollector<BlockIdAndNumber> for AncestorCollector {
-    type Output = BlockIdAndNumber;
+impl TaskResultCollector<DagBlockIdAndNumber> for AncestorCollector {
+    type Output = DagBlockIdAndNumber;
 
-    fn collect(&mut self, item: BlockIdAndNumber) -> anyhow::Result<CollectorState> {
+    fn collect(&mut self, item: DagBlockIdAndNumber) -> anyhow::Result<CollectorState> {
         if self.ancestor.is_some() {
             return Ok(CollectorState::Enough);
         }

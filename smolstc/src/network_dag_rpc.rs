@@ -1,9 +1,13 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use futures::FutureExt;
 use futures_core::future::BoxFuture;
 use network_p2p_derive::net_rpc;
 use network_p2p_types::peer_id::PeerId;
 use serde::{Deserialize, Serialize};
+use starcoin_crypto::HashValue;
+use crate::sync_dag_protocol::{GetBlockIds, SyncBlockIds};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -23,9 +27,16 @@ pub struct MyNotify {
     name: String,
 }
 
+pub trait RpcRequest {
+    fn verify(&self) -> Result<()> {
+        Ok(())
+    }
+}
+
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
     fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
+    fn get_block_ids(&self, peer_id: PeerId, req: GetBlockIds)-> BoxFuture<Result<Vec<SyncBlockIds>>>;
 }
 
 #[derive(Default)]
@@ -39,5 +50,9 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
             name: request.name + " from response",
         }))
         .boxed()
+    }
+
+    fn get_block_ids(&self,peer_id: PeerId, req: GetBlockIds) -> BoxFuture<Result<Vec<SyncBlockIds>>> {
+        todo!()
     }
 }

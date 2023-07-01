@@ -157,7 +157,15 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 ext_error_handle.clone(),
             )
             .generate();
-            
+            let (fut, handle) = sync_task.with_handle();
+            match fut.await {
+                anyhow::Result::Ok(ancestor) => {
+                    println!("receive ancestor {:?}", ancestor);
+                }
+                Err(error) => {
+                    println!("an error happened: {}", error.to_string());
+                },
+            }
         });
         Ok(())
     }

@@ -1,12 +1,14 @@
-use crate::{
-    block_id_fetcher::BlockIdFetcher,
-    network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse},
-};
+use std::{borrow::Cow, sync::Arc, collections::HashMap};
+
 use anyhow::Result;
 use futures::FutureExt;
 use network_p2p_core::{PeerId, RawRpcClient};
 use network_p2p_types::IfDisconnected;
-use std::{borrow::Cow, sync::Arc};
+use rand::Error;
+use starcoin_crypto::HashValue;
+
+use crate::{network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse}, block_id_fetcher::BlockIdFetcher, sync_dag_protocol::{GetBlockIds, SyncBlockIds}};
+
 #[derive(Clone)]
 pub struct NetworkDagServiceRef {
     network_service: Arc<network_p2p::NetworkService>,
@@ -101,7 +103,16 @@ impl BlockIdFetcher for VerifiedDagRpcClient {
         start_number: starcoin_types::block::BlockNumber,
         reverse: bool,
         max_size: u64,
-    ) -> futures_core::future::BoxFuture<Result<Vec<starcoin_crypto::HashValue>>> {
-        todo!()
+    ) -> futures_core::future::BoxFuture<Result<Vec<SyncBlockIds>>> {
+        let peer_id = match peer {
+            Some(peer_id) => peer_id,
+            None => todo!("fixme: select from peer selector!"),
+        };
+        let req = GetBlockIds {
+            start_number,
+            reverse,
+            max_size,
+        };
+        self.client.get_block_ids(peer_id, req)
     }
 }

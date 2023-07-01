@@ -32,3 +32,4 @@ parking_lot = "0.12"
 rocksdb = "0.21.0"
 ghostdag = { path = "../consensus/ghostdag" }
 stream-task = { workspace = true }
+schemars = { workspace = true }

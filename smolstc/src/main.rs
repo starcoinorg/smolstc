@@ -10,6 +10,8 @@ mod network_dag_verified_client;
 mod network_dag_worker;
 mod sync_dag_service;
 mod sync_task_error_handle;
+mod sync_dag_protocol;
+mod sync_dag_types;
 
 use anyhow::Ok;
 use async_std::path::PathBuf;

@@ -6086,6 +6086,7 @@ dependencies = [
  "reachability",
  "rocksdb",
  "sc-peerset",
+ "schemars",
  "serde",
  "serde_bytes",
  "sp-utils",
