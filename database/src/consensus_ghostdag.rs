@@ -1,5 +1,5 @@
 use crate::{
-    db::DB,
+    db::DBStorage,
     errors::StoreError,
     key::DbKey,
     prelude::{CachedDbAccess, DirectDbWriter},
@@ -133,14 +133,14 @@ const COMPACT_STORE_PREFIX: &[u8] = b"compact-block-ghostdag-data";
 /// A DB + cache implementation of `GhostdagStore` trait, with concurrency support.
 #[derive(Clone)]
 pub struct DbGhostdagStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     level: BlockLevel,
     access: CachedDbAccess<Hash, Arc<GhostdagData>>,
     compact_access: CachedDbAccess<Hash, CompactGhostdagData>,
 }
 
 impl DbGhostdagStore {
-    pub fn new(db: Arc<DB>, level: BlockLevel, cache_size: u64) -> Self {
+    pub fn new(db: Arc<DBStorage>, level: BlockLevel, cache_size: u64) -> Self {
         let lvl_bytes = level.to_le_bytes();
         let prefix = STORE_PREFIX.iter().copied().chain(lvl_bytes).collect_vec();
         let compact_prefix = COMPACT_STORE_PREFIX

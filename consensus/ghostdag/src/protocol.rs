@@ -10,6 +10,12 @@ use database::consensus::{GhostdagStoreReader, HeaderStoreReader, RelationsStore
 use reachability::reachability_service::ReachabilityService;
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;
+// For GhostdagStoreReader-related functions, use GhostDagDataWrapper instead.
+//  ascending_mergeset_without_selected_parent
+//  descending_mergeset_without_selected_parent
+//  consensus_ordered_mergeset
+//  consensus_ordered_mergeset_without_selected_parent
+//use database::consensus::GhostDagDataWrapper;
 
 #[derive(Clone)]
 pub struct GhostdagManager<

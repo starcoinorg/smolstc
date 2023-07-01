@@ -1,7 +1,10 @@
 use rocksdb::WriteBatch;
 use starcoin_storage::storage::InnerStore;
 
-use crate::{db::FLEXI_DAG_PREFIX_NAME, errors::StoreError, prelude::DB};
+use crate::{
+    db::{DBStorage, FLEXI_DAG_PREFIX_NAME},
+    errors::StoreError,
+};
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {
@@ -10,11 +13,11 @@ pub trait DbWriter {
 }
 
 pub struct DirectDbWriter<'a> {
-    db: &'a DB,
+    db: &'a DBStorage,
 }
 
 impl<'a> DirectDbWriter<'a> {
-    pub fn new(db: &'a DB) -> Self {
+    pub fn new(db: &'a DBStorage) -> Self {
         Self { db }
     }
 }

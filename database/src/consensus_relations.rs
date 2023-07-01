@@ -1,4 +1,7 @@
-use crate::prelude::{BatchDbWriter, CachedDbAccess, DbKey, DirectDbWriter, StoreError, DB};
+use crate::{
+    db::DBStorage,
+    prelude::{BatchDbWriter, CachedDbAccess, DbKey, DirectDbWriter, StoreError},
+};
 use consensus_types::blockhash::{BlockHashMap, BlockHashes, BlockLevel};
 use itertools::Itertools;
 use rocksdb::WriteBatch;
@@ -26,14 +29,14 @@ const CHILDREN_PREFIX: &[u8] = b"block-children";
 /// A DB + cache implementation of `RelationsStore` trait, with concurrent readers support.
 #[derive(Clone)]
 pub struct DbRelationsStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     level: BlockLevel,
     parents_access: CachedDbAccess<Hash, Arc<Vec<Hash>>>,
     children_access: CachedDbAccess<Hash, Arc<Vec<Hash>>>,
 }
 
 impl DbRelationsStore {
-    pub fn new(db: Arc<DB>, level: BlockLevel, cache_size: u64) -> Self {
+    pub fn new(db: Arc<DBStorage>, level: BlockLevel, cache_size: u64) -> Self {
         let lvl_bytes = level.to_le_bytes();
         let parents_prefix = PARENTS_PREFIX
             .iter()
@@ -211,7 +214,10 @@ impl RelationsStore for MemoryRelationsStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::prelude::open_db;
+    use crate::{
+        db::{FlexiDagStorageConfig, RelationsStoreConfig},
+        prelude::FlexiDagStorage,
+    };
 
     #[test]
     fn test_memory_relations_store() {
@@ -221,8 +227,16 @@ mod tests {
     #[test]
     fn test_db_relations_store() {
         let db_tempdir = tempfile::tempdir().unwrap();
-        let db = open_db(db_tempdir.path().to_owned(), 1);
-        test_relations_store(DbRelationsStore::new(db, 0, 2));
+        let rs_conf = RelationsStoreConfig {
+            block_level: 0,
+            cache_size: 2,
+        };
+        let config = FlexiDagStorageConfig::new()
+            .update_parallelism(1)
+            .update_relations_conf(rs_conf);
+
+        let db = FlexiDagStorage::create_from_path(db_tempdir.path(), config);
+        test_relations_store(db.relations_store);
     }
 
     fn test_relations_store<T: RelationsStore>(mut store: T) {

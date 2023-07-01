@@ -1,15 +1,16 @@
 use crate::{
-    db::DB,
+    db::DBStorage,
     errors::{StoreError, StoreResult},
     prelude::CachedDbAccess,
     writer::{BatchDbWriter, DirectDbWriter},
 };
 use consensus_types::{
     blockhash::BlockLevel,
-    header::{CompactHeaderData, Header, HeaderWithBlockLevel},
+    header::{CompactHeaderData, ConsensusHeader, Header, HeaderWithBlockLevel},
 };
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
+use starcoin_types::U256;
 use std::sync::Arc;
 
 pub trait HeaderStoreReader {
@@ -38,13 +39,13 @@ const COMPACT_HEADER_DATA_STORE_PREFIX: &[u8] = b"compact-header-data";
 /// A DB + cache implementation of `HeaderStore` trait, with concurrency support.
 #[derive(Clone)]
 pub struct DbHeadersStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     compact_headers_access: CachedDbAccess<Hash, CompactHeaderData>,
     headers_access: CachedDbAccess<Hash, HeaderWithBlockLevel>,
 }
 
 impl DbHeadersStore {
-    pub fn new(db: Arc<DB>, cache_size: u64) -> Self {
+    pub fn new(db: Arc<DBStorage>, cache_size: u64) -> Self {
         Self {
             db: Arc::clone(&db),
             compact_headers_access: CachedDbAccess::new(
@@ -86,10 +87,8 @@ impl DbHeadersStore {
             BatchDbWriter::new(batch),
             hash,
             CompactHeaderData {
-                daa_score: header.daa_score,
-                timestamp: header.timestamp,
-                bits: header.bits,
-                blue_score: header.blue_score,
+                timestamp: header.timestamp(),
+                difficulty: header.difficulty(),
             },
         )?;
         Ok(())
@@ -98,22 +97,16 @@ impl DbHeadersStore {
 
 impl HeaderStoreReader for DbHeadersStore {
     fn get_daa_score(&self, hash: Hash) -> Result<u64, StoreError> {
-        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
-            return Ok(header_with_block_level.header.daa_score);
-        }
-        Ok(self.compact_headers_access.read(hash)?.daa_score)
+        unimplemented!()
     }
 
     fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError> {
-        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
-            return Ok(header_with_block_level.header.blue_score);
-        }
-        Ok(self.compact_headers_access.read(hash)?.blue_score)
+        unimplemented!()
     }
 
     fn get_timestamp(&self, hash: Hash) -> Result<u64, StoreError> {
         if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
-            return Ok(header_with_block_level.header.timestamp);
+            return Ok(header_with_block_level.header.timestamp());
         }
         Ok(self.compact_headers_access.read(hash)?.timestamp)
     }
@@ -136,10 +129,8 @@ impl HeaderStoreReader for DbHeadersStore {
     fn get_compact_header_data(&self, hash: Hash) -> Result<CompactHeaderData, StoreError> {
         if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
             return Ok(CompactHeaderData {
-                daa_score: header_with_block_level.header.daa_score,
-                timestamp: header_with_block_level.header.timestamp,
-                bits: header_with_block_level.header.bits,
-                blue_score: header_with_block_level.header.blue_score,
+                timestamp: header_with_block_level.header.timestamp(),
+                difficulty: header_with_block_level.header.difficulty(),
             });
         }
         self.compact_headers_access.read(hash)
@@ -155,10 +146,8 @@ impl HeaderStore for DbHeadersStore {
             DirectDbWriter::new(&self.db),
             hash,
             CompactHeaderData {
-                daa_score: header.daa_score,
-                timestamp: header.timestamp,
-                bits: header.bits,
-                blue_score: header.blue_score,
+                timestamp: header.timestamp(),
+                difficulty: header.difficulty(),
             },
         )?;
         self.headers_access.write(

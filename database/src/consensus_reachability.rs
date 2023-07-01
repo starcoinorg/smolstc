@@ -1,5 +1,6 @@
-use crate::prelude::{
-    BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB,
+use crate::{
+    db::DBStorage,
+    prelude::{BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError},
 };
 use starcoin_crypto::HashValue as Hash;
 use starcoin_storage::storage::RawDBStorage;
@@ -54,7 +55,7 @@ const STORE_PREFIX: &[u8] = b"reachability-data";
 /// A DB + cache implementation of `ReachabilityStore` trait, with concurrent readers support.
 #[derive(Clone)]
 pub struct DbReachabilityStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     access: CachedDbAccess<Hash, Arc<ReachabilityData>>,
     reindex_root: CachedDbItem<Hash>,
     prefix_end: u8,
@@ -63,11 +64,15 @@ pub struct DbReachabilityStore {
 const DEFAULT_PREFIX_END: u8 = u8::MAX;
 
 impl DbReachabilityStore {
-    pub fn new(db: Arc<DB>, cache_size: u64) -> Self {
+    pub fn new(db: Arc<DBStorage>, cache_size: u64) -> Self {
         Self::new_with_prefix_end(db, cache_size, DEFAULT_PREFIX_END)
     }
 
-    pub fn new_with_alternative_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
+    pub fn new_with_alternative_prefix_end(
+        db: Arc<DBStorage>,
+        cache_size: u64,
+        prefix_end: u8,
+    ) -> Self {
         assert_ne!(
             DEFAULT_PREFIX_END, prefix_end,
             "this prefix end is already used as the default one"
@@ -75,7 +80,7 @@ impl DbReachabilityStore {
         Self::new_with_prefix_end(db, cache_size, prefix_end)
     }
 
-    fn new_with_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
+    fn new_with_prefix_end(db: Arc<DBStorage>, cache_size: u64, prefix_end: u8) -> Self {
         let store_prefix = STORE_PREFIX
             .iter()
             .copied()

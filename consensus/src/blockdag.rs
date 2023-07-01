@@ -1,21 +1,18 @@
-use consensus_types::blockhash::BlockHashes;
-use consensus_types::blockhash::KType;
-use consensus_types::blockhash::ORIGIN;
-use consensus_types::header::ConsensusHeader;
-use consensus_types::header::{DbHeadersStore, Header, HeaderStore};
-use database::prelude::DB;
-use ghostdag::ghostdata::DbGhostdagStore;
-use ghostdag::ghostdata::GhostdagStore;
+use consensus_types::{
+    blockhash::{BlockHashes, KType, ORIGIN},
+    header::{ConsensusHeader, Header},
+};
+use database::consensus::{
+    DbGhostdagStore, DbHeadersStore, DbReachabilityStore, DbRelationsStore, GhostdagStore,
+    HeaderStore, ReachabilityStoreReader, RelationsStore, RelationsStoreReader,
+};
+use database::prelude::FlexiDagStorage;
 use ghostdag::protocol::GhostdagManager;
 use parking_lot::RwLock;
-use reachability::inquirer;
-use reachability::reachability::ReachabilityStoreReader;
-use reachability::reachability::{DbReachabilityStore, ReachabilityStore};
-use reachability::reachability_service::MTReachabilityService;
-use reachability::relations::DbRelationsStore;
-use reachability::relations::{RelationsStore, RelationsStoreReader};
+use reachability::{inquirer, reachability_service::MTReachabilityService};
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;
+
 pub type DbGhostdagManager = GhostdagManager<
     DbGhostdagStore,
     DbRelationsStore,
@@ -32,20 +29,20 @@ pub struct BlockDAG {
 }
 
 impl BlockDAG {
-    pub fn new(genesis: Header, k: KType, db: Arc<DB>, cache_size: u64) -> Self {
-        let ghostdag_store = DbGhostdagStore::new(db.clone(), 0, cache_size);
-        let relations_store = DbRelationsStore::new(db.clone(), 0, cache_size);
-        let header_store = DbHeadersStore::new(db.clone(), cache_size);
-        let mut reachability_store = DbReachabilityStore::new(db, cache_size);
+    pub fn new(genesis: Header, k: KType, db: FlexiDagStorage) -> Self {
+        let ghostdag_store = db.ghost_dag_store.clone();
+        let header_store = db.header_store.clone();
+        let relations_store = db.relations_store.clone();
+        let mut reachability_store = db.reachability_store.clone();
         inquirer::init(&mut reachability_store).unwrap();
         let reachability_service =
             MTReachabilityService::new(Arc::new(RwLock::new(reachability_store.clone())));
         let ghostdag_manager = DbGhostdagManager::new(
             genesis.hash(),
             k,
-            Arc::new(ghostdag_store.clone()),
-            relations_store.clone(),
-            Arc::new(header_store.clone()),
+            Arc::new(db.ghost_dag_store.clone()),
+            db.relations_store.clone(),
+            Arc::new(db.header_store.clone()),
             reachability_service,
         );
 
@@ -113,10 +110,9 @@ impl BlockDAG {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use database::prelude::open_db;
+    use database::prelude::{FlexiDagStorage, FlexiDagStorageConfig};
     use starcoin_types::block::BlockHeader;
-    use std::env;
-    use std::fs;
+    use std::{env, fs};
     #[test]
     fn base_test() {
         let genesis = Header::new(BlockHeader::random(), vec![Hash::new(ORIGIN)]);
@@ -125,8 +121,9 @@ mod tests {
         let db_path = env::temp_dir().join("smolstc");
         fs::remove_dir_all(db_path.clone()).expect("Failed to delete temporary directory");
         println!("db path:{}", db_path.to_string_lossy());
-        let db = open_db(db_path, true, 1);
-        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+        let config = FlexiDagStorageConfig::create_with_params(1, 0, 1024);
+        let db = FlexiDagStorage::create_from_path(db_path, config);
+        let mut dag = BlockDAG::new(genesis, k, db);
 
         let block = Header::new(
             starcoin_types::block::BlockHeader::random(),

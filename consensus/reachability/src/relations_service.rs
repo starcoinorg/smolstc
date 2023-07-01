@@ -1,6 +1,5 @@
-use crate::relations::RelationsStoreReader;
 use consensus_types::blockhash::BlockHashes;
-use database::prelude::StoreError;
+use database::{consensus::RelationsStoreReader, prelude::StoreError};
 use parking_lot::RwLock;
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;

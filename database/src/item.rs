@@ -1,4 +1,4 @@
-use crate::{db::DB, errors::StoreError};
+use crate::{db::DBStorage, errors::StoreError};
 
 use super::prelude::{DbKey, DbWriter};
 use crate::db::FLEXI_DAG_PREFIX_NAME;
@@ -10,13 +10,13 @@ use std::sync::Arc;
 /// A cached DB item with concurrency support
 #[derive(Clone)]
 pub struct CachedDbItem<T> {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     key: Vec<u8>,
     cached_item: Arc<RwLock<Option<T>>>,
 }
 
 impl<T> CachedDbItem<T> {
-    pub fn new(db: Arc<DB>, key: Vec<u8>) -> Self {
+    pub fn new(db: Arc<DBStorage>, key: Vec<u8>) -> Self {
         Self {
             db,
             key,

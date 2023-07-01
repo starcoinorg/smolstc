@@ -1,10 +1,9 @@
-use std::sync::Arc;
-use crate::blockhash::{BlockLevel, BlueWorkType, BLOCK_VERSION};
+use crate::blockhash::{BlockLevel, ORIGIN};
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue as Hash;
-use starcoin_types::block::BlockHeader;
-use starcoin_types::U256;
+use starcoin_types::{block::BlockHeader, U256};
 use std::sync::Arc;
+
 pub trait ConsensusHeader {
     fn parents_hash(&self) -> &[Hash];
     fn difficulty(&self) -> U256;

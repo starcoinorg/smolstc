@@ -1,7 +1,10 @@
-use crate::{db::DB, errors::StoreError};
+use crate::{
+    cache::DagCache,
+    db::{DBStorage, FLEXI_DAG_PREFIX_NAME},
+    errors::StoreError,
+};
 
 use super::prelude::{Cache, DbKey, DbWriter};
-use crate::{cache::DagCache, db::FLEXI_DAG_PREFIX_NAME};
 use itertools::Itertools;
 use rocksdb::{Direction, IteratorMode, ReadOptions};
 use serde::{de::DeserializeOwned, Serialize};
@@ -20,7 +23,7 @@ where
 {
     cf_name: &'static str,
 
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
 
     // Cache
     cache: Cache<TKey>,
@@ -37,7 +40,7 @@ where
     TData: Clone + Send + Sync + DeserializeOwned,
     S: BuildHasher + Default,
 {
-    pub fn new(db: Arc<DB>, cache_size: u64, prefix: Vec<u8>) -> Self {
+    pub fn new(db: Arc<DBStorage>, cache_size: u64, prefix: Vec<u8>) -> Self {
         Self {
             cf_name: FLEXI_DAG_PREFIX_NAME,
             db,

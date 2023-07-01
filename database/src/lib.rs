@@ -20,7 +20,7 @@ pub mod prelude {
         key::{DbKey, SEP, SEP_SIZE},
         writer::{BatchDbWriter, DbWriter, DirectDbWriter},
     };
-    pub use db::{open_db, DB};
+    pub use db::{FlexiDagStorage, FlexiDagStorageConfig};
     pub use errors::{StoreError, StoreResult, StoreResultEmptyTuple, StoreResultExtensions};
 }
 
