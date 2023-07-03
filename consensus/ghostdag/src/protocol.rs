@@ -26,9 +26,9 @@ pub struct GhostdagManager<
 > {
     genesis_hash: Hash,
     pub(super) k: KType,
-    pub(super) ghostdag_store: Arc<T>,
+    pub(super) ghostdag_store: T,
     pub(super) relations_store: S,
-    pub(super) headers_store: Arc<V>,
+    pub(super) headers_store: V,
     pub(super) reachability_service: U,
 }
 
@@ -42,9 +42,9 @@ impl<
     pub fn new(
         genesis_hash: Hash,
         k: KType,
-        ghostdag_store: Arc<T>,
+        ghostdag_store: T,
         relations_store: S,
-        headers_store: Arc<V>,
+        headers_store: V,
         reachability_service: U,
     ) -> Self {
         Self {

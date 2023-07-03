@@ -40,9 +40,9 @@ impl BlockDAG {
         let ghostdag_manager = DbGhostdagManager::new(
             genesis.hash(),
             k,
-            Arc::new(db.ghost_dag_store.clone()),
-            db.relations_store.clone(),
-            Arc::new(db.header_store.clone()),
+            ghostdag_store.clone(),
+            relations_store.clone(),
+            header_store.clone(),
             reachability_service,
         );
 
