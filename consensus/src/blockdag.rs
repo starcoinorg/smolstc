@@ -119,8 +119,14 @@ mod tests {
         let genesis_hash = genesis.hash();
         let k = 16;
         let db_path = env::temp_dir().join("smolstc");
-        fs::remove_dir_all(db_path.clone()).expect("Failed to delete temporary directory");
         println!("db path:{}", db_path.to_string_lossy());
+        if db_path
+            .as_path()
+            .try_exists()
+            .unwrap_or_else(|_| panic!("Failed to check {db_path:?}"))
+        {
+            fs::remove_dir_all(db_path.as_path()).expect("Failed to delete temporary directory");
+        }
         let config = FlexiDagStorageConfig::create_with_params(1, 0, 1024);
         let db = FlexiDagStorage::create_from_path(db_path, config);
         let mut dag = BlockDAG::new(genesis, k, db);
