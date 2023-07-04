@@ -1,15 +1,12 @@
 use rocksdb::WriteBatch;
 use starcoin_storage::storage::InnerStore;
 
-use crate::{
-    db::{DBStorage, FLEXI_DAG_PREFIX_NAME},
-    errors::StoreError,
-};
+use crate::{db::DBStorage, errors::StoreError};
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError>;
-    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError>;
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError>;
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError>;
 }
 
 pub struct DirectDbWriter<'a> {
@@ -23,15 +20,15 @@ impl<'a> DirectDbWriter<'a> {
 }
 
 impl DbWriter for DirectDbWriter<'_> {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         self.db
-            .put(FLEXI_DAG_PREFIX_NAME, key.to_owned(), value)
+            .put(cf_name, key.to_owned(), value)
             .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 
-    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
         self.db
-            .remove(FLEXI_DAG_PREFIX_NAME, key.to_owned())
+            .remove(cf_name, key.to_owned())
             .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 }
@@ -47,12 +44,12 @@ impl<'a> BatchDbWriter<'a> {
 }
 
 impl DbWriter for BatchDbWriter<'_> {
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
+    fn put(&mut self, _cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         self.batch.put(key, value);
         Ok(())
     }
 
-    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
+    fn delete(&mut self, _cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
         self.batch.delete(key);
         Ok(())
     }
@@ -60,12 +57,12 @@ impl DbWriter for BatchDbWriter<'_> {
 
 impl<T: DbWriter> DbWriter for &mut T {
     #[inline]
-    fn put(&mut self, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
-        (*self).put(key, value)
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
+        (*self).put(cf_name, key, value)
     }
 
     #[inline]
-    fn delete(&mut self, key: &[u8]) -> Result<(), StoreError> {
-        (*self).delete(key)
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
+        (*self).delete(cf_name, key)
     }
 }

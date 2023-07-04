@@ -1,7 +1,10 @@
-use crate::consensus::{DbGhostdagStore, DbHeadersStore, DbReachabilityStore, DbRelationsStore};
-use rocksdb::LogLevel::Header;
+use crate::consensus::{
+    DbGhostdagStore, DbHeadersStore, DbReachabilityStore, DbRelationsStore, CHILDREN_CF,
+    COMPACT_GHOST_DAG_STORE_CF, COMPACT_HEADER_DATA_STORE_CF, GHOST_DAG_STORE_CF, HEADERS_STORE_CF,
+    PARENTS_CF, REACHABILITY_DATA_CF,
+};
 use starcoin_config::RocksdbConfig;
-pub(crate) use starcoin_storage::{db_storage::DBStorage, FLEXI_DAG_PREFIX_NAME};
+pub(crate) use starcoin_storage::db_storage::DBStorage;
 use std::{path::Path, sync::Arc};
 
 #[derive(Clone)]
@@ -101,7 +104,19 @@ impl FlexiDagStorage {
         let db = Arc::new(
             DBStorage::open_with_cfs(
                 db_path,
-                vec![FLEXI_DAG_PREFIX_NAME],
+                vec![
+                    // consensus headers
+                    HEADERS_STORE_CF,
+                    COMPACT_HEADER_DATA_STORE_CF,
+                    // consensus relations
+                    PARENTS_CF,
+                    CHILDREN_CF,
+                    // consensus reachability
+                    REACHABILITY_DATA_CF,
+                    // consensus ghostdag
+                    GHOST_DAG_STORE_CF,
+                    COMPACT_GHOST_DAG_STORE_CF,
+                ],
                 false,
                 rocksdb_config,
                 None,
@@ -126,6 +141,7 @@ impl FlexiDagStorage {
         }
     }
 
+    #[allow(unused)]
     pub fn create_with_new_cache(db: Arc<DBStorage>, block_level: u8, cache_size: u64) {
         todo!()
     }

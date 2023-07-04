@@ -1,7 +1,6 @@
 use crate::{
     db::DBStorage,
     errors::StoreError,
-    key::DbKey,
     prelude::{CachedDbAccess, DirectDbWriter},
     writer::BatchDbWriter,
 };
@@ -127,8 +126,8 @@ impl GhostDagDataWrapper {
     }
 }
 
-const STORE_PREFIX: &[u8] = b"block-ghostdag-data";
-const COMPACT_STORE_PREFIX: &[u8] = b"compact-block-ghostdag-data";
+pub(crate) const GHOST_DAG_STORE_CF: &str = "block-ghostdag-data";
+pub(crate) const COMPACT_GHOST_DAG_STORE_CF: &str = "compact-block-ghostdag-data";
 
 /// A DB + cache implementation of `GhostdagStore` trait, with concurrency support.
 #[derive(Clone)]
@@ -141,18 +140,11 @@ pub struct DbGhostdagStore {
 
 impl DbGhostdagStore {
     pub fn new(db: Arc<DBStorage>, level: BlockLevel, cache_size: u64) -> Self {
-        let lvl_bytes = level.to_le_bytes();
-        let prefix = STORE_PREFIX.iter().copied().chain(lvl_bytes).collect_vec();
-        let compact_prefix = COMPACT_STORE_PREFIX
-            .iter()
-            .copied()
-            .chain(lvl_bytes)
-            .collect_vec();
         Self {
             db: Arc::clone(&db),
             level,
-            access: CachedDbAccess::new(db.clone(), cache_size, prefix),
-            compact_access: CachedDbAccess::new(db, cache_size, compact_prefix),
+            access: CachedDbAccess::new(db.clone(), cache_size, GHOST_DAG_STORE_CF),
+            compact_access: CachedDbAccess::new(db, cache_size, COMPACT_GHOST_DAG_STORE_CF),
         }
     }
 
@@ -305,48 +297,48 @@ impl GhostdagStoreReader for MemoryGhostdagStore {
     fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError> {
         match self.blue_score_map.borrow().get(&hash) {
             Some(blue_score) => Ok(*blue_score),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_blue_work(&self, hash: Hash) -> Result<BlueWorkType, StoreError> {
         match self.blue_work_map.borrow().get(&hash) {
             Some(blue_work) => Ok(*blue_work),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_selected_parent(&self, hash: Hash) -> Result<Hash, StoreError> {
         match self.selected_parent_map.borrow().get(&hash) {
             Some(selected_parent) => Ok(*selected_parent),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_mergeset_blues(&self, hash: Hash) -> Result<BlockHashes, StoreError> {
         match self.mergeset_blues_map.borrow().get(&hash) {
             Some(mergeset_blues) => Ok(BlockHashes::clone(mergeset_blues)),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_mergeset_reds(&self, hash: Hash) -> Result<BlockHashes, StoreError> {
         match self.mergeset_reds_map.borrow().get(&hash) {
             Some(mergeset_reds) => Ok(BlockHashes::clone(mergeset_reds)),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_blues_anticone_sizes(&self, hash: Hash) -> Result<HashKTypeMap, StoreError> {
         match self.blues_anticone_sizes_map.borrow().get(&hash) {
             Some(sizes) => Ok(HashKTypeMap::clone(sizes)),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_data(&self, hash: Hash) -> Result<Arc<GhostdagData>, StoreError> {
         if !self.has(hash)? {
-            return Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash)));
+            return Err(StoreError::KeyNotFound(hash.to_string()));
         }
         Ok(Arc::new(GhostdagData::new(
             self.blue_score_map.borrow()[&hash],

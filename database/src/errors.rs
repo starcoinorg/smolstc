@@ -1,11 +1,9 @@
 use thiserror::Error;
 
-use crate::prelude::DbKey;
-
 #[derive(Error, Debug)]
 pub enum StoreError {
     #[error("key {0} not found in store")]
-    KeyNotFound(DbKey),
+    KeyNotFound(String),
 
     #[error("key {0} already exists in store")]
     KeyAlreadyExists(String),

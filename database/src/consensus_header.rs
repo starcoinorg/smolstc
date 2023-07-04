@@ -33,8 +33,8 @@ pub trait HeaderStore: HeaderStoreReader {
     ) -> Result<(), StoreError>;
 }
 
-const HEADERS_STORE_PREFIX: &[u8] = b"headers";
-const COMPACT_HEADER_DATA_STORE_PREFIX: &[u8] = b"compact-header-data";
+pub(crate) const HEADERS_STORE_CF: &str = "headers-store";
+pub(crate) const COMPACT_HEADER_DATA_STORE_CF: &str = "compact-header-data";
 
 /// A DB + cache implementation of `HeaderStore` trait, with concurrency support.
 #[derive(Clone)]
@@ -51,9 +51,9 @@ impl DbHeadersStore {
             compact_headers_access: CachedDbAccess::new(
                 Arc::clone(&db),
                 cache_size,
-                COMPACT_HEADER_DATA_STORE_PREFIX.to_vec(),
+                COMPACT_HEADER_DATA_STORE_CF,
             ),
-            headers_access: CachedDbAccess::new(db, cache_size, HEADERS_STORE_PREFIX.to_vec()),
+            headers_access: CachedDbAccess::new(db, cache_size, HEADERS_STORE_CF),
         }
     }
 
@@ -96,11 +96,11 @@ impl DbHeadersStore {
 }
 
 impl HeaderStoreReader for DbHeadersStore {
-    fn get_daa_score(&self, hash: Hash) -> Result<u64, StoreError> {
+    fn get_daa_score(&self, _hash: Hash) -> Result<u64, StoreError> {
         unimplemented!()
     }
 
-    fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError> {
+    fn get_blue_score(&self, _hash: Hash) -> Result<u64, StoreError> {
         unimplemented!()
     }
 
