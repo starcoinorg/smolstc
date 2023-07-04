@@ -33,7 +33,7 @@ impl BlockDAG {
         let ghostdag_store = db.ghost_dag_store.clone();
         let header_store = db.header_store.clone();
         let relations_store = db.relations_store.clone();
-        let mut reachability_store = db.reachability_store.clone();
+        let mut reachability_store = db.reachability_store;
         inquirer::init(&mut reachability_store).unwrap();
         let reachability_service =
             MTReachabilityService::new(Arc::new(RwLock::new(reachability_store.clone())));
@@ -73,7 +73,7 @@ impl BlockDAG {
 
         let parents_hash = header.parents_hash();
         let ghostdag_data = if header.hash() != self.genesis.hash() {
-            self.ghostdag_manager.ghostdag(&parents_hash)
+            self.ghostdag_manager.ghostdag(parents_hash)
         } else {
             self.ghostdag_manager.genesis_ghostdag_data()
         };
@@ -131,10 +131,7 @@ mod tests {
         let db = FlexiDagStorage::create_from_path(db_path, config);
         let mut dag = BlockDAG::new(genesis, k, db);
 
-        let block = Header::new(
-            starcoin_types::block::BlockHeader::random(),
-            vec![genesis_hash],
-        );
+        let block = Header::new(BlockHeader::random(), vec![genesis_hash]);
         dag.commit_header(block);
     }
 }

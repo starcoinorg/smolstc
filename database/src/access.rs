@@ -142,7 +142,7 @@ where
     {
         for (key, data) in iter {
             let bin_data = bincode::serialize(&data)?;
-            writer.put(&self.prefix, key.as_ref(), bin_data)?;
+            writer.put(self.prefix, key.as_ref(), bin_data)?;
         }
         // The cache must be cleared in order to avoid invalidated entries
         self.cache.remove_all();
@@ -169,7 +169,7 @@ where
         let key_iter_clone = key_iter.clone();
         self.cache.remove_many(key_iter);
         for key in key_iter_clone {
-            writer.delete(&self.prefix, key.as_ref())?;
+            writer.delete(self.prefix, key.as_ref())?;
         }
         Ok(())
     }
@@ -196,13 +196,12 @@ where
         Ok(())
     }
 
-    /// A dynamic iterator that can iterate through a specific prefix / bucket, or from a certain start point.
-    //TODO: loop and chain iterators for multi-prefix / bucket iterator.
+    /// A dynamic iterator that can iterate through a specific prefix, and from a certain start point.
+    //TODO: loop and chain iterators for multi-prefix iterator.
     pub fn seek_iterator(
         &self,
-        bucket: Option<&[u8]>, // iter self.prefix if None, else append bytes to self.prefix.
         seek_from: Option<TKey>, // iter whole range if None
-        limit: usize,          // amount to take.
+        limit: usize,            // amount to take.
         skip_first: bool, // skips the first value, (useful in conjunction with the seek-key, as to not re-retrieve).
     ) -> impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_
     where
@@ -229,7 +228,7 @@ where
         db_iterator.take(limit).map(move |item| match item {
             Ok((key_bytes, value_bytes)) => {
                 match bincode::deserialize::<TData>(value_bytes.as_ref()) {
-                    Ok(value) => Ok((key_bytes.into(), value)),
+                    Ok(value) => Ok((key_bytes, value)),
                     Err(err) => Err(err.into()),
                 }
             }
