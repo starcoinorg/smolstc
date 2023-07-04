@@ -15,7 +15,7 @@ pub trait ConsensusHeader {
     fn timestamp(&self) -> u64;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq,Hash)]
 pub struct Header {
     block_header: BlockHeader,
     parents_hash: Vec<Hash>,
