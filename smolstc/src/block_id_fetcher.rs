@@ -13,17 +13,17 @@ pub trait BlockIdFetcher: Send + Sync {
     fn fetch_block_ids(
         &self,
         peer: Option<PeerId>,
-        start_number: BlockNumber,
+        block_hash: Vec<HashValue>,
         reverse: bool,
-        max_size: u64,
+        depth: u64,
     ) -> BoxFuture<Result<Vec<SyncBlockIds>>>;
 
     fn fetch_block_id(
         &self,
         peer: Option<PeerId>,
-        number: BlockNumber,
+        block_hash: Vec<HashValue>,
     ) -> BoxFuture<Result<Option<SyncBlockIds>>> {
-        self.fetch_block_ids(peer, number, false, 1)
+        self.fetch_block_ids(peer, block_hash, false, 1)
             .and_then(|mut ids| async move { Ok(ids.pop()) })
             .boxed()
     }

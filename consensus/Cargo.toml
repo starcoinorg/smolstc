@@ -13,3 +13,4 @@ database.workspace = true
 parking_lot.workspace = true
 starcoin-crypto.workspace = true
 starcoin-types.workspace = true
+anyhow.workspace = true

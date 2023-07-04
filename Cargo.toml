@@ -20,11 +20,12 @@ default-members = [
     "consensus/types",
     "database",
     "consensus/ghostdag",
-    "smolstc",
 ]
 
 [workspace.dependencies]
 starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
+starcoin-accumulator = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
+starcoin-storage = {git = "https://github.com/starcoinorg/starcoin",rev = "ad4933aba600d8c7b864d65a5adb3b67692afcb2"}
 starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
 starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "5772b323b08397875a3a0806307d7f6f6f735476"}
 starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
@@ -56,3 +57,4 @@ ghostdag={path = "consensus/ghostdag"}
 reachability = {path = "consensus/reachability"}
 schemars = { git = "https://github.com/starcoinorg/schemars", rev = "9b3705780b8fe9c8676ff82919869ba7405b1062" }
 hex = "0.4"
+anyhow = "~1"

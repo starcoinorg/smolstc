@@ -1,20 +1,20 @@
 use crate::{block_id_fetcher::BlockIdFetcher, sync_dag_types::DagBlockIdAndNumber};
 use anyhow::{format_err, Result};
 use futures::FutureExt;
+use starcoin_crypto::HashValue;
 use starcoin_types::block::{BlockIdAndNumber, BlockNumber};
-use std::sync::Arc;
+use std::{sync::Arc, hash::Hash};
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
 
 #[derive(Clone)]
 pub struct FindAncestorTask {
-    start_number: BlockNumber,
-    batch_size: u64,
+    tips_hash: Vec<HashValue>, // tips hash in accumulator in chain service
     fetcher: Arc<dyn BlockIdFetcher>,
 }
 impl FindAncestorTask {
     pub(crate) fn new(
-        current_block_number: BlockNumber,
-        target_block_number: BlockNumber,
+        current_tips: HashValue,
+        target_tips: HashValue,
         arg: i32,
         fetcher: Arc<crate::network_dag_verified_client::VerifiedDagRpcClient>,
     ) -> Self {

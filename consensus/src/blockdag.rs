@@ -1,3 +1,4 @@
+use anyhow::bail;
 use consensus_types::blockhash::BlockHashes;
 use consensus_types::blockhash::KType;
 use consensus_types::blockhash::ORIGIN;
@@ -6,6 +7,7 @@ use consensus_types::header::{DbHeadersStore, Header, HeaderStore};
 use database::prelude::DB;
 use ghostdag::ghostdata::DbGhostdagStore;
 use ghostdag::ghostdata::GhostdagStore;
+use ghostdag::ghostdata::GhostdagStoreReader;
 use ghostdag::protocol::GhostdagManager;
 use parking_lot::RwLock;
 use reachability::inquirer;
@@ -22,6 +24,8 @@ pub type DbGhostdagManager = GhostdagManager<
     MTReachabilityService<DbReachabilityStore>,
     DbHeadersStore,
 >;
+
+#[derive(Clone)]
 pub struct BlockDAG {
     genesis: Header,
     ghostdag_manager: DbGhostdagManager,
@@ -107,6 +111,30 @@ impl BlockDAG {
         self.header_store
             .insert(header.hash(), Arc::new(header), 0)
             .unwrap();
+    }
+
+    pub fn get_parents(&self, hash: Hash) -> anyhow::Result<Vec<Hash>>  {
+        match self.relations_store.get_parents(hash) {
+            Ok(parents) => {
+                anyhow::Result::Ok((*parents).clone())
+            }
+            Err(error) => {
+                println!("failed to get parents by hash: {}", error.to_string());
+                bail!("failed to get parents by hash: {}", error.to_string());
+            }
+        }
+    }
+
+    pub fn get_children(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
+        match self.relations_store.get_children(hash) {
+            Ok(children) => {
+                anyhow::Result::Ok((*children).clone())
+            }
+            Err(error) => {
+                println!("failed to get parents by hash: {}", error.to_string());
+                bail!("failed to get parents by hash: {}", error.to_string());
+            }
+        }
     }
 }
 

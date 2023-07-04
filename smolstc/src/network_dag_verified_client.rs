@@ -101,9 +101,9 @@ impl BlockIdFetcher for VerifiedDagRpcClient {
     fn fetch_block_ids(
         &self,
         peer: Option<PeerId>,
-        start_number: starcoin_types::block::BlockNumber,
+        block_hash: Vec<HashValue>,
         reverse: bool,
-        max_size: u64,
+        depth: u64,
     ) -> futures_core::future::BoxFuture<Result<Vec<SyncBlockIds>>> {
         let peer_id = match peer {
             Some(peer_id) => peer_id,
@@ -118,9 +118,9 @@ impl BlockIdFetcher for VerifiedDagRpcClient {
             }
         };
         let req = GetBlockIds {
-            start_number,
+            block_hash,
             reverse,
-            max_size,
+            depth,
         };
         async_std::task::block_on(async {
             self.client.send_request(peer_id.clone(), MyReqeust {

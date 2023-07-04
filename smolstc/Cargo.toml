@@ -22,7 +22,7 @@ async-std = { version = "1", features = ["attributes", "tokio1"] }
 futures = "0.3.12"
 serde = "1.0.130"
 serde_bytes = "0.11"
-anyhow = "~1"
+anyhow = { workspace = true }
 actix = "0.13"
 reachability = { path = "../consensus/reachability" }
 consensus-types = { path = "../consensus/types" }
@@ -34,3 +34,6 @@ ghostdag = { path = "../consensus/ghostdag" }
 stream-task = { workspace = true }
 schemars = { workspace = true }
 hex = { workspace = true }
+starcoin-accumulator = { workspace = true }
+starcoin-storage = { workspace = true }
+starcoin-config = { workspace = true }
