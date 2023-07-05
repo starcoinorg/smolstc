@@ -32,7 +32,7 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
     fn insert(&self, key: Self::TKey, data: Self::TData) {
         self.cache
             .put_v2(None, key.as_ref().to_vec(), data)
-            .expect("Failed to write cache");
+            .expect("Failed on cache written");
     }
 
     fn remove(&self, key: &Self::TKey) {

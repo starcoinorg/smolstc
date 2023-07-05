@@ -7,7 +7,6 @@ mod consensus_relations;
 mod db;
 mod errors;
 mod item;
-mod key;
 mod writer;
 
 pub mod prelude {
@@ -17,7 +16,6 @@ pub mod prelude {
         access::CachedDbAccess,
         cache::Cache,
         item::CachedDbItem,
-        key::{DbKey, SEP, SEP_SIZE},
         writer::{BatchDbWriter, DbWriter, DirectDbWriter},
     };
     pub use db::{FlexiDagStorage, FlexiDagStorageConfig};

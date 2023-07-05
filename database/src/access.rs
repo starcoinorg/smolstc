@@ -43,13 +43,14 @@ where
         }
     }
 
-    pub fn read_from_cache(&self, key: TKey) -> Option<TData>
+    pub fn read_from_cache(&self, key: TKey) -> Result<Option<TData>, StoreError>
     where
         TKey: Copy + AsRef<[u8]>,
     {
         self.cache
             .get(&key)
-            .map(|b| bincode::deserialize(&b).expect("Failed to decode cache data"))
+            .map(|b| bincode::deserialize(&b).map_err(StoreError::DeserializationError))
+            .transpose()
     }
 
     pub fn has(&self, key: TKey) -> Result<bool, StoreError>
@@ -85,21 +86,25 @@ where
         }
     }
 
-    pub fn iterator(&self) -> impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_
+    pub fn iterator(
+        &self,
+    ) -> Result<impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_, StoreError>
     where
         TKey: Clone + AsRef<[u8]>,
         TData: DeserializeOwned, // We need `DeserializeOwned` since the slice coming from `db.get_pinned_cf` has short lifetime
     {
-        self.db
+        let db_iterator = self
+            .db
             .raw_iterator_cf_opt(self.prefix, IteratorMode::Start, ReadOptions::default())
-            .unwrap()
-            .map(|iter_result| match iter_result {
-                Ok((key, data_bytes)) => match bincode::deserialize(&data_bytes) {
-                    Ok(data) => Ok((key[self.prefix.len() + 1..].into(), data)),
-                    Err(e) => Err(e.into()),
-                },
+            .map_err(|e| StoreError::CFNotExist(e.to_string()))?;
+
+        Ok(db_iterator.map(|iter_result| match iter_result {
+            Ok((key, data_bytes)) => match bincode::deserialize(&data_bytes) {
+                Ok(data) => Ok((key, data)),
                 Err(e) => Err(e.into()),
-            })
+            },
+            Err(e) => Err(e.into()),
+        }))
     }
 
     pub fn write(&self, mut writer: impl DbWriter, key: TKey, data: TData) -> Result<(), StoreError>
@@ -179,19 +184,17 @@ where
         TKey: Clone + AsRef<[u8]>,
     {
         self.cache.remove_all();
-        //TODO: Consider using column families to make it faster
-        // currently all key-values are saved in FLEX_DAG_DATA_PREFIX CF
         let keys = self
             .db
             .raw_iterator_cf_opt(self.prefix, IteratorMode::Start, ReadOptions::default())
-            .unwrap()
+            .map_err(|e| StoreError::CFNotExist(e.to_string()))?
             .map(|iter_result| match iter_result {
                 Ok((key, _)) => Ok::<_, rocksdb::Error>(key),
                 Err(e) => Err(e),
             })
             .collect_vec();
         for key in keys {
-            writer.delete(self.prefix, key.unwrap().as_ref())?;
+            writer.delete(self.prefix, key?.as_ref())?;
         }
         Ok(())
     }
@@ -203,7 +206,7 @@ where
         seek_from: Option<TKey>, // iter whole range if None
         limit: usize,            // amount to take.
         skip_first: bool, // skips the first value, (useful in conjunction with the seek-key, as to not re-retrieve).
-    ) -> impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_
+    ) -> Result<impl Iterator<Item = Result<(Box<[u8]>, TData), Box<dyn Error>>> + '_, StoreError>
     where
         TKey: Clone + AsRef<[u8]>,
         TData: DeserializeOwned,
@@ -219,13 +222,13 @@ where
                 .db
                 .raw_iterator_cf_opt(self.prefix, IteratorMode::Start, read_opts),
         }
-        .unwrap();
+        .map_err(|e| StoreError::CFNotExist(e.to_string()))?;
 
         if skip_first {
             db_iterator.next();
         }
 
-        db_iterator.take(limit).map(move |item| match item {
+        Ok(db_iterator.take(limit).map(move |item| match item {
             Ok((key_bytes, value_bytes)) => {
                 match bincode::deserialize::<TData>(value_bytes.as_ref()) {
                     Ok(value) => Ok((key_bytes, value)),
@@ -233,6 +236,6 @@ where
                 }
             }
             Err(err) => Err(err.into()),
-        })
+        }))
     }
 }

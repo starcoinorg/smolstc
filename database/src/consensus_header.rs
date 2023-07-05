@@ -105,14 +105,14 @@ impl HeaderStoreReader for DbHeadersStore {
     }
 
     fn get_timestamp(&self, hash: Hash) -> Result<u64, StoreError> {
-        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
+        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash)? {
             return Ok(header_with_block_level.header.timestamp());
         }
         Ok(self.compact_headers_access.read(hash)?.timestamp)
     }
 
     fn get_difficulty(&self, hash: Hash) -> Result<U256, StoreError> {
-        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
+        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash)? {
             return Ok(header_with_block_level.header.difficulty());
         }
         Ok(self.compact_headers_access.read(hash)?.difficulty)
@@ -127,7 +127,7 @@ impl HeaderStoreReader for DbHeadersStore {
     }
 
     fn get_compact_header_data(&self, hash: Hash) -> Result<CompactHeaderData, StoreError> {
-        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash) {
+        if let Some(header_with_block_level) = self.headers_access.read_from_cache(hash)? {
             return Ok(CompactHeaderData {
                 timestamp: header_with_block_level.header.timestamp(),
                 difficulty: header_with_block_level.header.difficulty(),

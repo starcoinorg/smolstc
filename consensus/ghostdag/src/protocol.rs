@@ -146,7 +146,7 @@ impl<
                     0u128
                 } else {
                     //TODO: implement caculate pow work
-                    let difficulty = self.headers_store.get_difficulty(hash).unwrap();
+                    let _difficulty = self.headers_store.get_difficulty(hash).unwrap();
                     1024u128
                 }
             })
