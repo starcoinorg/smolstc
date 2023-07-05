@@ -15,7 +15,7 @@ use itertools::{
 };
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
-use std::{cell::RefCell, iter::once, sync::Arc};
+use std::{cell::RefCell, cmp, iter::once, sync::Arc};
 
 pub trait GhostdagStoreReader {
     fn get_blue_score(&self, hash: Hash) -> Result<u64, StoreError>;
@@ -55,20 +55,27 @@ impl GhostDagDataWrapper {
     pub fn ascending_mergeset_without_selected_parent<'a>(
         &'a self,
         store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = SortableBlock> + '_ {
+    ) -> impl Iterator<Item = Result<SortableBlock, StoreError>> + '_ {
         self.0
             .mergeset_blues
             .iter()
             .skip(1) // Skip the selected parent
             .cloned()
-            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
+            .map(|h| {
+                store
+                    .get_blue_work(h)
+                    .map(|blue| SortableBlock::new(h, blue))
+            })
             .merge_join_by(
                 self.0
                     .mergeset_reds
                     .iter()
                     .cloned()
-                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
-                |a, b| a.cmp(b),
+                    .map(|h| store.get_blue_work(h).map(|red| SortableBlock::new(h, red))),
+                |a, b| match (a, b) {
+                    (Ok(a), Ok(b)) => a.cmp(b),
+                    (_, _) => cmp::Ordering::Equal,
+                },
             )
             .map(|r| match r {
                 Left(b) | Right(b) => b,
@@ -80,22 +87,29 @@ impl GhostDagDataWrapper {
     pub fn descending_mergeset_without_selected_parent<'a>(
         &'a self,
         store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = SortableBlock> + '_ {
+    ) -> impl Iterator<Item = Result<SortableBlock, StoreError>> + '_ {
         self.0
             .mergeset_blues
             .iter()
             .skip(1) // Skip the selected parent
             .rev() // Reverse since blues and reds are stored with ascending blue work order
             .cloned()
-            .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap()))
+            .map(|h| {
+                store
+                    .get_blue_work(h)
+                    .map(|blue| SortableBlock::new(h, blue))
+            })
             .merge_join_by(
                 self.0
                     .mergeset_reds
                     .iter()
                     .rev() // Reverse
                     .cloned()
-                    .map(|h| SortableBlock::new(h, store.get_blue_work(h).unwrap())),
-                |a, b| b.cmp(a), // Reverse
+                    .map(|h| store.get_blue_work(h).map(|red| SortableBlock::new(h, red))),
+                |a, b| match (b, a) {
+                    (Ok(b), Ok(a)) => b.cmp(a),
+                    (_, _) => cmp::Ordering::Equal,
+                }, // Reverse
             )
             .map(|r| match r {
                 Left(b) | Right(b) => b,
@@ -109,10 +123,10 @@ impl GhostDagDataWrapper {
     pub fn consensus_ordered_mergeset<'a>(
         &'a self,
         store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = Hash> + '_ {
-        once(self.0.selected_parent).chain(
+    ) -> impl Iterator<Item = Result<Hash, StoreError>> + '_ {
+        once(Ok(self.0.selected_parent)).chain(
             self.ascending_mergeset_without_selected_parent(store)
-                .map(|s| s.hash),
+                .map(|s| s.map(|s| s.hash)),
         )
     }
 
@@ -120,9 +134,9 @@ impl GhostDagDataWrapper {
     pub fn consensus_ordered_mergeset_without_selected_parent<'a>(
         &'a self,
         store: &'a (impl GhostdagStoreReader + ?Sized),
-    ) -> impl Iterator<Item = Hash> + '_ {
+    ) -> impl Iterator<Item = Result<Hash, StoreError>> + '_ {
         self.ascending_mergeset_without_selected_parent(store)
-            .map(|s| s.hash)
+            .map(|s| s.map(|s| s.hash))
     }
 }
 
@@ -405,7 +419,7 @@ mod tests {
             expected,
             wrapper
                 .ascending_mergeset_without_selected_parent(&store)
-                .map(|b| b.hash)
+                .filter_map(|b| b.hash)
                 .collect::<Vec<Hash>>()
         );
 
