@@ -1,5 +1,5 @@
 use super::DagCache;
-use starcoin_storage::{cache_storage::CacheStorage, storage::InnerStoreV2};
+use starcoin_storage::cache_storage::CacheStorage;
 use std::{marker::PhantomData, sync::Arc};
 
 #[derive(Clone)]
@@ -20,9 +20,7 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
     }
 
     fn get(&self, key: &Self::TKey) -> Option<Self::TData> {
-        self.cache
-            .get_v2(None, key.as_ref().to_vec())
-            .expect("Failed on cache read")
+        self.cache.get_inner(None, key.as_ref().to_vec())
     }
 
     fn contains_key(&self, key: &Self::TKey) -> bool {
@@ -30,15 +28,11 @@ impl<TKey: Clone + std::hash::Hash + Eq + Send + Sync + AsRef<[u8]>> DagCache fo
     }
 
     fn insert(&self, key: Self::TKey, data: Self::TData) {
-        self.cache
-            .put_v2(None, key.as_ref().to_vec(), data)
-            .expect("Failed on cache written");
+        self.cache.put_inner(None, key.as_ref().to_vec(), data);
     }
 
     fn remove(&self, key: &Self::TKey) {
-        self.cache
-            .remove_v2(None, key.as_ref().to_vec())
-            .expect("Failed to remove from cache")
+        self.cache.remove_inner(None, key.as_ref().to_vec());
     }
 
     fn remove_many(&self, key_iter: &mut impl Iterator<Item = Self::TKey>) {
