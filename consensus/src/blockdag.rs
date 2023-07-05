@@ -11,6 +11,8 @@ use ghostdag::protocol::GhostdagManager;
 use parking_lot::RwLock;
 use reachability::{inquirer, reachability_service::MTReachabilityService};
 use starcoin_crypto::HashValue as Hash;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 pub type DbGhostdagManager = GhostdagManager<
@@ -26,6 +28,8 @@ pub struct BlockDAG {
     reachability_store: DbReachabilityStore,
     ghostdag_store: DbGhostdagStore,
     header_store: DbHeadersStore,
+    /// orphan blocks, parent hash -> orphan block
+    missing_blocks: HashMap<Hash, HashSet<Header>>,
 }
 
 impl BlockDAG {
@@ -53,6 +57,7 @@ impl BlockDAG {
             reachability_store,
             ghostdag_store,
             header_store,
+            missing_blocks: HashMap::new(),
         };
         dag.init_with_genesis();
         dag
@@ -65,10 +70,10 @@ impl BlockDAG {
         self.relations_store
             .insert(Hash::new(ORIGIN), BlockHashes::new(vec![]))
             .unwrap();
-        self.commit_header(self.genesis.clone())
+        self.commit_header(&self.genesis.clone())
     }
 
-    pub fn commit_header(&mut self, header: Header) {
+    pub fn commit_header(&mut self, header: &Header) {
         // Generate ghostdag data
 
         let parents_hash = header.parents_hash();
@@ -102,8 +107,65 @@ impl BlockDAG {
             .unwrap();
         // Store header store
         self.header_store
-            .insert(header.hash(), Arc::new(header), 0)
+            .insert(header.hash(), Arc::new(header.to_owned()), 0)
             .unwrap();
+    }
+    fn is_in_dag(&self, hash: Hash) -> anyhow::Result<bool> {
+        return Ok(true);
+    }
+    pub fn verify_header(&self, header: &Header) -> anyhow::Result<()> {
+        //TODO: implemented it
+        Ok(())
+    }
+
+    pub fn connect_block(&mut self, header: &Header) -> anyhow::Result<()> {
+        let _ = self.verify_header(header)?;
+        let is_orphan_block = self.update_orphans(header)?;
+        if is_orphan_block {
+            return Ok(());
+        }
+        self.commit_header(header);
+        self.check_missing_block(header)?;
+        Ok(())
+    }
+
+    pub fn check_missing_block(&mut self, header: &Header) -> anyhow::Result<()> {
+        if let Some(orphans) = self.missing_blocks.remove(&header.hash()) {
+            for orphan in orphans.iter() {
+                let is_orphan = self.is_orphan(&orphan)?;
+                if !is_orphan {
+                    self.commit_header(header);
+                }
+            }
+        }
+        Ok(())
+    }
+    fn is_orphan(&self, header: &Header) -> anyhow::Result<bool> {
+        for parent in header.parents_hash() {
+            if !self.is_in_dag(parent.to_owned())? {
+                return Ok(false);
+            }
+        }
+        return Ok(true);
+    }
+
+    fn update_orphans(&mut self, block_header: &Header) -> anyhow::Result<bool> {
+        let mut is_orphan = false;
+        for parent in block_header.parents_hash() {
+            if self.is_in_dag(parent.to_owned())? {
+                continue;
+            }
+            if !self
+                .missing_blocks
+                .entry(parent.to_owned())
+                .or_insert_with(HashSet::new)
+                .insert(block_header.to_owned())
+            {
+                return Err(anyhow::anyhow!("Block already processed as a orphan"));
+            }
+            is_orphan = true;
+        }
+        Ok(is_orphan)
     }
 }
 

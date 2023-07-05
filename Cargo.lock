@@ -606,6 +606,7 @@ dependencies = [
 name = "consensus"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "consensus-types",
  "database",
  "ghostdag",
