@@ -419,13 +419,15 @@ mod tests {
             expected,
             wrapper
                 .ascending_mergeset_without_selected_parent(&store)
-                .filter_map(|b| b.hash)
+                .filter_map(|b| b.map(|b| b.hash).ok())
                 .collect::<Vec<Hash>>()
         );
 
         itertools::assert_equal(
             once(1.into()).chain(expected.iter().cloned()),
-            wrapper.consensus_ordered_mergeset(&store),
+            wrapper
+                .consensus_ordered_mergeset(&store)
+                .filter_map(|b| b.ok()),
         );
 
         expected.reverse();
@@ -433,7 +435,7 @@ mod tests {
             expected,
             wrapper
                 .descending_mergeset_without_selected_parent(&store)
-                .map(|b| b.hash)
+                .filter_map(|b| b.map(|b| b.hash).ok())
                 .collect::<Vec<Hash>>()
         );
 
