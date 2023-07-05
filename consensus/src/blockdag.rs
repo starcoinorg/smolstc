@@ -194,6 +194,6 @@ mod tests {
         let mut dag = BlockDAG::new(genesis, k, db);
 
         let block = Header::new(BlockHeader::random(), vec![genesis_hash]);
-        dag.commit_header(block);
+        dag.commit_header(&block);
     }
 }
