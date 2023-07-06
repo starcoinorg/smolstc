@@ -1,20 +1,27 @@
 use thiserror::Error;
 
-use crate::prelude::DbKey;
-
 #[derive(Error, Debug)]
 pub enum StoreError {
     #[error("key {0} not found in store")]
-    KeyNotFound(DbKey),
+    KeyNotFound(String),
 
     #[error("key {0} already exists in store")]
     KeyAlreadyExists(String),
+
+    #[error("column family {0} not exist in db")]
+    CFNotExist(String),
+
+    #[error("IO error {0}")]
+    DBIoError(String),
 
     #[error("rocksdb error {0}")]
     DbError(#[from] rocksdb::Error),
 
     #[error("bincode error {0}")]
     DeserializationError(#[from] Box<bincode::ErrorKind>),
+
+    #[error("ghostdag {0} duplicate blocks")]
+    DAGDupBlocksError(String),
 }
 
 pub type StoreResult<T> = std::result::Result<T, StoreError>;

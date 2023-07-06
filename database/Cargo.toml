@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+starcoin-storage.workspace = true
+starcoin-config.workspace = true
+starcoin-crypto.workspace = true
+starcoin-types.workspace = true
+consensus-types.workspace = true
 rocksdb.workspace = true
 serde.workspace = true
 bincode.workspace = true
@@ -16,4 +21,4 @@ itertools.workspace = true
 num_cpus.workspace = true
 
 [dev-dependencies]
-starcoin-crypto.workspace = true
+tempfile.workspace = true

@@ -1,9 +1,11 @@
-use crate::reachability::ReachabilityStore;
 use crate::{
-    extensions::ReachabilityStoreIntervalExtensions, inquirer::get_next_chain_ancestor_unchecked,
-    interval::Interval, *,
+    extensions::ReachabilityStoreIntervalExtensions, inquirer::get_next_chain_ancestor_unchecked, *,
 };
-use consensus_types::blockhash::{BlockHashExtensions, BlockHashMap};
+use consensus_types::{
+    blockhash::{BlockHashExtensions, BlockHashMap},
+    interval::Interval,
+};
+use database::consensus::ReachabilityStore;
 use starcoin_crypto::HashValue as Hash;
 use std::collections::VecDeque;
 
@@ -12,7 +14,7 @@ use std::collections::VecDeque;
 pub(super) struct ReindexOperationContext<'a, T: ReachabilityStore + ?Sized> {
     store: &'a mut T,
     subtree_sizes: BlockHashMap<u64>, // Cache for subtree sizes computed during this operation
-    depth: u64,
+    _depth: u64,
     slack: u64,
 }
 
@@ -21,7 +23,7 @@ impl<'a, T: ReachabilityStore + ?Sized> ReindexOperationContext<'a, T> {
         Self {
             store,
             subtree_sizes: BlockHashMap::new(),
-            depth,
+            _depth: depth,
             slack,
         }
     }
@@ -568,13 +570,10 @@ fn split_children(children: &std::sync::Arc<Vec<Hash>>, pivot: Hash) -> Result<(
 
 #[cfg(test)]
 mod tests {
-    use super::super::tests::*;
-    use super::*;
-    use crate::{
-        interval::Interval,
-        reachability::{MemoryReachabilityStore, ReachabilityStoreReader},
-    };
-    use consensus_types::blockhash;
+    use super::{super::tests::*, *};
+    use consensus_types::{blockhash, interval::Interval};
+    use database::consensus::{MemoryReachabilityStore, ReachabilityStoreReader};
+
     #[test]
     fn test_count_subtrees() {
         let mut store = MemoryReachabilityStore::new();
