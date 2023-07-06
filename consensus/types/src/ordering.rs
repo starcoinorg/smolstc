@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue as Hash;
 use std::cmp::Ordering;
 
-#[derive(Eq, Clone, Serialize, Deserialize)]
+#[derive(Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct SortableBlock {
     pub hash: Hash,
     pub blue_work: BlueWorkType,

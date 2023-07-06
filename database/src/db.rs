@@ -3,6 +3,7 @@ use crate::consensus::{
     COMPACT_GHOST_DAG_STORE_CF, COMPACT_HEADER_DATA_STORE_CF, GHOST_DAG_STORE_CF, HEADERS_STORE_CF,
     PARENTS_CF, REACHABILITY_DATA_CF,
 };
+use crate::errors::StoreError;
 use starcoin_config::RocksdbConfig;
 pub(crate) use starcoin_storage::db_storage::DBStorage;
 use std::{path::Path, sync::Arc};
@@ -95,7 +96,10 @@ impl FlexiDagStorageConfig {
 
 impl FlexiDagStorage {
     /// Creates or loads an existing storage from the provided directory path.
-    pub fn create_from_path<P: AsRef<Path>>(db_path: P, config: FlexiDagStorageConfig) -> Self {
+    pub fn create_from_path<P: AsRef<Path>>(
+        db_path: P,
+        config: FlexiDagStorageConfig,
+    ) -> Result<Self, StoreError> {
         let rocksdb_config = RocksdbConfig {
             parallelism: config.parallelism,
             ..Default::default()
@@ -121,10 +125,10 @@ impl FlexiDagStorage {
                 rocksdb_config,
                 None,
             )
-            .unwrap(),
+            .map_err(|e| StoreError::DBIoError(e.to_string()))?,
         );
 
-        Self {
+        Ok(Self {
             ghost_dag_store: DbGhostdagStore::new(
                 db.clone(),
                 config.gds_conf.block_level,
@@ -138,11 +142,6 @@ impl FlexiDagStorage {
                 config.rs_conf.block_level,
                 config.rs_conf.cache_size,
             ),
-        }
-    }
-
-    #[allow(unused)]
-    pub fn create_with_new_cache(db: Arc<DBStorage>, block_level: u8, cache_size: u64) {
-        todo!()
+        })
     }
 }

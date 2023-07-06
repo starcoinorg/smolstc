@@ -19,6 +19,9 @@ pub enum StoreError {
 
     #[error("bincode error {0}")]
     DeserializationError(#[from] Box<bincode::ErrorKind>),
+
+    #[error("ghostdag {0} duplicate blocks")]
+    DAGDupBlocksError(String),
 }
 
 pub type StoreResult<T> = std::result::Result<T, StoreError>;

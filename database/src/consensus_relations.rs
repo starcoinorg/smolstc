@@ -223,7 +223,8 @@ mod tests {
             .update_parallelism(1)
             .update_relations_conf(rs_conf);
 
-        let db = FlexiDagStorage::create_from_path(db_tempdir.path(), config);
+        let db = FlexiDagStorage::create_from_path(db_tempdir.path(), config)
+            .expect("failed to create flexidag storage");
         test_relations_store(db.relations_store);
     }
 

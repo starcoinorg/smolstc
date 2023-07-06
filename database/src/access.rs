@@ -137,7 +137,7 @@ where
 
     /// Write directly from an iterator and do not cache any data. NOTE: this action also clears the cache
     pub fn write_many_without_cache(
-        &mut self,
+        &self,
         mut writer: impl DbWriter,
         iter: &mut impl Iterator<Item = (TKey, TData)>,
     ) -> Result<(), StoreError>

@@ -190,7 +190,8 @@ mod tests {
             fs::remove_dir_all(db_path.as_path()).expect("Failed to delete temporary directory");
         }
         let config = FlexiDagStorageConfig::create_with_params(1, 0, 1024);
-        let db = FlexiDagStorage::create_from_path(db_path, config);
+        let db = FlexiDagStorage::create_from_path(db_path, config)
+            .expect("Failed to create flexidag storage");
         let mut dag = BlockDAG::new(genesis, k, db);
 
         let block = Header::new(BlockHeader::random(), vec![genesis_hash]);

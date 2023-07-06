@@ -74,12 +74,14 @@ impl GhostDagDataWrapper {
                     .map(|h| store.get_blue_work(h).map(|red| SortableBlock::new(h, red))),
                 |a, b| match (a, b) {
                     (Ok(a), Ok(b)) => a.cmp(b),
-                    (_, _) => cmp::Ordering::Equal,
+                    (Err(_), Ok(_)) => cmp::Ordering::Less, // select left Err node
+                    (Ok(_), Err(_)) => cmp::Ordering::Greater, // select right Err node
+                    (Err(_), Err(_)) => cmp::Ordering::Equal, // remove both Err nodes
                 },
             )
             .map(|r| match r {
                 Left(b) | Right(b) => b,
-                Both(_, _) => panic!("distinct blocks are never equal"),
+                Both(c, _) => Err(StoreError::DAGDupBlocksError(format!("{c:?}"))),
             })
     }
 
@@ -108,12 +110,14 @@ impl GhostDagDataWrapper {
                     .map(|h| store.get_blue_work(h).map(|red| SortableBlock::new(h, red))),
                 |a, b| match (b, a) {
                     (Ok(b), Ok(a)) => b.cmp(a),
-                    (_, _) => cmp::Ordering::Equal,
+                    (Err(_), Ok(_)) => cmp::Ordering::Less, // select left Err node
+                    (Ok(_), Err(_)) => cmp::Ordering::Greater, // select right Err node
+                    (Err(_), Err(_)) => cmp::Ordering::Equal, // select both Err nodes
                 }, // Reverse
             )
             .map(|r| match r {
                 Left(b) | Right(b) => b,
-                Both(_, _) => panic!("distinct blocks are never equal"),
+                Both(c, _) => Err(StoreError::DAGDupBlocksError(format!("{c:?}"))),
             })
     }
 
@@ -364,12 +368,12 @@ impl GhostdagStoreReader for MemoryGhostdagStore {
         )))
     }
 
-    fn has(&self, hash: Hash) -> Result<bool, StoreError> {
-        Ok(self.blue_score_map.borrow().contains_key(&hash))
-    }
-
     fn get_compact_data(&self, hash: Hash) -> Result<CompactGhostdagData, StoreError> {
         Ok(self.get_data(hash)?.to_compact())
+    }
+
+    fn has(&self, hash: Hash) -> Result<bool, StoreError> {
+        Ok(self.blue_score_map.borrow().contains_key(&hash))
     }
 }
 
