@@ -1,13 +1,16 @@
-use std::{borrow::Cow, sync::Arc, collections::HashMap};
+use std::{borrow::Cow, sync::Arc};
 
 use anyhow::Result;
 use futures::FutureExt;
 use network_p2p_core::{PeerId, RawRpcClient};
 use network_p2p_types::IfDisconnected;
-use rand::Error;
+use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_crypto::HashValue;
 
-use crate::{network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse}, block_id_fetcher::BlockIdFetcher, sync_dag_protocol::{GetBlockIds, SyncBlockIds}};
+use crate::{
+    network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse},
+    sync_dag_protocol_trait::PeerSynDagAccumulator,
+};
 
 #[derive(Clone)]
 pub struct NetworkDagServiceRef {
@@ -97,19 +100,17 @@ impl VerifiedDagRpcClient {
     }
 }
 
-impl BlockIdFetcher for VerifiedDagRpcClient {
-    fn fetch_block_ids(
+impl PeerSynDagAccumulator for VerifiedDagRpcClient {
+    fn get_sync_dag_asccumulator_leaves(
         &self,
         peer: Option<PeerId>,
-        block_hash: Vec<HashValue>,
-        reverse: bool,
-        depth: u64,
-    ) -> futures_core::future::BoxFuture<Result<Vec<SyncBlockIds>>> {
+        leaf_index: u64,
+    ) -> futures_core::future::BoxFuture<Result<Vec<HashValue>>> {
         let peer_id = match peer {
             Some(peer_id) => peer_id,
             None => {
-                /// this is must be selected in peer selector which will select a proper peer by some ways. 
-                /// here I pick a peer id for testing the sync procedure simply
+                // this is must be selected in peer selector which will select a proper peer by some ways.
+                // here I pick a peer id for testing the sync procedure simply
                 let result = async_std::task::block_on(async {
                     let peerset = self.network_service.known_peers().await;
                     return peerset.into_iter().next().unwrap().into();
@@ -117,17 +118,6 @@ impl BlockIdFetcher for VerifiedDagRpcClient {
                 result
             }
         };
-        let req = GetBlockIds {
-            block_hash,
-            reverse,
-            depth,
-        };
-        async_std::task::block_on(async {
-            self.client.send_request(peer_id.clone(), MyReqeust {
-                number: 10,
-                name: String::from("jack"),
-            });
-        });
-       self.client.get_block_ids(peer_id, req)
+        self.client.get_accumulator_leaves(peer_id, leaf_index)
     }
 }

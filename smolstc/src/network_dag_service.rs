@@ -1,18 +1,24 @@
 use crate::{
-    network_dag_handle::DagDataHandle, network_dag_rpc_service::NetworkDagRpcService,
-    network_dag_trait::NetworkDag, network_dag_verified_client::NetworkDagServiceRef,
-    network_dag_worker::build_worker, network_dag_rpc::gen_client,
+    network_dag_data::{ChainInfo, Status},
+    network_dag_handle::DagDataHandle,
+    network_dag_rpc::gen_client,
+    network_dag_rpc_service::NetworkDagRpcService,
+    network_dag_trait::NetworkDag,
+    network_dag_verified_client::NetworkDagServiceRef,
+    network_dag_worker::build_worker,
 };
 use anyhow::Result;
+use bcs_ext::BCSCodec;
 use futures::{channel::mpsc::channel, FutureExt, StreamExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{config, config::RequestResponseConfig, Event, NetworkService, NetworkWorker};
 use network_p2p_types::{Multiaddr, ProtocolRequest};
+use sc_peerset::PeerId;
 use starcoin_service_registry::{
     ActorService, EventHandler, ServiceContext, ServiceFactory, ServiceHandler, ServiceRef,
     ServiceRequest,
 };
-use std::{borrow::Cow, net::Ipv4Addr, sync::Arc, time::Duration};
+use std::{borrow::Cow, collections::HashMap, net::Ipv4Addr, sync::Arc, time::Duration};
 
 const MAX_REQUEST_SIZE: u64 = 1024 * 1024;
 const MAX_RESPONSE_SIZE: u64 = 1024 * 1024 * 64;
@@ -53,9 +59,16 @@ pub struct NetworkMultiaddrInfo {
     pub peers: Vec<String>,
 }
 
+#[derive(Debug)]
+pub struct GetBestChainInfo;
+impl ServiceRequest for GetBestChainInfo {
+    type Response = ChainInfo;
+}
+
 pub struct NetworkDagService {
     worker: Option<NetworkWorker<DagDataHandle>>,
     network_inner_service: Arc<NetworkService>,
+    peer_set: HashMap<PeerId, Status>,
 }
 
 impl NetworkDagService {
@@ -87,11 +100,15 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
                 // listen addr
                 vec![listen_addr],
                 // request response
-                gen_client::get_rpc_info().iter().cloned().map(|path| {
-                    let protocol_name: Cow<'static, str> =
-                    format!("{}{}", "/starcoin/rpc/", path).into();
-                    protocol_name
-                }).collect::<Vec<Cow<'static, str>>>(),
+                gen_client::get_rpc_info()
+                    .iter()
+                    .cloned()
+                    .map(|path| {
+                        let protocol_name: Cow<'static, str> =
+                            format!("{}{}", "/starcoin/rpc/", path).into();
+                        protocol_name
+                    })
+                    .collect::<Vec<Cow<'static, str>>>(),
             ),
         );
         let network_async_service: NetworkDagServiceRef =
@@ -138,6 +155,7 @@ impl NetworkDagService {
         NetworkDagService {
             worker: Some(worker),
             network_inner_service: network_inner_service.clone(),
+            peer_set: HashMap::new(),
         }
     }
 
@@ -200,16 +218,6 @@ impl ActorService for NetworkDagService {
     }
 }
 
-impl EventHandler<NetworkDagService, Event> for NetworkDagService {
-    fn handle_event(
-        &mut self,
-        msg: Event,
-        ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>,
-    ) {
-        todo!()
-    }
-}
-
 impl ServiceHandler<Self, NetworkMultiaddr> for NetworkDagService {
     fn handle(
         &mut self,
@@ -230,5 +238,40 @@ impl ServiceHandler<Self, NetworkMultiaddr> for NetworkDagService {
                 return NetworkMultiaddrInfo { peers: [].to_vec() };
             }
         }
+    }
+}
+
+impl EventHandler<Self, network_p2p::Event> for NetworkDagService {
+    fn handle_event(
+        &mut self,
+        msg: Event,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) {
+        match msg {
+            Event::NotificationStreamOpened {
+                remote,
+                protocol,
+                generic_data,
+                notif_protocols,
+                rpc_protocols,
+                version_string,
+            } => {
+                let status = Status::decode(&generic_data).expect("");
+                self.peer_set.entry(remote).or_insert(status);
+            }
+            _ => (),
+        }
+    }
+}
+
+impl ServiceHandler<Self, GetBestChainInfo> for NetworkDagService {
+    fn handle(
+        &mut self,
+        msg: GetBestChainInfo,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> <GetBestChainInfo as ServiceRequest>::Response {
+        // this is for test
+        let first = self.peer_set.iter().next().unwrap().1;
+        first.info.clone()
     }
 }

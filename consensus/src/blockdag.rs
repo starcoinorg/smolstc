@@ -113,11 +113,9 @@ impl BlockDAG {
             .unwrap();
     }
 
-    pub fn get_parents(&self, hash: Hash) -> anyhow::Result<Vec<Hash>>  {
+    pub fn get_parents(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
         match self.relations_store.get_parents(hash) {
-            Ok(parents) => {
-                anyhow::Result::Ok((*parents).clone())
-            }
+            Ok(parents) => anyhow::Result::Ok((*parents).clone()),
             Err(error) => {
                 println!("failed to get parents by hash: {}", error.to_string());
                 bail!("failed to get parents by hash: {}", error.to_string());
@@ -127,9 +125,7 @@ impl BlockDAG {
 
     pub fn get_children(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
         match self.relations_store.get_children(hash) {
-            Ok(children) => {
-                anyhow::Result::Ok((*children).clone())
-            }
+            Ok(children) => anyhow::Result::Ok((*children).clone()),
             Err(error) => {
                 println!("failed to get parents by hash: {}", error.to_string());
                 bail!("failed to get parents by hash: {}", error.to_string());

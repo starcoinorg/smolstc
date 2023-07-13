@@ -2,14 +2,16 @@ use std::sync::Arc;
 
 use crate::{
     find_ancestor_task::{AncestorCollector, FindAncestorTask},
+    network_dag_service::{GetBestChainInfo, NetworkDagService},
     network_dag_verified_client::{NetworkDagServiceRef, VerifiedDagRpcClient},
     sync_task_error_handle::ExtSyncTaskErrorHandle,
 };
 use anyhow::Ok;
+use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_service_registry::{
-    ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRequest,
+    ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRef, ServiceRequest,
 };
-use stream_task::{TaskEventCounterHandle, TaskGenerator, Generator};
+use stream_task::{Generator, TaskEventCounterHandle, TaskGenerator};
 
 #[derive(Debug)]
 pub struct SyncInitVerifiedClient;
@@ -33,13 +35,20 @@ impl ServiceRequest for SyncConnectToPeers {
     type Response = anyhow::Result<()>;
 }
 
+struct StartupInfo {
+    accumulator_info: AccumulatorInfo,
+} 
+
 pub struct SyncDagService {
     client: Option<Arc<VerifiedDagRpcClient>>,
+
+    // start info should be in main, here is for test
+    
 }
 
 impl SyncDagService {
     pub fn new() -> Self {
-        SyncDagService { client: None, }
+        SyncDagService { client: None }
     }
 }
 
@@ -128,25 +137,37 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
         /// in practice, it should be the one stored in the startup structure stored in the storage
         let current_block_number = 0;
 
-        /// just for test, it should be read from chain info in peer info
-        let target_block_number = current_block_number + 10;
-
         let max_retry_times = 10; // in startcoin, it is in config
         let delay_milliseconds_on_error = 100;
 
         let event_handle = Arc::new(TaskEventCounterHandle::new());
 
         let ext_error_handle = Arc::new(ExtSyncTaskErrorHandle::new(Arc::clone(
-            &self.client.as_ref().expect("the client must be initialized"),
+            &self
+                .client
+                .as_ref()
+                .expect("the client must be initialized"),
         )));
 
-        let fetcher = Arc::clone(&self.client.as_ref().expect("the client must be initialized"));
+        let fetcher = Arc::clone(
+            &self
+                .client
+                .as_ref()
+                .expect("the client must be initialized"),
+        );
         async_std::task::spawn(async move {
+            // here should compare the dag's node not accumulator leaf node
+            let best_chain_info = ctx
+                .service_ref::<NetworkDagService>()
+                .unwrap()
+                .send(GetBestChainInfo)
+                .await
+                .unwrap();
+
             let sync_task = TaskGenerator::new(
                 FindAncestorTask::new(
                     current_block_number,
-                    target_block_number,
-                    10,
+                    best_chain_info.flexi_dag_accumulator_info.num_leaves,
                     fetcher,
                 ),
                 2,
@@ -164,7 +185,7 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 }
                 Err(error) => {
                     println!("an error happened: {}", error.to_string());
-                },
+                }
             }
         });
         Ok(())

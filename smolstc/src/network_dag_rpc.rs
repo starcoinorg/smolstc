@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use futures::FutureExt;
 use futures_core::future::BoxFuture;
@@ -7,7 +5,6 @@ use network_p2p_derive::net_rpc;
 use network_p2p_types::peer_id::PeerId;
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue;
-use crate::sync_dag_protocol::{GetBlockIds, SyncBlockIds};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -36,7 +33,11 @@ pub trait RpcRequest {
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
     fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
-    fn get_block_ids(&self, peer_id: PeerId, req: GetBlockIds)-> BoxFuture<Result<Vec<SyncBlockIds>>>;
+    fn get_accumulator_leaves(
+        &self,
+        peer_id: PeerId,
+        accumulator_leaf_index: u64,
+    ) -> BoxFuture<Result<Vec<HashValue>>>;
 }
 
 #[derive(Default)]
@@ -52,7 +53,11 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         .boxed()
     }
 
-    fn get_block_ids(&self,peer_id: PeerId, req: GetBlockIds) -> BoxFuture<Result<Vec<SyncBlockIds>>> {
+    fn get_accumulator_leaves(
+        &self,
+        peer_id: PeerId,
+        accumulator_leaf_index: u64,
+    ) -> BoxFuture<Result<Vec<HashValue>>> {
         todo!()
     }
 }

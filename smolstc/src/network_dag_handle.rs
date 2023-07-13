@@ -1,6 +1,9 @@
 use std::borrow::Cow;
 
-use crate::{network_dag_service::{PROTOCOL_NAME_NOTIFY, PROTOCOL_NAME_REQRES_1, PROTOCOL_NAME_REQRES_2}, network_dag_data::{Status, ChainInfo}};
+use crate::{
+    network_dag_data::{ChainInfo, Status},
+    network_dag_service::{PROTOCOL_NAME_NOTIFY, PROTOCOL_NAME_REQRES_1, PROTOCOL_NAME_REQRES_2},
+};
 use anyhow::{anyhow, Ok};
 use bcs_ext::BCSCodec;
 use network_p2p::{
@@ -74,14 +77,12 @@ impl BusinessLayerHandle for DagDataHandle {
         received_handshake: Vec<u8>,
     ) -> Result<HandshakeResult, ReputationChange> {
         match Status::decode(&received_handshake[..]) {
-            std::result::Result::Ok(status) => {
-                std::result::Result::Ok(HandshakeResult {
-                    who: peer_id,
-                    generic_data: status.info.encode().unwrap(),
-                    notif_protocols: status.notif_protocols.to_vec(),
-                    rpc_protocols: status.rpc_protocols.to_vec(),
-                })
-            }
+            std::result::Result::Ok(status) => std::result::Result::Ok(HandshakeResult {
+                who: peer_id,
+                generic_data: status.info.encode().unwrap(),
+                notif_protocols: status.notif_protocols.to_vec(),
+                rpc_protocols: status.rpc_protocols.to_vec(),
+            }),
             Err(err) => {
                 error!(target: "network-p2p", "Couldn't decode handshake packet sent by {}: {:?}: {}", peer_id, hex::encode(received_handshake), err);
                 Err(rep::BAD_MESSAGE)

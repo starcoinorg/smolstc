@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
 
 /// it is ChainInfo inn starcoin
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct ChainInfo {
-    pub conn_number: usize,
+    pub flexi_dag_accumulator_info: AccumulatorInfo,
 }
 
 /// it is ChainInfo inn starcoin

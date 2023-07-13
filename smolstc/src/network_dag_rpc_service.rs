@@ -1,9 +1,18 @@
-use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
-use crate::network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl};
+use crate::{
+    network_dag_data::Status,
+    network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl},
+};
+use bcs_ext::BCSCodec;
+use network_p2p::Event;
 use network_p2p_core::server::NetworkRpcServer;
 use network_p2p_types::ProtocolRequest;
-use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory, ServiceRequest};
+use sc_peerset::PeerId;
+use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory};
 
 pub struct NetworkDagRpcService {
     rpc_server: Arc<NetworkRpcServer>,
