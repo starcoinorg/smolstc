@@ -7,7 +7,7 @@ use network_p2p_types::IfDisconnected;
 use starcoin_crypto::HashValue;
 
 use crate::{
-    network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse},
+    network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse, GetAccumulatorLeaves},
     sync_dag_protocol_trait::PeerSynDagAccumulator,
 };
 
@@ -119,6 +119,9 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
             }
         };
         self.client
-            .get_accumulator_leaves(peer_id, leaf_index, batch_size)
+            .get_accumulator_leaves(peer_id, GetAccumulatorLeaves {
+                accumulator_leaf_index: leaf_index,
+                batch_size,
+            })
     }
 }

@@ -30,14 +30,19 @@ pub trait RpcRequest {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct GetAccumulatorLeaves {
+    pub accumulator_leaf_index: u64,
+    pub batch_size: u64,
+}
+
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
     fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
     fn get_accumulator_leaves(
         &self,
         peer_id: PeerId,
-        accumulator_leaf_index: u64,
-        batch_size: u64,
+        req: GetAccumulatorLeaves,
     ) -> BoxFuture<Result<Vec<HashValue>>>;
 }
 
@@ -57,8 +62,7 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
     fn get_accumulator_leaves(
         &self,
         peer_id: PeerId,
-        accumulator_leaf_index: u64,
-        batch_size: u64,
+        req: GetAccumulatorLeaves,
     ) -> BoxFuture<Result<Vec<HashValue>>> {
         todo!()
     }
