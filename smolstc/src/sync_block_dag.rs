@@ -19,8 +19,7 @@ use starcoin_types::block::BlockHeader;
 
 pub struct SyncBlockDag {
     pub dag: Arc<BlockDAG>,
-    // accumulator: MerkleAccumulator,
-    pub accumulator_info: AccumulatorInfo,
+    pub accumulator: MerkleAccumulator,
     pub accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
 }
 
@@ -189,7 +188,7 @@ impl SyncBlockDag {
 
         return SyncBlockDag {
             dag: Arc::new(dag),
-            accumulator_info: accumulator.get_info(),
+            accumulator,
             accumulator_snapshot: accumulator_snapshot.clone(),
         };
     }

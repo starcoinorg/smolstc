@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use crate::sync_block_dag::SyncBlockDag;
 use anyhow::Result;
-use starcoin_service_registry::{ActorService, ServiceContext, ServiceFactory};
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
+use starcoin_service_registry::{
+    ActorService, ServiceContext, ServiceFactory, ServiceHandler, ServiceRequest,
+};
 use starcoin_storage::Storage;
 
 pub struct ChainDagService {
@@ -35,5 +38,22 @@ impl ActorService for ChainDagService {
 
     fn service_name() -> &'static str {
         std::any::type_name::<Self>()
+    }
+}
+
+#[derive(Debug)]
+pub struct GetAccumulatorInfo;
+impl ServiceRequest for GetAccumulatorInfo {
+    type Response = AccumulatorInfo;
+}
+
+impl ServiceHandler<Self, GetAccumulatorInfo> for ChainDagService {
+    fn handle(
+        &mut self,
+        msg: GetAccumulatorInfo,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> <GetAccumulatorInfo as ServiceRequest>::Response {
+        // this is for test
+        self.dag.accumulator.get_info()
     }
 }

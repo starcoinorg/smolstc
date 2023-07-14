@@ -23,22 +23,11 @@ use network_dag_rpc_service::NetworkDagRpcService;
 // use flexi_dag::{FlexiBlock, FlexiDagConsensus};
 use network_dag_service::{NetworkDagService, NetworkDagServiceFactory, NetworkMultiaddr};
 use starcoin_config::RocksdbConfig;
-use starcoin_crypto::HashValue as Hash;
 use starcoin_service_registry::{RegistryAsyncService, RegistryService, ServiceRef};
 use starcoin_storage::{
     cache_storage::CacheStorage, db_storage::DBStorage, storage::StorageInstance, Storage,
 };
-use starcoin_types::block::BlockHeader;
-use sync_block_dag::SyncBlockDag;
 use sync_dag_service::{CheckSync, SyncConnectToPeers, SyncDagService, SyncInitVerifiedClient};
-
-// dag
-use consensus::blockdag::BlockDAG;
-use consensus_types::{
-    blockhash::ORIGIN,
-    header::{ConsensusHeader, Header},
-};
-use database::prelude::*;
 
 async fn run_sync(
     registry: &ServiceRef<RegistryService>,
