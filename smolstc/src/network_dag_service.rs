@@ -120,11 +120,14 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
 }
 
 impl NetworkDagService {
-    pub fn new(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>, nt: NetworkType) -> Self {
+    pub fn new(
+        ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>,
+        nt: NetworkType,
+    ) -> Self {
         let rpc_service = ctx.service_ref::<NetworkDagRpcService>().unwrap().clone();
         let worker = match nt {
-            NetworkType::InMemory(notifications, listen_addrs, request_responses) => {
-                build_worker(config::NetworkConfiguration {
+            NetworkType::InMemory(notifications, listen_addrs, request_responses) => build_worker(
+                config::NetworkConfiguration {
                     notifications_protocols: notifications,
                     listen_addresses: listen_addrs,
                     transport: config::TransportConfig::MemoryOnly,
@@ -134,10 +137,11 @@ impl NetworkDagService {
                             request_responses,
                         ),
                     ..config::NetworkConfiguration::new_local()
-                }, ctx)
-            }
-            NetworkType::InP2P(notifications, listen_addrs, request_responses) => {
-                build_worker(config::NetworkConfiguration {
+                },
+                ctx,
+            ),
+            NetworkType::InP2P(notifications, listen_addrs, request_responses) => build_worker(
+                config::NetworkConfiguration {
                     notifications_protocols: notifications,
                     listen_addresses: listen_addrs,
                     transport: config::TransportConfig::Normal {
@@ -150,8 +154,9 @@ impl NetworkDagService {
                             request_responses,
                         ),
                     ..config::NetworkConfiguration::new_local()
-                }, ctx)
-            }
+                },
+                ctx,
+            ),
         };
         let network_inner_service = worker.service().clone();
         NetworkDagService {

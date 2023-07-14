@@ -4,7 +4,7 @@ use bcs_ext::BCSCodec;
 use consensus::blockdag::BlockDAG;
 use consensus_types::blockhash::ORIGIN;
 use serde::{Deserialize, Serialize};
-use starcoin_accumulator::{Accumulator, MerkleAccumulator};
+use starcoin_accumulator::{Accumulator, MerkleAccumulator, accumulator_info::AccumulatorInfo};
 use starcoin_crypto::HashValue;
 use starcoin_storage::{
     flexi_dag::{SyncFlexiDagSnapshot, SyncFlexiDagSnapshotStorage},
@@ -13,8 +13,9 @@ use starcoin_storage::{
 };
 
 pub struct SyncBlockDag {
-    accumulator: MerkleAccumulator,
-    accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
+    // accumulator: MerkleAccumulator,
+    pub accumulator_info: AccumulatorInfo,
+    pub accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
 }
 
 #[derive(Clone, Debug, Hash, Eq, PartialOrd, Ord, PartialEq, Serialize, Deserialize)]
@@ -24,10 +25,7 @@ struct RelationshipPair {
 }
 
 impl SyncBlockDag {
-    pub fn build_sync_block_dag(
-        dag: Arc<BlockDAG>,
-        store: Arc<Storage>,
-    ) -> MerkleAccumulator {
+    pub fn build_sync_block_dag(dag: Arc<BlockDAG>, store: Arc<Storage>) -> Arc<SyncBlockDag> {
         let accumulator = MerkleAccumulator::new_empty(store.get_accumulator_storage());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
@@ -89,6 +87,9 @@ impl SyncBlockDag {
             }
         }
 
-        return accumulator;
+        return Arc::new(SyncBlockDag {
+            accumulator_info: accumulator.get_info(),
+            accumulator_snapshot: accumulator_snapshot.clone(),
+        });
     }
 }

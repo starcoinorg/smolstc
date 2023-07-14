@@ -29,6 +29,7 @@ use starcoin_storage::{
     cache_storage::CacheStorage, db_storage::DBStorage, storage::StorageInstance, Storage,
 };
 use starcoin_types::block::BlockHeader;
+use sync_block_dag::SyncBlockDag;
 use sync_dag_service::{CheckSync, SyncConnectToPeers, SyncDagService, SyncInitVerifiedClient};
 
 // dag
@@ -88,7 +89,6 @@ async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()
 
 fn main() {
     async_std::task::block_on(async {
-       
         let system = actix::prelude::System::new();
 
         let registry = RegistryService::launch();
@@ -105,9 +105,10 @@ fn main() {
                 .unwrap(),
             ))
             .unwrap(),
-        ));
+        )).await;
 
         registry.register::<ChainDagService>().await.unwrap();
+        async_std::task::sleep(std::time::Duration::from_secs(3)).await;
 
         /// init services: network service and sync service
         /// Actix services are initialized in parallel.

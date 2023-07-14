@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::sync_block_dag::SyncBlockDag;
 use anyhow::Result;
+use async_std::path::PathBuf;
 use consensus::blockdag::BlockDAG;
 use consensus_types::{
     blockhash::ORIGIN,
@@ -23,11 +24,10 @@ impl ChainDagService {
         let genesis_hash = genesis.hash();
 
         let k = 16;
-        let db_path = std::env::temp_dir().join("smolstc");
-        std::fs::remove_dir_all(db_path.clone()).expect("Failed to delete temporary directory");
-        println!("db path:{}", db_path.to_string_lossy());
+        let path = std::path::PathBuf::from("./sync_test_db");
+        std::fs::remove_dir_all(path.clone()).unwrap_or(());
 
-        let db = open_db(db_path, true, 1);
+        let db = open_db(path.clone(), true, 1);
 
         let mut dag = BlockDAG::new(genesis, k, db, 1024);
 
@@ -45,11 +45,14 @@ impl ServiceFactory<Self> for ChainDagService {
     fn create(ctx: &mut ServiceContext<ChainDagService>) -> Result<ChainDagService> {
         // for testing only
         let dag = Arc::new(Self::new_dag_for_test());
-        let accumulator = SyncBlockDag::build_sync_block_dag(dag.clone(), ctx.get_shared::<Arc<Storage>>().unwrap().clone());
-        ctx.put_shared(Arc::new(accumulator));
-        return Ok(ChainDagService {
-            dag: dag.clone(),
-        })
+        ctx.put_shared(dag.clone()).unwrap();
+        let sync_block_dag = SyncBlockDag::build_sync_block_dag(
+            dag.clone(),
+            ctx.get_shared::<Arc<Storage>>().unwrap().clone(),
+        );
+        ctx.put_shared(sync_block_dag.clone()).unwrap();
+
+        return Ok(ChainDagService { dag: dag.clone() });
     }
 }
 

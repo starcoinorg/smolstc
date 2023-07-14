@@ -37,13 +37,11 @@ impl ServiceRequest for SyncConnectToPeers {
 
 struct StartupInfo {
     accumulator_info: AccumulatorInfo,
-} 
+}
 
 pub struct SyncDagService {
     client: Option<Arc<VerifiedDagRpcClient>>,
-
     // start info should be in main, here is for test
-    
 }
 
 impl SyncDagService {
@@ -156,10 +154,12 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 .expect("the client must be initialized"),
         );
 
-        let best_chain_info = async_std::task::block_on(ctx
-            .service_ref::<NetworkDagService>()
-            .unwrap()
-            .send(GetBestChainInfo)).unwrap(); 
+        let best_chain_info = async_std::task::block_on(
+            ctx.service_ref::<NetworkDagService>()
+                .unwrap()
+                .send(GetBestChainInfo),
+        )
+        .unwrap();
 
         let accumulator = ctx.get_shared::<Arc<MerkleAccumulator>>().unwrap().clone();
 
