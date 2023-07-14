@@ -7,7 +7,7 @@ use crate::{
     sync_task_error_handle::ExtSyncTaskErrorHandle,
 };
 use anyhow::Ok;
-use starcoin_accumulator::accumulator_info::AccumulatorInfo;
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator};
 use starcoin_service_registry::{
     ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRef, ServiceRequest,
 };
@@ -155,15 +155,16 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 .as_ref()
                 .expect("the client must be initialized"),
         );
+
+        let best_chain_info = async_std::task::block_on(ctx
+            .service_ref::<NetworkDagService>()
+            .unwrap()
+            .send(GetBestChainInfo)).unwrap(); 
+
+        let accumulator = ctx.get_shared::<Arc<MerkleAccumulator>>().unwrap().clone();
+
         async_std::task::spawn(async move {
             // here should compare the dag's node not accumulator leaf node
-            let best_chain_info = ctx
-                .service_ref::<NetworkDagService>()
-                .unwrap()
-                .send(GetBestChainInfo)
-                .await
-                .unwrap();
-
             let sync_task = TaskGenerator::new(
                 FindAncestorTask::new(
                     current_block_number,
@@ -173,7 +174,7 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 2,
                 max_retry_times,
                 delay_milliseconds_on_error,
-                AncestorCollector::new(),
+                AncestorCollector::new(accumulator.clone()),
                 event_handle.clone(),
                 ext_error_handle.clone(),
             )

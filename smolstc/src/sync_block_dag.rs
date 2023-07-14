@@ -27,7 +27,7 @@ impl SyncBlockDag {
     pub fn build_sync_block_dag(
         dag: Arc<BlockDAG>,
         store: Arc<Storage>,
-    ) -> (MerkleAccumulator, Arc<SyncFlexiDagSnapshotStorage>) {
+    ) -> MerkleAccumulator {
         let accumulator = MerkleAccumulator::new_empty(store.get_accumulator_storage());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
@@ -89,6 +89,6 @@ impl SyncBlockDag {
             }
         }
 
-        return (accumulator, accumulator_snapshot);
+        return accumulator;
     }
 }

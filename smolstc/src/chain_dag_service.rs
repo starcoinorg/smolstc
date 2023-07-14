@@ -10,6 +10,7 @@ use consensus_types::{
 use database::prelude::open_db;
 use starcoin_crypto::HashValue;
 use starcoin_service_registry::{ActorService, ServiceContext, ServiceFactory};
+use starcoin_storage::Storage;
 use starcoin_types::block::BlockHeader;
 
 pub struct ChainDagService {
@@ -38,17 +39,17 @@ impl ChainDagService {
 
         dag
     }
-    /// for testing only
-    pub fn new_for_testing() -> Self {
-        ChainDagService {
-            dag: Arc::new(Self::new_dag_for_test()),
-        }
-    }
 }
 
 impl ServiceFactory<Self> for ChainDagService {
     fn create(ctx: &mut ServiceContext<ChainDagService>) -> Result<ChainDagService> {
-        Ok(Self::new_for_testing())
+        // for testing only
+        let dag = Arc::new(Self::new_dag_for_test());
+        let accumulator = SyncBlockDag::build_sync_block_dag(dag.clone(), ctx.get_shared::<Arc<Storage>>().unwrap().clone());
+        ctx.put_shared(Arc::new(accumulator));
+        return Ok(ChainDagService {
+            dag: dag.clone(),
+        })
     }
 }
 

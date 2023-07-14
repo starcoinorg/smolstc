@@ -9,6 +9,7 @@ use crate::{
 };
 use anyhow::Result;
 use bcs_ext::BCSCodec;
+use consensus::blockdag::BlockDAG;
 use futures::{channel::mpsc::channel, FutureExt, StreamExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{config, config::RequestResponseConfig, Event, NetworkService, NetworkWorker};
@@ -93,7 +94,7 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
         let localhost = Ipv4Addr::new(127, 0, 0, 1);
         let listen_addr = config::build_multiaddr![Ip4(localhost), Tcp(0_u16)];
         let network_service = NetworkDagService::new(
-            network_dag_rpc_service,
+            ctx,
             NetworkType::InP2P(
                 // notify
                 vec![Cow::from(PROTOCOL_NAME_NOTIFY)],
@@ -119,7 +120,8 @@ impl ServiceFactory<NetworkDagService> for NetworkDagServiceFactory {
 }
 
 impl NetworkDagService {
-    pub fn new(rpc_service: ServiceRef<NetworkDagRpcService>, nt: NetworkType) -> Self {
+    pub fn new(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagService>, nt: NetworkType) -> Self {
+        let rpc_service = ctx.service_ref::<NetworkDagRpcService>().unwrap().clone();
         let worker = match nt {
             NetworkType::InMemory(notifications, listen_addrs, request_responses) => {
                 build_worker(config::NetworkConfiguration {
@@ -132,7 +134,7 @@ impl NetworkDagService {
                             request_responses,
                         ),
                     ..config::NetworkConfiguration::new_local()
-                })
+                }, ctx)
             }
             NetworkType::InP2P(notifications, listen_addrs, request_responses) => {
                 build_worker(config::NetworkConfiguration {
@@ -148,7 +150,7 @@ impl NetworkDagService {
                             request_responses,
                         ),
                     ..config::NetworkConfiguration::new_local()
-                })
+                }, ctx)
             }
         };
         let network_inner_service = worker.service().clone();

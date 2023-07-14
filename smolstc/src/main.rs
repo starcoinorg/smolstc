@@ -88,6 +88,7 @@ async fn run_server(registry: &ServiceRef<RegistryService>) -> anyhow::Result<()
 
 fn main() {
     async_std::task::block_on(async {
+       
         let system = actix::prelude::System::new();
 
         let registry = RegistryService::launch();
@@ -106,6 +107,8 @@ fn main() {
             .unwrap(),
         ));
 
+        registry.register::<ChainDagService>().await.unwrap();
+
         /// init services: network service and sync service
         /// Actix services are initialized in parallel.
         /// Therefore, if there are dependencies among them,
@@ -117,7 +120,6 @@ fn main() {
             .await
             .unwrap();
         registry.register::<SyncDagService>().await.unwrap();
-        registry.register::<ChainDagService>().await.unwrap();
 
         /// to see if sync task or server task?
         let op = std::env::args().collect::<Vec<_>>();
