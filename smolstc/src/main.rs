@@ -105,7 +105,7 @@ fn main() {
                 .unwrap(),
             ))
             .unwrap(),
-        )).await;
+        )).await.unwrap();
 
         registry.register::<ChainDagService>().await.unwrap();
         async_std::task::sleep(std::time::Duration::from_secs(3)).await;

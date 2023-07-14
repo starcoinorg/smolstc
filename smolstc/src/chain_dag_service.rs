@@ -39,6 +39,81 @@ impl ChainDagService {
 
         dag
     }
+    fn new_dag_for_test_2() -> BlockDAG {
+        let genesis = Header::new(BlockHeader::random(), vec![HashValue::new(ORIGIN)]);
+        let genesis_hash = genesis.hash();
+
+        let k = 16;
+        let path = std::path::PathBuf::from("./sync_test_db");
+        std::fs::remove_dir_all(path.clone()).unwrap_or(());
+
+        let db = open_db(path.clone(), true, 1);
+
+        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+
+       let b = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![genesis_hash],
+        );
+ 
+        let c = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![genesis_hash],
+        );
+ 
+        let d = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![genesis_hash],
+        );
+ 
+        let e = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![genesis_hash],
+        );
+
+        let f = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![b.hash(), c.hash()],
+        );
+        let h = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![e.hash(), d.hash(), c.hash()],
+        );
+        let i = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![e.hash()],
+        );
+        let k = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![b.hash(), h.hash(), i.hash()],
+        );
+        let l = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![d.hash(), i.hash()],
+        );
+        let j = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![f.hash(), h.hash()],
+        );
+        let m = Header::new(
+            starcoin_types::block::BlockHeader::random(),
+            vec![f.hash(), k.hash()],
+        );
+ 
+        dag.commit_header(b);
+        dag.commit_header(c);
+        dag.commit_header(d);
+        dag.commit_header(e);
+        dag.commit_header(f);
+        dag.commit_header(h);
+        dag.commit_header(i);
+        dag.commit_header(k);
+        dag.commit_header(l);
+        dag.commit_header(j);
+        dag.commit_header(m);
+
+        dag
+    }
 }
 
 impl ServiceFactory<Self> for ChainDagService {
