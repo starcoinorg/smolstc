@@ -69,7 +69,7 @@ impl ServiceRequest for GetBestChainInfo {
 pub struct NetworkDagService {
     worker: Option<NetworkWorker<DagDataHandle>>,
     network_inner_service: Arc<NetworkService>,
-    peer_set: HashMap<PeerId, Status>,
+    peer_set: HashMap<PeerId, ChainInfo>,
 }
 
 impl NetworkDagService {
@@ -213,6 +213,9 @@ impl ActorService for NetworkDagService {
         async_std::task::spawn(async move {
             let _ = worker.await;
         });
+        let event_stream = self.network_inner_service.event_stream("network");
+        ctx.add_stream(event_stream);
+
         Ok(())
     }
 
@@ -254,6 +257,7 @@ impl EventHandler<Self, network_p2p::Event> for NetworkDagService {
         msg: Event,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) {
+        println!("p2p event...");
         match msg {
             Event::NotificationStreamOpened {
                 remote,
@@ -263,8 +267,9 @@ impl EventHandler<Self, network_p2p::Event> for NetworkDagService {
                 rpc_protocols,
                 version_string,
             } => {
-                let status = Status::decode(&generic_data).expect("");
-                self.peer_set.entry(remote).or_insert(status);
+                let chain_info = ChainInfo::decode(&generic_data).expect("failed to decode generic data for status");
+                self.peer_set.entry(remote).or_insert(chain_info);
+                println!("a peer is put into the peer set, {:?}", remote);
             }
             _ => (),
         }
@@ -279,6 +284,6 @@ impl ServiceHandler<Self, GetBestChainInfo> for NetworkDagService {
     ) -> <GetBestChainInfo as ServiceRequest>::Response {
         // this is for test
         let first = self.peer_set.iter().next().unwrap().1;
-        first.info.clone()
+        first.clone()
     }
 }
