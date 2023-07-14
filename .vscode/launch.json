@@ -132,7 +132,7 @@
           "kind": "bin"
         }
       },
-      "args": ["sync", "/ip4/127.0.0.1/tcp/63037/p2p/12D3KooWQtEJ5w27Sb2WKXUBZSQnuD8zBcUsPbrHg2W9sJpXq24n"],
+      "args": ["sync", "/ip4/127.0.0.1/tcp/51054/p2p/12D3KooW9wAAjv5tvkbgXNMJJENfgTsLcrueMmxkHVArL5vXhYJS"],
       "cwd": "${workspaceFolder}"
     },
  

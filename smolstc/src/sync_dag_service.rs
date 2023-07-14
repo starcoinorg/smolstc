@@ -7,11 +7,11 @@ use crate::{
     sync_task_error_handle::ExtSyncTaskErrorHandle, chain_dag_service::{ChainDagService, GetAccumulatorInfo},
 };
 use anyhow::Ok;
-use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator};
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator, node::AccumulatorStoreType};
 use starcoin_service_registry::{
     ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRef, ServiceRequest,
 };
-use starcoin_storage::{Storage, SyncFlexiDagStore};
+use starcoin_storage::{Storage, SyncFlexiDagStore, Store};
 use stream_task::{Generator, TaskEventCounterHandle, TaskGenerator};
 
 #[derive(Debug)]
@@ -169,7 +169,7 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
         )
         .unwrap();
 
-        let accumulator_store = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_storage();
+        let accumulator_store = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_store(AccumulatorStoreType::SyncDag);
 
         async_std::task::spawn(async move {
             // here should compare the dag's node not accumulator leaf node
