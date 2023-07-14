@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::sync_block_dag::SyncBlockDag;
 use anyhow::Result;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
+use starcoin_crypto::HashValue;
 use starcoin_service_registry::{
     ActorService, ServiceContext, ServiceFactory, ServiceHandler, ServiceRequest,
 };
@@ -55,5 +56,30 @@ impl ServiceHandler<Self, GetAccumulatorInfo> for ChainDagService {
     ) -> <GetAccumulatorInfo as ServiceRequest>::Response {
         // this is for test
         self.dag.accumulator.get_info()
+    }
+}
+
+#[derive(Debug)]
+pub struct GetAccumulatorLeaves {
+    pub start_index: u64,
+    pub batch_size: u64,
+}
+impl ServiceRequest for GetAccumulatorLeaves {
+    type Response = Vec<HashValue>;
+}
+
+impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
+    fn handle(
+        &mut self,
+        msg: GetAccumulatorLeaves,
+        ctx: &mut starcoin_service_registry::ServiceContext<Self>,
+    ) -> <GetAccumulatorLeaves as ServiceRequest>::Response {
+        match self.dag.accumulator.get_leaves(msg.start_index, true, msg.batch_size) {
+            Ok(leaves) => leaves,
+            Err(error) => {
+                println!("an error occured when getting the leaves of the accumulator, {}", error.to_string());
+                [].to_vec()
+            }
+        }
     }
 }

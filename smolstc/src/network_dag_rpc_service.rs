@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     network_dag_data::Status,
-    network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl},
+    network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl}, chain_dag_service::ChainDagService,
 };
 use bcs_ext::BCSCodec;
 use network_p2p::Event;
@@ -20,7 +20,7 @@ pub struct NetworkDagRpcService {
 
 impl NetworkDagRpcService {
     pub fn new(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagRpcService>) -> Self {
-        let rpc_impl = NetworkDagRpcImpl::default();
+        let rpc_impl = NetworkDagRpcImpl::new(ctx.service_ref::<ChainDagService>().unwrap().clone());
         let rpc_server = NetworkRpcServer::new(rpc_impl.to_delegate());
         NetworkDagRpcService {
             rpc_server: Arc::new(rpc_server),

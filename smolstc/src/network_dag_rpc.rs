@@ -5,6 +5,9 @@ use network_p2p_derive::net_rpc;
 use network_p2p_types::peer_id::PeerId;
 use serde::{Deserialize, Serialize};
 use starcoin_crypto::HashValue;
+use starcoin_service_registry::ServiceRef;
+
+use crate::chain_dag_service::{ChainDagService, self};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -46,9 +49,18 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
     ) -> BoxFuture<Result<Vec<HashValue>>>;
 }
 
-#[derive(Default)]
-#[allow(clippy::upper_case_acronyms)]
-pub struct NetworkDagRpcImpl;
+pub struct NetworkDagRpcImpl {
+    chain_service: ServiceRef<ChainDagService>,
+}
+
+impl NetworkDagRpcImpl {
+    pub fn new(chain_service: ServiceRef<ChainDagService>) -> Self {
+        NetworkDagRpcImpl { 
+            chain_service   
+        }
+    }
+}
+
 impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
     fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>> {
         println!("peer id = {peer_id:?}, request = {request:?}");
@@ -61,9 +73,12 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
 
     fn get_accumulator_leaves(
         &self,
-        peer_id: PeerId,
+        _peer_id: PeerId,
         req: GetAccumulatorLeaves,
     ) -> BoxFuture<Result<Vec<HashValue>>> {
-        todo!()
+        self.chain_service.send(chain_dag_service::GetAccumulatorLeaves {
+            start_index: req.accumulator_leaf_index,
+            batch_size: req.batch_size,
+        }).boxed()
     }
 }
