@@ -34,7 +34,7 @@ impl TaskState for FindAncestorTask {
             let current_number = self.start_leaf_number;
             let leaf_hashes = self
                 .fetcher
-                .get_sync_dag_asccumulator_leaves(None, self.start_leaf_number)
+                .get_sync_dag_asccumulator_leaves(None, self.start_leaf_number, self.batch_size)
                 .await?;
             let id_and_numbers: Vec<DagBlockIdAndNumber> = leaf_hashes
                 .into_iter()

@@ -10,5 +10,6 @@ pub trait PeerSynDagAccumulator: Send + Sync {
         &self,
         peer_id: Option<PeerId>,
         leaf_index: u64,
+        batch_size: u64,
     ) -> BoxFuture<Result<Vec<HashValue>>>;
 }

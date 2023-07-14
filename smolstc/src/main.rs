@@ -94,18 +94,21 @@ fn main() {
         let registry = RegistryService::launch();
 
         /// initialize the storage
-        registry.put_shared(Arc::new(
-            Storage::new(StorageInstance::new_cache_and_db_instance(
-                CacheStorage::default(),
-                DBStorage::new(
-                    starcoin_config::temp_dir().as_ref(),
-                    RocksdbConfig::default(),
-                    None,
-                )
+        registry
+            .put_shared(Arc::new(
+                Storage::new(StorageInstance::new_cache_and_db_instance(
+                    CacheStorage::default(),
+                    DBStorage::new(
+                        starcoin_config::temp_dir().as_ref(),
+                        RocksdbConfig::default(),
+                        None,
+                    )
+                    .unwrap(),
+                ))
                 .unwrap(),
             ))
-            .unwrap(),
-        )).await.unwrap();
+            .await
+            .unwrap();
 
         registry.register::<ChainDagService>().await.unwrap();
         async_std::task::sleep(std::time::Duration::from_secs(3)).await;

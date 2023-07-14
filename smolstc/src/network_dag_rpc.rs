@@ -37,6 +37,7 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
         &self,
         peer_id: PeerId,
         accumulator_leaf_index: u64,
+        batch_size: u64,
     ) -> BoxFuture<Result<Vec<HashValue>>>;
 }
 
@@ -57,6 +58,7 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         &self,
         peer_id: PeerId,
         accumulator_leaf_index: u64,
+        batch_size: u64,
     ) -> BoxFuture<Result<Vec<HashValue>>> {
         todo!()
     }

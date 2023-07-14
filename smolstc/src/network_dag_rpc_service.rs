@@ -19,7 +19,7 @@ pub struct NetworkDagRpcService {
 }
 
 impl NetworkDagRpcService {
-    pub fn new() -> Self {
+    pub fn new(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagRpcService>) -> Self {
         let rpc_impl = NetworkDagRpcImpl::default();
         let rpc_server = NetworkRpcServer::new(rpc_impl.to_delegate());
         NetworkDagRpcService {
@@ -34,7 +34,7 @@ impl ServiceFactory<NetworkDagRpcService> for NetworkDagRpcService {
     fn create(
         ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagRpcService>,
     ) -> anyhow::Result<NetworkDagRpcService> {
-        anyhow::Result::Ok(NetworkDagRpcService::new())
+        anyhow::Result::Ok(NetworkDagRpcService::new(ctx))
     }
 }
 

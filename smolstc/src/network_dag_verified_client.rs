@@ -4,7 +4,6 @@ use anyhow::Result;
 use futures::FutureExt;
 use network_p2p_core::{PeerId, RawRpcClient};
 use network_p2p_types::IfDisconnected;
-use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_crypto::HashValue;
 
 use crate::{
@@ -105,6 +104,7 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
         &self,
         peer: Option<PeerId>,
         leaf_index: u64,
+        batch_size: u64,
     ) -> futures_core::future::BoxFuture<Result<Vec<HashValue>>> {
         let peer_id = match peer {
             Some(peer_id) => peer_id,
@@ -118,6 +118,7 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
                 result
             }
         };
-        self.client.get_accumulator_leaves(peer_id, leaf_index)
+        self.client
+            .get_accumulator_leaves(peer_id, leaf_index, batch_size)
     }
 }

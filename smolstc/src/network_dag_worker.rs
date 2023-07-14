@@ -21,8 +21,11 @@ pub fn build_worker(
         protocol_id: config::ProtocolId::from(PROTOCOL_NAME_CHAIN),
         metrics_registry: None,
         business_layer_handle: DagDataHandle::new(ChainInfo {
-            flexi_dag_accumulator_info: 
-                ctx.get_shared::<Arc<SyncBlockDag>>().unwrap().accumulator_info.clone(),
+            flexi_dag_accumulator_info: ctx
+                .get_shared::<Arc<SyncBlockDag>>()
+                .unwrap()
+                .accumulator_info
+                .clone(),
         }),
     })
     .unwrap();
