@@ -9,8 +9,8 @@ use crate::{
 };
 use bcs_ext::BCSCodec;
 use network_p2p::Event;
-use network_p2p_core::server::NetworkRpcServer;
-use network_p2p_types::ProtocolRequest;
+use network_p2p_core::{server::NetworkRpcServer, RawRpcServer};
+use network_p2p_types::{ProtocolRequest, OutgoingResponse};
 use sc_peerset::PeerId;
 use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory};
 
@@ -44,6 +44,21 @@ impl EventHandler<Self, ProtocolRequest> for NetworkDagRpcService {
         msg: ProtocolRequest,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) {
-        todo!()
+        let rpc_server = self.rpc_server.clone();
+        ctx.spawn(async move {
+            let protocol = msg.protocol;
+            let rpc_path = protocol.strip_prefix("/starcoin/rpc/").unwrap().to_string();
+            let peer = msg.request.peer.into();
+            let result = rpc_server.handle_raw_request(peer, rpc_path.into(), msg.request.payload).await;
+
+            let resp = bcs_ext::to_bytes(&result).expect("NetRpc Result must encode success.");
+            //TODO: update reputation_changes
+            if let Err(e) = msg.request.pending_response.send(OutgoingResponse {
+                result: Ok(resp),
+                reputation_changes: vec![],
+            }) {
+                println!("Send response to rpc call failed:{:?}", e);
+            }
+        });
     }
 }
