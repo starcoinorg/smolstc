@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use crate::sync_block_dag::SyncBlockDag;
+use crate::{sync_block_dag::SyncBlockDag, network_dag_rpc::TargetAccumulatorLeaf};
 use anyhow::Result;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
 use starcoin_crypto::HashValue;
 use starcoin_service_registry::{
     ActorService, ServiceContext, ServiceFactory, ServiceHandler, ServiceRequest,
 };
-use starcoin_storage::Storage;
+use starcoin_storage::{Storage, storage::CodecKVStore};
 
 pub struct ChainDagService {
     dag: SyncBlockDag,
@@ -65,7 +65,7 @@ pub struct GetAccumulatorLeaves {
     pub batch_size: u64,
 }
 impl ServiceRequest for GetAccumulatorLeaves {
-    type Response = Vec<HashValue>;
+    type Response = Vec<TargetAccumulatorLeaf>;
 }
 
 impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
@@ -75,7 +75,22 @@ impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) -> <GetAccumulatorLeaves as ServiceRequest>::Response {
         match self.dag.accumulator.get_leaves(msg.start_index, true, msg.batch_size) {
-            Ok(leaves) => leaves,
+            Ok(leaves) => {
+                leaves.into_iter().enumerate().map(|(index, leaf)| {
+                    match self.dag.accumulator_snapshot.get(leaf) {
+                        Ok(op_snapshot) => {
+                            let snapshot = op_snapshot.expect("snapshot must exist");
+                            TargetAccumulatorLeaf {
+                                accumulator_info: snapshot.accumulator_info,
+                                leaf_index: msg.start_index.saturating_sub(index as u64),
+                            }
+                        }
+                        Err(error) => {
+                            panic!("error occured when query the accumulator snapshot: {}", error.to_string());
+                        }
+                    }
+                }).collect()
+            }
             Err(error) => {
                 println!("an error occured when getting the leaves of the accumulator, {}", error.to_string());
                 [].to_vec()

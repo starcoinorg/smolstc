@@ -8,7 +8,7 @@ use consensus_types::{
 };
 use database::prelude::open_db;
 use serde::{Deserialize, Serialize};
-use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator, node::AccumulatorStoreType};
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator, node::AccumulatorStoreType, AccumulatorTreeStore};
 use starcoin_crypto::HashValue;
 use starcoin_storage::{
     flexi_dag::{SyncFlexiDagSnapshot, SyncFlexiDagSnapshotStorage},
@@ -125,7 +125,8 @@ impl SyncBlockDag {
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
         let dag = Self::new_dag_for_test();
-        let accumulator = MerkleAccumulator::new_empty(store.get_accumulator_store(AccumulatorStoreType::SyncDag));
+        let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
+        let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
         let mut next_parents = HashSet::new();
@@ -186,6 +187,7 @@ impl SyncBlockDag {
             }
         }
 
+        accumulator.flush().unwrap();
         return SyncBlockDag {
             dag: Arc::new(dag),
             accumulator,

@@ -1,8 +1,8 @@
-use crate::{sync_dag_protocol_trait::PeerSynDagAccumulator, sync_dag_types::DagBlockIdAndNumber};
+use crate::{sync_dag_protocol_trait::PeerSynDagAccumulator, sync_dag_types::DagBlockIdAndNumber, network_dag_rpc::TargetAccumulatorLeaf};
 use anyhow::{format_err, Result};
 use futures::FutureExt;
-use starcoin_accumulator::{Accumulator, MerkleAccumulator};
-use starcoin_storage::accumulator;
+use starcoin_accumulator::{Accumulator, MerkleAccumulator, accumulator_info};
+use starcoin_storage::{accumulator, flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore};
 use std::sync::Arc;
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
 
@@ -27,24 +27,16 @@ impl FindAncestorTask {
 }
 
 impl TaskState for FindAncestorTask {
-    type Item = DagBlockIdAndNumber;
+    type Item = TargetAccumulatorLeaf;
 
     fn new_sub_task(self) -> futures_core::future::BoxFuture<'static, Result<Vec<Self::Item>>> {
         async move {
             let current_number = self.start_leaf_number;
-            let leaf_hashes = self
+            let target_accumulator_leaves = self
                 .fetcher
                 .get_sync_dag_asccumulator_leaves(None, self.start_leaf_number, self.batch_size)
                 .await?;
-            let id_and_numbers: Vec<DagBlockIdAndNumber> = leaf_hashes
-                .into_iter()
-                .enumerate()
-                .map(|(index, accumulator_leaf)| DagBlockIdAndNumber {
-                    accumulator_leaf,
-                    number: current_number.saturating_sub(index as u64),
-                })
-                .collect();
-            Ok(id_and_numbers)
+            Ok(target_accumulator_leaves)
         }
         .boxed()
     }
@@ -66,31 +58,38 @@ impl TaskState for FindAncestorTask {
 
 pub struct AncestorCollector {
     accumulator: Arc<MerkleAccumulator>,
-    ancestor: Option<DagBlockIdAndNumber>,
+    ancestor: Option<TargetAccumulatorLeaf>,
+    accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
 }
 
 impl AncestorCollector {
-    pub fn new(accumulator: Arc<MerkleAccumulator>) -> Self {
+    pub fn new(accumulator: Arc<MerkleAccumulator>, accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>) -> Self {
         Self {
             accumulator,
             ancestor: None,
+            accumulator_snapshot,
         }
     }
 }
 
-impl TaskResultCollector<DagBlockIdAndNumber> for AncestorCollector {
-    type Output = DagBlockIdAndNumber;
+impl TaskResultCollector<TargetAccumulatorLeaf> for AncestorCollector {
+    type Output = TargetAccumulatorLeaf;
 
-    fn collect(&mut self, item: DagBlockIdAndNumber) -> anyhow::Result<CollectorState> {
+    fn collect(&mut self, item: TargetAccumulatorLeaf) -> anyhow::Result<CollectorState> {
         if self.ancestor.is_some() {
             return Ok(CollectorState::Enough);
         }
 
-        let accumulator_leaf = self.accumulator.get_leaf(item.number)?.ok_or_else(|| {
-            format_err!("Cannot find accumulator leaf by number: {}", item.number)
+        let accumulator_leaf = self.accumulator.get_leaf(item.leaf_index)?.ok_or_else(|| {
+            format_err!("Cannot find accumulator leaf by number: {}", item.leaf_index)
         })?;
 
-        if item.accumulator_leaf == accumulator_leaf {
+        let accumulator_info = match self.accumulator_snapshot.get(accumulator_leaf)? {
+            Some(snapshot) => snapshot.accumulator_info,
+            None => panic!("failed to get the snapshot, it is none."),
+        };
+
+        if item.accumulator_info == accumulator_info {
             self.ancestor = Some(item);
             return anyhow::Result::Ok(CollectorState::Enough);
         } else {

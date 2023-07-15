@@ -4,7 +4,7 @@ use futures_core::future::BoxFuture;
 use network_p2p_derive::net_rpc;
 use network_p2p_types::peer_id::PeerId;
 use serde::{Deserialize, Serialize};
-use starcoin_crypto::HashValue;
+use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_service_registry::ServiceRef;
 
 use crate::chain_dag_service::{ChainDagService, self};
@@ -38,6 +38,11 @@ pub struct GetAccumulatorLeaves {
     pub accumulator_leaf_index: u64,
     pub batch_size: u64,
 }
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct TargetAccumulatorLeaf {
+    pub accumulator_info: AccumulatorInfo,
+    pub leaf_index: u64,
+}
 
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
@@ -46,7 +51,7 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
         &self,
         peer_id: PeerId,
         req: GetAccumulatorLeaves,
-    ) -> BoxFuture<Result<Vec<HashValue>>>;
+    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeaf>>>;
 }
 
 pub struct NetworkDagRpcImpl {
@@ -75,7 +80,7 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         &self,
         _peer_id: PeerId,
         req: GetAccumulatorLeaves,
-    ) -> BoxFuture<Result<Vec<HashValue>>> {
+    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeaf>>> {
         self.chain_service.send(chain_dag_service::GetAccumulatorLeaves {
             start_index: req.accumulator_leaf_index,
             batch_size: req.batch_size,

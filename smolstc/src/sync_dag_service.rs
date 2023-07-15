@@ -170,6 +170,7 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
         .unwrap();
 
         let accumulator_store = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_store(AccumulatorStoreType::SyncDag);
+        let accumulator_snapshot = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_snapshot_storage();
 
         async_std::task::spawn(async move {
             // here should compare the dag's node not accumulator leaf node
@@ -182,7 +183,7 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 2,
                 max_retry_times,
                 delay_milliseconds_on_error,
-                AncestorCollector::new(Arc::new(MerkleAccumulator::new_with_info(accumulator_info, accumulator_store))),
+                AncestorCollector::new(Arc::new(MerkleAccumulator::new_with_info(accumulator_info, accumulator_store.clone())), accumulator_snapshot.clone()),
                 event_handle.clone(),
                 ext_error_handle.clone(),
             )

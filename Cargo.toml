@@ -23,21 +23,21 @@ default-members = [
 ]
 
 [workspace.dependencies]
-starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-storage = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-bcs-ext = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-sp-utils = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-network-p2p = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-network-p2p-types = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-network-p2p-core = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-sc-peerset = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-stream-task = { git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-accumulator = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
-starcoin-types = {git = "https://github.com/starcoinorg/starcoin",rev = "08649fe74a3d172dda8e39609721d90645f81ea2"}
+starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-storage = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+bcs-ext = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+sp-utils = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+network-p2p = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+network-p2p-types = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+network-p2p-core = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+sc-peerset = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+stream-task = { git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-accumulator = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
+starcoin-types = {git = "https://github.com/starcoinorg/starcoin",rev = "bba794c1556289c2fdb3bb02eb551689039d1ae9"}
 rocksdb = { default-features = false, features = ["lz4"], version = "0.21.0" }
 bincode = { version = "1", default-features = false }
 faster-hex = "0.6"
