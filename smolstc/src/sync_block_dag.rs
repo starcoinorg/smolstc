@@ -188,6 +188,7 @@ impl SyncBlockDag {
         }
 
         accumulator.flush().unwrap();
+        accumulator.flush().unwrap();
         return SyncBlockDag {
             dag: Arc::new(dag),
             accumulator,
