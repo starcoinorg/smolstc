@@ -8,7 +8,10 @@ use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_crypto::HashValue;
 
 use crate::{
-    network_dag_rpc::{gen_client::NetworkRpcClient, MyReqeust, MyResponse, GetAccumulatorLeaves, TargetAccumulatorLeaf},
+    network_dag_rpc::{
+        gen_client::NetworkRpcClient, GetAccumulatorLeaves, MyReqeust, MyResponse,
+        TargetAccumulatorLeaf,
+    },
     sync_dag_protocol_trait::PeerSynDagAccumulator,
 };
 
@@ -119,10 +122,12 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
                 result
             }
         };
-        self.client
-            .get_accumulator_leaves(peer_id, GetAccumulatorLeaves {
+        self.client.get_accumulator_leaves(
+            peer_id,
+            GetAccumulatorLeaves {
                 accumulator_leaf_index: leaf_index,
                 batch_size,
-            })
+            },
+        )
     }
 }

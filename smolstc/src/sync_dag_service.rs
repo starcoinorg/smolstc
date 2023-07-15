@@ -1,17 +1,20 @@
 use std::sync::Arc;
 
 use crate::{
+    chain_dag_service::{ChainDagService, GetAccumulatorInfo},
     find_ancestor_task::{AncestorCollector, FindAncestorTask},
     network_dag_service::{GetBestChainInfo, NetworkDagService},
     network_dag_verified_client::{NetworkDagServiceRef, VerifiedDagRpcClient},
-    sync_task_error_handle::ExtSyncTaskErrorHandle, chain_dag_service::{ChainDagService, GetAccumulatorInfo},
+    sync_task_error_handle::ExtSyncTaskErrorHandle,
 };
 use anyhow::Ok;
-use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator, node::AccumulatorStoreType};
+use starcoin_accumulator::{
+    accumulator_info::AccumulatorInfo, node::AccumulatorStoreType, Accumulator, MerkleAccumulator,
+};
 use starcoin_service_registry::{
     ActorService, EventHandler, ServiceFactory, ServiceHandler, ServiceRef, ServiceRequest,
 };
-use starcoin_storage::{Storage, SyncFlexiDagStore, Store};
+use starcoin_storage::{Storage, Store, SyncFlexiDagStore};
 use stream_task::{Generator, TaskEventCounterHandle, TaskGenerator};
 
 #[derive(Debug)]
@@ -169,8 +172,14 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
         )
         .unwrap();
 
-        let accumulator_store = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_store(AccumulatorStoreType::SyncDag);
-        let accumulator_snapshot = ctx.get_shared::<Arc<Storage>>().unwrap().get_accumulator_snapshot_storage();
+        let accumulator_store = ctx
+            .get_shared::<Arc<Storage>>()
+            .unwrap()
+            .get_accumulator_store(AccumulatorStoreType::SyncDag);
+        let accumulator_snapshot = ctx
+            .get_shared::<Arc<Storage>>()
+            .unwrap()
+            .get_accumulator_snapshot_storage();
 
         async_std::task::spawn(async move {
             // here should compare the dag's node not accumulator leaf node
@@ -183,7 +192,13 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
                 2,
                 max_retry_times,
                 delay_milliseconds_on_error,
-                AncestorCollector::new(Arc::new(MerkleAccumulator::new_with_info(accumulator_info, accumulator_store.clone())), accumulator_snapshot.clone()),
+                AncestorCollector::new(
+                    Arc::new(MerkleAccumulator::new_with_info(
+                        accumulator_info,
+                        accumulator_store.clone(),
+                    )),
+                    accumulator_snapshot.clone(),
+                ),
                 event_handle.clone(),
                 ext_error_handle.clone(),
             )

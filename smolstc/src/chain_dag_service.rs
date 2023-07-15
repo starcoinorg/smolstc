@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use crate::{sync_block_dag::SyncBlockDag, network_dag_rpc::TargetAccumulatorLeaf};
+use crate::{network_dag_rpc::TargetAccumulatorLeaf, sync_block_dag::SyncBlockDag};
 use anyhow::Result;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
 use starcoin_crypto::HashValue;
 use starcoin_service_registry::{
     ActorService, ServiceContext, ServiceFactory, ServiceHandler, ServiceRequest,
 };
-use starcoin_storage::{Storage, storage::CodecKVStore};
+use starcoin_storage::{storage::CodecKVStore, Storage};
 
 pub struct ChainDagService {
     dag: SyncBlockDag,
@@ -74,10 +74,16 @@ impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
         msg: GetAccumulatorLeaves,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) -> <GetAccumulatorLeaves as ServiceRequest>::Response {
-        match self.dag.accumulator.get_leaves(msg.start_index, true, msg.batch_size) {
-            Ok(leaves) => {
-                leaves.into_iter().enumerate().map(|(index, leaf)| {
-                    match self.dag.accumulator_snapshot.get(leaf) {
+        match self
+            .dag
+            .accumulator
+            .get_leaves(msg.start_index, true, msg.batch_size)
+        {
+            Ok(leaves) => leaves
+                .into_iter()
+                .enumerate()
+                .map(
+                    |(index, leaf)| match self.dag.accumulator_snapshot.get(leaf) {
                         Ok(op_snapshot) => {
                             let snapshot = op_snapshot.expect("snapshot must exist");
                             TargetAccumulatorLeaf {
@@ -86,13 +92,19 @@ impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
                             }
                         }
                         Err(error) => {
-                            panic!("error occured when query the accumulator snapshot: {}", error.to_string());
+                            panic!(
+                                "error occured when query the accumulator snapshot: {}",
+                                error.to_string()
+                            );
                         }
-                    }
-                }).collect()
-            }
+                    },
+                )
+                .collect(),
             Err(error) => {
-                println!("an error occured when getting the leaves of the accumulator, {}", error.to_string());
+                println!(
+                    "an error occured when getting the leaves of the accumulator, {}",
+                    error.to_string()
+                );
                 [].to_vec()
             }
         }

@@ -4,13 +4,14 @@ use std::{
 };
 
 use crate::{
+    chain_dag_service::ChainDagService,
     network_dag_data::Status,
-    network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl}, chain_dag_service::ChainDagService,
+    network_dag_rpc::{gen_server::NetworkDagRpc, NetworkDagRpcImpl},
 };
 use bcs_ext::BCSCodec;
 use network_p2p::Event;
 use network_p2p_core::{server::NetworkRpcServer, RawRpcServer};
-use network_p2p_types::{ProtocolRequest, OutgoingResponse};
+use network_p2p_types::{OutgoingResponse, ProtocolRequest};
 use sc_peerset::PeerId;
 use starcoin_service_registry::{ActorService, EventHandler, ServiceFactory};
 
@@ -20,7 +21,8 @@ pub struct NetworkDagRpcService {
 
 impl NetworkDagRpcService {
     pub fn new(ctx: &mut starcoin_service_registry::ServiceContext<NetworkDagRpcService>) -> Self {
-        let rpc_impl = NetworkDagRpcImpl::new(ctx.service_ref::<ChainDagService>().unwrap().clone());
+        let rpc_impl =
+            NetworkDagRpcImpl::new(ctx.service_ref::<ChainDagService>().unwrap().clone());
         let rpc_server = NetworkRpcServer::new(rpc_impl.to_delegate());
         NetworkDagRpcService {
             rpc_server: Arc::new(rpc_server),
@@ -49,7 +51,9 @@ impl EventHandler<Self, ProtocolRequest> for NetworkDagRpcService {
             let protocol = msg.protocol;
             let rpc_path = protocol.strip_prefix("/starcoin/rpc/").unwrap().to_string();
             let peer = msg.request.peer.into();
-            let result = rpc_server.handle_raw_request(peer, rpc_path.into(), msg.request.payload).await;
+            let result = rpc_server
+                .handle_raw_request(peer, rpc_path.into(), msg.request.payload)
+                .await;
 
             let resp = bcs_ext::to_bytes(&result).expect("NetRpc Result must encode success.");
             //TODO: update reputation_changes

@@ -8,12 +8,15 @@ use consensus_types::{
 };
 use database::prelude::open_db;
 use serde::{Deserialize, Serialize};
-use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator, node::AccumulatorStoreType, AccumulatorTreeStore};
+use starcoin_accumulator::{
+    accumulator_info::AccumulatorInfo, node::AccumulatorStoreType, Accumulator,
+    AccumulatorTreeStore, MerkleAccumulator,
+};
 use starcoin_crypto::HashValue;
 use starcoin_storage::{
     flexi_dag::{SyncFlexiDagSnapshot, SyncFlexiDagSnapshotStorage},
     storage::CodecKVStore,
-    Storage, SyncFlexiDagStore, Store,
+    Storage, Store, SyncFlexiDagStore,
 };
 use starcoin_types::block::BlockHeader;
 
@@ -130,10 +133,20 @@ impl SyncBlockDag {
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
         let mut next_parents = HashSet::new();
-        next_parents.insert(HashValue::new(ORIGIN));
+        let genesis_hash = HashValue::new(ORIGIN);
+        next_parents.insert(genesis_hash);
         accumulator
             .append(&[HashValue::new(ORIGIN)])
             .expect("appending genesis for sync accumulator must be successful");
+        accumulator_snapshot
+            .put(
+                HashValue::sha3_256_of(&[genesis_hash].encode().unwrap()),
+                SyncFlexiDagSnapshot {
+                    child_hashes: [genesis_hash].to_vec(),
+                    accumulator_info: accumulator.get_info(),
+                },
+            )
+            .expect("putting accumulator snapshot must be successful");
         loop {
             let mut children_set = HashSet::new();
             let mut relationship_set = HashSet::new();

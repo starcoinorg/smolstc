@@ -1,8 +1,13 @@
-use crate::{sync_dag_protocol_trait::PeerSynDagAccumulator, sync_dag_types::DagBlockIdAndNumber, network_dag_rpc::TargetAccumulatorLeaf};
+use crate::{
+    network_dag_rpc::TargetAccumulatorLeaf, sync_dag_protocol_trait::PeerSynDagAccumulator,
+    sync_dag_types::DagBlockIdAndNumber,
+};
 use anyhow::{format_err, Result};
 use futures::FutureExt;
-use starcoin_accumulator::{Accumulator, MerkleAccumulator, accumulator_info};
-use starcoin_storage::{accumulator, flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore};
+use starcoin_accumulator::{accumulator_info, Accumulator, MerkleAccumulator};
+use starcoin_storage::{
+    accumulator, flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore,
+};
 use std::sync::Arc;
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
 
@@ -63,7 +68,10 @@ pub struct AncestorCollector {
 }
 
 impl AncestorCollector {
-    pub fn new(accumulator: Arc<MerkleAccumulator>, accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>) -> Self {
+    pub fn new(
+        accumulator: Arc<MerkleAccumulator>,
+        accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
+    ) -> Self {
         Self {
             accumulator,
             ancestor: None,
@@ -81,7 +89,10 @@ impl TaskResultCollector<TargetAccumulatorLeaf> for AncestorCollector {
         }
 
         let accumulator_leaf = self.accumulator.get_leaf(item.leaf_index)?.ok_or_else(|| {
-            format_err!("Cannot find accumulator leaf by number: {}", item.leaf_index)
+            format_err!(
+                "Cannot find accumulator leaf by number: {}",
+                item.leaf_index
+            )
         })?;
 
         let accumulator_info = match self.accumulator_snapshot.get(accumulator_leaf)? {

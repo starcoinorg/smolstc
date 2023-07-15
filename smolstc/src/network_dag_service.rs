@@ -267,7 +267,8 @@ impl EventHandler<Self, network_p2p::Event> for NetworkDagService {
                 rpc_protocols,
                 version_string,
             } => {
-                let chain_info = ChainInfo::decode(&generic_data).expect("failed to decode generic data for status");
+                let chain_info = ChainInfo::decode(&generic_data)
+                    .expect("failed to decode generic data for status");
                 self.peer_set.entry(remote).or_insert(chain_info);
                 println!("a peer is put into the peer set, {:?}", remote);
             }

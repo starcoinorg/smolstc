@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use starcoin_accumulator::accumulator_info::AccumulatorInfo;
 use starcoin_service_registry::ServiceRef;
 
-use crate::chain_dag_service::{ChainDagService, self};
+use crate::chain_dag_service::{self, ChainDagService};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -60,9 +60,7 @@ pub struct NetworkDagRpcImpl {
 
 impl NetworkDagRpcImpl {
     pub fn new(chain_service: ServiceRef<ChainDagService>) -> Self {
-        NetworkDagRpcImpl { 
-            chain_service   
-        }
+        NetworkDagRpcImpl { chain_service }
     }
 }
 
@@ -81,9 +79,11 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         _peer_id: PeerId,
         req: GetAccumulatorLeaves,
     ) -> BoxFuture<Result<Vec<TargetAccumulatorLeaf>>> {
-        self.chain_service.send(chain_dag_service::GetAccumulatorLeaves {
-            start_index: req.accumulator_leaf_index,
-            batch_size: req.batch_size,
-        }).boxed()
+        self.chain_service
+            .send(chain_dag_service::GetAccumulatorLeaves {
+                start_index: req.accumulator_leaf_index,
+                batch_size: req.batch_size,
+            })
+            .boxed()
     }
 }
