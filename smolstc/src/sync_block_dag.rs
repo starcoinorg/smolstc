@@ -134,13 +134,14 @@ impl SyncBlockDag {
 
         let mut next_parents = HashSet::new();
         let genesis_hash = HashValue::new(ORIGIN);
+        let genesis_leaf = HashValue::sha3_256_of(&[genesis_hash].encode().unwrap());
         next_parents.insert(genesis_hash);
         accumulator
-            .append(&[HashValue::new(ORIGIN)])
+            .append(&[genesis_leaf])
             .expect("appending genesis for sync accumulator must be successful");
         accumulator_snapshot
             .put(
-                HashValue::sha3_256_of(&[genesis_hash].encode().unwrap()),
+                genesis_leaf,
                 SyncFlexiDagSnapshot {
                     child_hashes: [genesis_hash].to_vec(),
                     accumulator_info: accumulator.get_info(),
