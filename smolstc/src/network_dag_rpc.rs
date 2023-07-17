@@ -5,9 +5,13 @@ use network_p2p_derive::net_rpc;
 use network_p2p_types::peer_id::PeerId;
 use serde::{Deserialize, Serialize};
 use starcoin_accumulator::accumulator_info::AccumulatorInfo;
+use starcoin_crypto::HashValue;
 use starcoin_service_registry::ServiceRef;
 
-use crate::chain_dag_service::{self, ChainDagService};
+use crate::{
+    chain_dag_service::{self, ChainDagService},
+    sync_block_dag::RelationshipPair,
+};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct MyReqeust {
@@ -40,8 +44,20 @@ pub struct GetAccumulatorLeaves {
 }
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct TargetAccumulatorLeaf {
-    pub accumulator_info: AccumulatorInfo,
+    pub accumulator_root: HashValue, // accumulator info root
     pub leaf_index: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct GetTargetAccumulatorLeafDetail {
+    pub leaf_index: u64,
+    pub batch_size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct TargetAccumulatorLeafDetail {
+    pub accumulator_root: HashValue,
+    pub relationship_pair: Vec<RelationshipPair>,
 }
 
 #[net_rpc(client, server)]
@@ -52,6 +68,11 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
         peer_id: PeerId,
         req: GetAccumulatorLeaves,
     ) -> BoxFuture<Result<Vec<TargetAccumulatorLeaf>>>;
+    fn get_accumulator_leaf_detail(
+        &self,
+        peer_id: PeerId,
+        req: GetTargetAccumulatorLeafDetail,
+    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>>;
 }
 
 pub struct NetworkDagRpcImpl {
@@ -85,5 +106,13 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
                 batch_size: req.batch_size,
             })
             .boxed()
+    }
+
+    fn get_accumulator_leaf_detail(
+        &self,
+        peer_id: PeerId,
+        req: GetTargetAccumulatorLeafDetail,
+    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>> {
+        todo!()
     }
 }

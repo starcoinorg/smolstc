@@ -9,6 +9,7 @@ mod network_dag_trait;
 mod network_dag_verified_client;
 mod network_dag_worker;
 mod sync_block_dag;
+mod sync_dag_accumulator_task;
 mod sync_dag_protocol;
 mod sync_dag_protocol_trait;
 mod sync_dag_service;

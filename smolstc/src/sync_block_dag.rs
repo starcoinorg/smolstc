@@ -27,7 +27,7 @@ pub struct SyncBlockDag {
 }
 
 #[derive(Clone, Debug, Hash, Eq, PartialOrd, Ord, PartialEq, Serialize, Deserialize)]
-struct RelationshipPair {
+pub struct RelationshipPair {
     pub parent: HashValue,
     pub child: HashValue,
 }

@@ -87,7 +87,7 @@ impl ServiceHandler<Self, GetAccumulatorLeaves> for ChainDagService {
                         Ok(op_snapshot) => {
                             let snapshot = op_snapshot.expect("snapshot must exist");
                             TargetAccumulatorLeaf {
-                                accumulator_info: snapshot.accumulator_info,
+                                accumulator_root: snapshot.accumulator_info.accumulator_root,
                                 leaf_index: msg.start_index.saturating_sub(index as u64),
                             }
                         }

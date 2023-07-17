@@ -1,13 +1,10 @@
 use crate::{
     network_dag_rpc::TargetAccumulatorLeaf, sync_dag_protocol_trait::PeerSynDagAccumulator,
-    sync_dag_types::DagBlockIdAndNumber,
 };
 use anyhow::{format_err, Result};
 use futures::FutureExt;
-use starcoin_accumulator::{accumulator_info, Accumulator, MerkleAccumulator};
-use starcoin_storage::{
-    accumulator, flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore,
-};
+use starcoin_accumulator::{Accumulator, MerkleAccumulator};
+use starcoin_storage::{flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore};
 use std::sync::Arc;
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
 
@@ -100,7 +97,7 @@ impl TaskResultCollector<TargetAccumulatorLeaf> for AncestorCollector {
             None => panic!("failed to get the snapshot, it is none."),
         };
 
-        if item.accumulator_info == accumulator_info {
+        if item.accumulator_root == accumulator_info.accumulator_root {
             self.ancestor = Some(item);
             return anyhow::Result::Ok(CollectorState::Enough);
         } else {

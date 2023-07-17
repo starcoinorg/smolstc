@@ -9,8 +9,8 @@ use starcoin_crypto::HashValue;
 
 use crate::{
     network_dag_rpc::{
-        gen_client::NetworkRpcClient, GetAccumulatorLeaves, MyReqeust, MyResponse,
-        TargetAccumulatorLeaf,
+        gen_client::NetworkRpcClient, GetAccumulatorLeaves, GetTargetAccumulatorLeafDetail,
+        MyReqeust, MyResponse, TargetAccumulatorLeaf, TargetAccumulatorLeafDetail,
     },
     sync_dag_protocol_trait::PeerSynDagAccumulator,
 };
@@ -126,6 +126,33 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
             peer_id,
             GetAccumulatorLeaves {
                 accumulator_leaf_index: leaf_index,
+                batch_size,
+            },
+        )
+    }
+
+    fn get_accumulator_leaf_detail(
+        &self,
+        peer: Option<PeerId>,
+        leaf_index: u64,
+        batch_size: u64,
+    ) -> futures_core::future::BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>> {
+        let peer_id = match peer {
+            Some(peer_id) => peer_id,
+            None => {
+                // this is must be selected in peer selector which will select a proper peer by some ways.
+                // here I pick a peer id for testing the sync procedure simply
+                let result = async_std::task::block_on(async {
+                    let peerset = self.network_service.known_peers().await;
+                    return peerset.into_iter().next().unwrap().into();
+                });
+                result
+            }
+        };
+        self.client.get_accumulator_leaf_detail(
+            peer_id,
+            GetTargetAccumulatorLeafDetail {
+                leaf_index,
                 batch_size,
             },
         )
