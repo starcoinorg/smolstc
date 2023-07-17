@@ -113,10 +113,11 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         peer_id: PeerId,
         req: GetTargetAccumulatorLeafDetail,
     ) -> BoxFuture<Result<Option<Vec<TargetAccumulatorLeafDetail>>>> {
-        self.chain_service.send(chain_dag_service::GetDagAccumulatorLeafDetails {
-            start_index: req.leaf_index,
-            batch_size: req.batch_size,
-        })
-        .boxed()
+        self.chain_service
+            .send(chain_dag_service::GetDagAccumulatorLeafDetails {
+                start_index: req.leaf_index,
+                batch_size: req.batch_size,
+            })
+            .boxed()
     }
 }

@@ -3,7 +3,7 @@ use crate::{
 };
 use anyhow::{format_err, Result};
 use futures::FutureExt;
-use starcoin_accumulator::{Accumulator, MerkleAccumulator};
+use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator};
 use starcoin_storage::{flexi_dag::SyncFlexiDagSnapshotStorage, storage::CodecKVStore};
 use std::sync::Arc;
 use stream_task::{CollectorState, TaskResultCollector, TaskState};
@@ -60,7 +60,7 @@ impl TaskState for FindAncestorTask {
 
 pub struct AncestorCollector {
     accumulator: Arc<MerkleAccumulator>,
-    ancestor: Option<TargetAccumulatorLeaf>,
+    ancestor: Option<AccumulatorInfo>,
     accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
 }
 
@@ -78,7 +78,7 @@ impl AncestorCollector {
 }
 
 impl TaskResultCollector<TargetAccumulatorLeaf> for AncestorCollector {
-    type Output = TargetAccumulatorLeaf;
+    type Output = AccumulatorInfo;
 
     fn collect(&mut self, item: TargetAccumulatorLeaf) -> anyhow::Result<CollectorState> {
         if self.ancestor.is_some() {
@@ -98,7 +98,7 @@ impl TaskResultCollector<TargetAccumulatorLeaf> for AncestorCollector {
         };
 
         if item.accumulator_root == accumulator_info.accumulator_root {
-            self.ancestor = Some(item);
+            self.ancestor = Some(accumulator_info);
             return anyhow::Result::Ok(CollectorState::Enough);
         } else {
             Ok(CollectorState::Need)

@@ -22,7 +22,7 @@ pub struct SyncDagAccumulatorTask {
     fetcher: Arc<crate::network_dag_verified_client::VerifiedDagRpcClient>,
 }
 impl SyncDagAccumulatorTask {
-    pub(crate) fn new(
+    pub fn new(
         leaf_index: u64,
         batch_size: u64,
         target_index: u64,
@@ -45,12 +45,13 @@ impl TaskState for SyncDagAccumulatorTask {
             let target_details = match self
                 .fetcher
                 .get_accumulator_leaf_detail(None, self.leaf_index, self.batch_size)
-                .await? {
-                    Some(details) => details,
-                    None => {
-                        bail!("return None when sync accumulator for dag");
-                    },
-                };
+                .await?
+            {
+                Some(details) => details,
+                None => {
+                    bail!("return None when sync accumulator for dag");
+                }
+            };
             Ok(target_details)
         }
         .boxed()

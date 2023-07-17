@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{network_dag_rpc::{TargetAccumulatorLeaf, TargetAccumulatorLeafDetail}, sync_block_dag::{SyncBlockDag, RelationshipPair}};
+use crate::{
+    network_dag_rpc::{TargetAccumulatorLeaf, TargetAccumulatorLeafDetail},
+    sync_block_dag::{RelationshipPair, SyncBlockDag},
+};
 use anyhow::Result;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
 use starcoin_crypto::HashValue;
@@ -128,22 +131,42 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
         msg: GetDagAccumulatorLeafDetails,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) -> <GetDagAccumulatorLeafDetails as ServiceRequest>::Response {
-        let end_index = std::cmp::min(msg.start_index + msg.batch_size, self.dag.accumulator.get_info().num_leaves);
+        let end_index = std::cmp::min(
+            msg.start_index + msg.batch_size,
+            self.dag.accumulator.get_info().num_leaves,
+        );
         let mut details = [].to_vec();
         for index in msg.start_index..=end_index {
-            let leaf_hash = self.dag.accumulator.get_leaf(index).unwrap_or(None).expect("leaf hash should not be None");
-            let snapshot = self.dag.accumulator_snapshot.get(leaf_hash).unwrap_or(None).expect("the snapshot should not be None");
+            let leaf_hash = self
+                .dag
+                .accumulator
+                .get_leaf(index)
+                .unwrap_or(None)
+                .expect("leaf hash should not be None");
+            let snapshot = self
+                .dag
+                .accumulator_snapshot
+                .get(leaf_hash)
+                .unwrap_or(None)
+                .expect("the snapshot should not be None");
             let mut relationship_pair = [].to_vec();
-            relationship_pair.extend(snapshot.child_hashes.into_iter().fold([].to_vec(), |mut pairs, child| {
-                let parents = self.dag.dag.get_parents(child).expect("a child must have parents");
-                parents.into_iter().for_each(|parent| {
-                    pairs.push(RelationshipPair {
-                        parent,
-                        child,
-                    });
-                });
-                pairs
-            }).into_iter());
+            relationship_pair.extend(
+                snapshot
+                    .child_hashes
+                    .into_iter()
+                    .fold([].to_vec(), |mut pairs, child| {
+                        let parents = self
+                            .dag
+                            .dag
+                            .get_parents(child)
+                            .expect("a child must have parents");
+                        parents.into_iter().for_each(|parent| {
+                            pairs.push(RelationshipPair { parent, child });
+                        });
+                        pairs
+                    })
+                    .into_iter(),
+            );
 
             details.push(TargetAccumulatorLeafDetail {
                 accumulator_root: snapshot.accumulator_info.accumulator_root,
@@ -151,5 +174,5 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
             });
         }
         Some(details)
-   }
+    }
 }

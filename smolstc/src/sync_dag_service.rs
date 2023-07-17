@@ -3,9 +3,11 @@ use std::{any, sync::Arc};
 use crate::{
     chain_dag_service::{ChainDagService, GetAccumulatorInfo},
     find_ancestor_task::{AncestorCollector, FindAncestorTask},
+    network_dag_data::ChainInfo,
     network_dag_rpc::TargetAccumulatorLeaf,
     network_dag_service::{GetBestChainInfo, NetworkDagService},
     network_dag_verified_client::{NetworkDagServiceRef, VerifiedDagRpcClient},
+    sync_dag_accumulator_task::{SyncDagAccumulatorCollector, SyncDagAccumulatorTask},
     sync_task_error_handle::ExtSyncTaskErrorHandle,
 };
 use anyhow::Ok;
@@ -57,7 +59,8 @@ impl SyncDagService {
     pub fn find_ancestor_task(
         &self,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
-    ) -> TargetAccumulatorLeaf {
+        best_chain_info: ChainInfo,
+    ) -> AccumulatorInfo {
         /// for debug, I use genesis for start.
         /// in practice, it should be the one stored in the startup structure stored in the storage
         let current_block_number = 0;
@@ -80,13 +83,6 @@ impl SyncDagService {
                 .as_ref()
                 .expect("the client must be initialized"),
         );
-
-        let best_chain_info = async_std::task::block_on(
-            ctx.service_ref::<NetworkDagService>()
-                .unwrap()
-                .send(GetBestChainInfo),
-        )
-        .unwrap();
 
         let accumulator_info = async_std::task::block_on(
             ctx.service_ref::<ChainDagService>()
@@ -144,9 +140,62 @@ impl SyncDagService {
     fn sync_accumulator(
         &self,
         ctx: &mut starcoin_service_registry::ServiceContext<'_, SyncDagService>,
-        target_accumulator_leaf: TargetAccumulatorLeaf,
+        ancestor: AccumulatorInfo,
+        best_chain_info: ChainInfo,
     ) -> anyhow::Result<()> {
-        todo!()
+        let max_retry_times = 10; // in startcoin, it is in config
+        let delay_milliseconds_on_error = 100;
+
+        let accumulator_store = ctx
+            .get_shared::<Arc<Storage>>()
+            .unwrap()
+            .get_accumulator_store(AccumulatorStoreType::SyncDag);
+
+        let accumulator_snapshot = ctx
+            .get_shared::<Arc<Storage>>()
+            .unwrap()
+            .get_accumulator_snapshot_storage();
+
+        let fetcher = Arc::clone(
+            &self
+                .client
+                .as_ref()
+                .expect("the client must be initialized"),
+        );
+
+        let start_index = ancestor.get_num_leaves().saturating_sub(1);
+
+        let event_handle = Arc::new(TaskEventCounterHandle::new());
+
+        let ext_error_handle = Arc::new(ExtSyncTaskErrorHandle::new(Arc::clone(
+            &self
+                .client
+                .as_ref()
+                .expect("the client must be initialized"),
+        )));
+
+        async_std::task::spawn(async move {
+            let sync_task = TaskGenerator::new(
+                SyncDagAccumulatorTask::new(
+                    start_index,
+                    10,
+                    best_chain_info.flexi_dag_accumulator_info.num_leaves,
+                    fetcher.clone(),
+                ),
+                2,
+                max_retry_times,
+                delay_milliseconds_on_error,
+                SyncDagAccumulatorCollector::new(
+                    MerkleAccumulator::new_with_info(ancestor, accumulator_store.clone()),
+                    accumulator_snapshot.clone(),
+                    best_chain_info.flexi_dag_accumulator_info,
+                    start_index,
+                ),
+                event_handle.clone(),
+                ext_error_handle,
+            );
+        });
+        Ok(())
     }
 }
 
@@ -231,8 +280,14 @@ impl ServiceHandler<Self, CheckSync> for SyncDagService {
         msg: CheckSync,
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) -> <CheckSync as ServiceRequest>::Response {
-        let target_accumulator_leaf = self.find_ancestor_task(ctx);
-        self.sync_accumulator(ctx, target_accumulator_leaf);
+        let best_chain_info = async_std::task::block_on(
+            ctx.service_ref::<NetworkDagService>()
+                .unwrap()
+                .send(GetBestChainInfo),
+        )
+        .unwrap();
+        let ancestor = self.find_ancestor_task(ctx, best_chain_info.clone());
+        self.sync_accumulator(ctx, ancestor, best_chain_info.clone());
         Ok(())
     }
 }
