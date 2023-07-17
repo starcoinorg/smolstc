@@ -42,10 +42,15 @@ impl TaskState for SyncDagAccumulatorTask {
 
     fn new_sub_task(self) -> futures_core::future::BoxFuture<'static, Result<Vec<Self::Item>>> {
         async move {
-            let target_details = self
+            let target_details = match self
                 .fetcher
                 .get_accumulator_leaf_detail(None, self.leaf_index, self.batch_size)
-                .await?;
+                .await? {
+                    Some(details) => details,
+                    None => {
+                        bail!("return None when sync accumulator for dag");
+                    },
+                };
             Ok(target_details)
         }
         .boxed()

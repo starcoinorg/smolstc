@@ -136,7 +136,7 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
         peer: Option<PeerId>,
         leaf_index: u64,
         batch_size: u64,
-    ) -> futures_core::future::BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>> {
+    ) -> futures_core::future::BoxFuture<Result<Option<Vec<TargetAccumulatorLeafDetail>>>> {
         let peer_id = match peer {
             Some(peer_id) => peer_id,
             None => {

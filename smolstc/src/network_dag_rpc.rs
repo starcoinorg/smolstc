@@ -72,7 +72,7 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
         &self,
         peer_id: PeerId,
         req: GetTargetAccumulatorLeafDetail,
-    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>>;
+    ) -> BoxFuture<Result<Option<Vec<TargetAccumulatorLeafDetail>>>>;
 }
 
 pub struct NetworkDagRpcImpl {
@@ -112,7 +112,11 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         &self,
         peer_id: PeerId,
         req: GetTargetAccumulatorLeafDetail,
-    ) -> BoxFuture<Result<Vec<TargetAccumulatorLeafDetail>>> {
-        todo!()
+    ) -> BoxFuture<Result<Option<Vec<TargetAccumulatorLeafDetail>>>> {
+        self.chain_service.send(chain_dag_service::GetDagAccumulatorLeafDetails {
+            start_index: req.leaf_index,
+            batch_size: req.batch_size,
+        })
+        .boxed()
     }
 }
