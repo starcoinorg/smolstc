@@ -175,7 +175,7 @@ impl SyncDagService {
                 .expect("the client must be initialized"),
         )));
 
-        async_std::task::spawn(async move {
+        let sync = async_std::task::spawn(async move {
             let sync_task = TaskGenerator::new(
                 SyncDagAccumulatorTask::new(
                     start_index,
@@ -209,7 +209,7 @@ impl SyncDagService {
             //     Ok(sync_dag_accumulator_task)
             // });
         });
-        Ok(())
+        return Ok(async_std::task::block_on(sync));
     }
 }
 
