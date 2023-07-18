@@ -2,15 +2,16 @@ use std::{any, sync::Arc};
 
 use crate::{
     chain_dag_service::{ChainDagService, GetAccumulatorInfo},
-    find_ancestor_task::{AncestorCollector, FindAncestorTask},
     network_dag_data::ChainInfo,
     network_dag_rpc::TargetAccumulatorLeaf,
     network_dag_service::{GetBestChainInfo, NetworkDagService},
     network_dag_verified_client::{NetworkDagServiceRef, VerifiedDagRpcClient},
     sync_dag_accumulator_task::{SyncDagAccumulatorCollector, SyncDagAccumulatorTask},
+    sync_find_ancestor_task::{AncestorCollector, FindAncestorTask},
     sync_task_error_handle::ExtSyncTaskErrorHandle,
 };
 use anyhow::Ok;
+use futures::TryFutureExt;
 use starcoin_accumulator::{
     accumulator_info::AccumulatorInfo, node::AccumulatorStoreType, Accumulator, MerkleAccumulator,
 };
@@ -194,6 +195,19 @@ impl SyncDagService {
                 event_handle.clone(),
                 ext_error_handle,
             );
+            // TODO: we need to talk about this
+            // .and_then(|sync_accumulator_result, event_handle| {
+            //     let sync_dag_accumulator_task = TaskGenerator::new(
+            //         SyncDagBlockTask::new(),
+            //         2,
+            //         max_retry_times,
+            //         delay_milliseconds_on_error,
+            //         SyncDagAccumulatorCollector::new(),
+            //         event_handle.clone(),
+            //         ext_error_handle,
+            //     );
+            //     Ok(sync_dag_accumulator_task)
+            // });
         });
         Ok(())
     }

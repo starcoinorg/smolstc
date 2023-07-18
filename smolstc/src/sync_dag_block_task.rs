@@ -1,8 +1,8 @@
 use crate::{
-    network_dag_rpc::{TargetAccumulatorLeaf, TargetAccumulatorLeafDetail},
+    network_dag_rpc::{SyncDagBlockInfo, TargetAccumulatorLeaf, TargetAccumulatorLeafDetail},
     sync_dag_protocol_trait::PeerSynDagAccumulator,
 };
-use anyhow::{bail, ensure, format_err, Result};
+use anyhow::{bail, ensure, format_err, Result, Ok};
 use bcs_ext::BCSCodec;
 use futures::FutureExt;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator};
@@ -45,112 +45,54 @@ impl TaskState for SyncDagBlockTask {
 
     fn new_sub_task(self) -> futures_core::future::BoxFuture<'static, Result<Vec<Self::Item>>> {
         async move {
-            let target_details = match self
-                .fetcher
-                .get_accumulator_leaf_detail(None, self.leaf_index, self.batch_size)
-                .await?
-            {
-                Some(details) => details,
-                None => {
-                    bail!("return None when sync accumulator for dag");
-                }
+            let dag_info: Vec<SyncDagBlockInfo> = match self.fetcher.get_dag_block_info(None, self.start_index, self.batch_size).await {
+                anyhow::Result::Ok(result) => result.unwrap_or_else(|| {
+                    println!("failed to get the sync dag block info, result is None");
+                    [].to_vec()
+                }),
+                Err(error) => {
+                    println!("failed to get the sync dag block info, error: {:?}", error);
+                    [].to_vec()
+                },
             };
-            Ok(target_details)
-        }
-        .boxed()
+            Ok(dag_info)
+        }.boxed()
     }
 
     fn next(&self) -> Option<Self> {
-        //this should never happen, because all node's genesis block should same.
-        if self.leaf_index == 0 {
-            // it is genesis
-            return None;
-        }
-
-        let next_number = self.leaf_index.saturating_add(self.batch_size);
-        if next_number > self.target_index {
+        let next_number = self.start_index.saturating_add(self.batch_size);
+        if next_number > self.target.num_leaves {
             return None;
         }
         Some(Self {
-            fetcher: self.fetcher.clone(),
-            leaf_index: next_number,
+            accumulator: self.accumulator.clone(),
+            start_index: next_number,
             batch_size: self.batch_size,
-            target_index: self.target_index,
+            target: self.target.clone(),
+            fetcher: self.fetcher.clone(),
         })
     }
 }
 
-pub struct SyncDagAccumulatorCollector {
-    accumulator: MerkleAccumulator,
-    accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
-    target: AccumulatorInfo,
-    start_leaf_index: u64,
+pub struct SyncDagBlockCollector {
 }
 
-impl SyncDagAccumulatorCollector {
+impl SyncDagBlockCollector {
     pub fn new(
-        accumulator: MerkleAccumulator,
-        accumulator_snapshot: Arc<SyncFlexiDagSnapshotStorage>,
-        target: AccumulatorInfo,
-        start_leaf_index: u64,
     ) -> Self {
         Self {
-            accumulator,
-            accumulator_snapshot,
-            target,
-            start_leaf_index,
         }
     }
 }
 
-impl TaskResultCollector<TargetAccumulatorLeafDetail> for SyncDagAccumulatorCollector {
-    type Output = (u64, MerkleAccumulator);
+impl TaskResultCollector<SyncDagBlockInfo> for SyncDagBlockCollector {
+    type Output = ();
 
-    fn collect(&mut self, mut item: TargetAccumulatorLeafDetail) -> anyhow::Result<CollectorState> {
-        item.relationship_pair.sort();
-        let accumulator_leaf = HashValue::sha3_256_of(
-            &item
-                .encode()
-                .expect("encoding the sorted relatship set must be successful"),
-        );
-        self.accumulator.append(&[accumulator_leaf])?;
-        self.accumulator.flush()?;
-
-        let accumulator_info = self.accumulator.get_info();
-        if accumulator_info.accumulator_root != item.accumulator_root {
-            bail!("sync occurs error for the accumulator root differs from other!")
-        }
-
-        let num_leaves = accumulator_info.num_leaves;
-        self.accumulator_snapshot.put(
-            accumulator_leaf,
-            SyncFlexiDagSnapshot {
-                child_hashes: item
-                    .relationship_pair
-                    .into_iter()
-                    .map(|pair| pair.child)
-                    .collect::<Vec<_>>(),
-                accumulator_info,
-            },
-        )?;
-
-        if num_leaves == self.target.num_leaves {
-            Ok(CollectorState::Enough)
-        } else {
-            Ok(CollectorState::Need)
-        }
+    fn collect(&mut self, mut item: SyncDagBlockInfo) -> anyhow::Result<CollectorState> {
+        Ok(CollectorState::Enough)
     }
 
     fn finish(self) -> Result<Self::Output> {
-        let accumulator_info = self.accumulator.get_info();
-
-        ensure!(
-            accumulator_info == self.target,
-            "local accumulator info: {:?}, peer's: {:?}",
-            accumulator_info,
-            self.target
-        );
-
-        Ok((self.start_leaf_index, self.accumulator))
+        Ok(())
     }
 }

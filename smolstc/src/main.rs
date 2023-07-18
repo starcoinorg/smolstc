@@ -1,5 +1,4 @@
 mod chain_dag_service;
-mod find_ancestor_task;
 mod network_dag_data;
 mod network_dag_handle;
 mod network_dag_rpc;
@@ -10,10 +9,12 @@ mod network_dag_verified_client;
 mod network_dag_worker;
 mod sync_block_dag;
 mod sync_dag_accumulator_task;
+mod sync_dag_block_task;
 mod sync_dag_protocol;
 mod sync_dag_protocol_trait;
 mod sync_dag_service;
 mod sync_dag_types;
+mod sync_find_ancestor_task;
 mod sync_task_error_handle;
 
 use std::sync::Arc;

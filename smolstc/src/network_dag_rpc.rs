@@ -144,9 +144,11 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
         peer_id: PeerId,
         req: GetSyncDagBlockInfo,
     ) -> BoxFuture<Result<Option<Vec<SyncDagBlockInfo>>>> {
-        self.chain_service.send(chain_dag_service::GetDagBlockInfo {
-            start_index: req.leaf_index,
-            batch_size: req.batch_size,
-        }).boxed()
+        self.chain_service
+            .send(chain_dag_service::GetDagBlockInfo {
+                start_index: req.leaf_index,
+                batch_size: req.batch_size,
+            })
+            .boxed()
     }
 }

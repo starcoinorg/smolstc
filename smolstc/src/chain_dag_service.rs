@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    network_dag_rpc::{TargetAccumulatorLeaf, TargetAccumulatorLeafDetail, SyncDagBlockInfo},
+    network_dag_rpc::{SyncDagBlockInfo, TargetAccumulatorLeaf, TargetAccumulatorLeafDetail},
     sync_block_dag::{RelationshipPair, SyncBlockDag},
 };
 use anyhow::Result;
@@ -178,7 +178,6 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
     }
 }
 
-
 #[derive(Debug)]
 pub struct GetDagBlockInfo {
     pub start_index: u64,
@@ -199,7 +198,11 @@ impl ServiceHandler<Self, GetDagBlockInfo> for ChainDagService {
             msg.start_index + msg.batch_size,
             self.dag.accumulator.get_info().num_leaves,
         );
-        let leaves = match self.dag.accumulator.get_leaves(msg.start_index, false, msg.batch_size) {
+        let leaves = match self
+            .dag
+            .accumulator
+            .get_leaves(msg.start_index, false, msg.batch_size)
+        {
             Ok(leaves) => leaves,
             Err(error) => {
                 println!(
@@ -209,36 +212,44 @@ impl ServiceHandler<Self, GetDagBlockInfo> for ChainDagService {
                 [].to_vec()
             }
         };
-        let snapshots = leaves.iter().map(|hash| {
-            match self.dag.accumulator_snapshot.get(*hash) {
+        let snapshots = leaves
+            .iter()
+            .map(|hash| match self.dag.accumulator_snapshot.get(*hash) {
                 Ok(children) => children.expect("children must exist"),
                 Err(error) => {
                     panic!(
                         "error occured when query the accumulator snapshot: {}",
                         error.to_string()
                     );
-                } 
-            }
-        }).collect::<Vec<_>>();
-        let info = snapshots.into_iter().map(|snapshot| {
-            let headers = snapshot.child_hashes.into_iter().fold([].to_vec(), |mut headers, child| {
-                let header = match self.dag.dag.get_block_header(child) {
-                    Ok(header) => header,
-                    Err(error) => {
-                        panic!(
-                            "error occured when query the block header: {}",
-                            error.to_string()
-                        );
-                    }
-                };
-                headers.push(header);
-                headers
-            });
-            SyncDagBlockInfo {
-                block_headers: headers,
-                accumulator_info: snapshot.accumulator_info,
-            }
-        }).collect::<Vec<_>>();
+                }
+            })
+            .collect::<Vec<_>>();
+        let info = snapshots
+            .into_iter()
+            .map(|snapshot| {
+                let headers =
+                    snapshot
+                        .child_hashes
+                        .into_iter()
+                        .fold([].to_vec(), |mut headers, child| {
+                            let header = match self.dag.dag.get_block_header(child) {
+                                Ok(header) => header,
+                                Err(error) => {
+                                    panic!(
+                                        "error occured when query the block header: {}",
+                                        error.to_string()
+                                    );
+                                }
+                            };
+                            headers.push(header);
+                            headers
+                        });
+                SyncDagBlockInfo {
+                    block_headers: headers,
+                    accumulator_info: snapshot.accumulator_info,
+                }
+            })
+            .collect::<Vec<_>>();
         Some(info)
     }
 }
