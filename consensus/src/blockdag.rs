@@ -3,6 +3,7 @@ use consensus_types::blockhash::BlockHashes;
 use consensus_types::blockhash::KType;
 use consensus_types::blockhash::ORIGIN;
 use consensus_types::header::ConsensusHeader;
+use consensus_types::header::HeaderStoreReader;
 use consensus_types::header::{DbHeadersStore, Header, HeaderStore};
 use database::prelude::DB;
 use ghostdag::ghostdata::DbGhostdagStore;
@@ -110,6 +111,16 @@ impl BlockDAG {
         self.header_store
             .insert(header.hash(), Arc::new(header), 0)
             .unwrap();
+    }
+
+    pub fn get_block_header(&self, hash: Hash) -> anyhow::Result<Header> {
+        match self.header_store.get_header(hash) {
+            Ok(header) => anyhow::Result::Ok((*header).clone()),
+            Err(error) => {
+                println!("failed to get header by hash: {}", error.to_string());
+                bail!("failed to get header by hash: {}", error.to_string());
+            }
+        }
     }
 
     pub fn get_parents(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {

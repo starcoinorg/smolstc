@@ -1,4 +1,5 @@
 use anyhow::Result;
+use consensus_types::header::Header;
 use futures::FutureExt;
 use futures_core::future::BoxFuture;
 use network_p2p_derive::net_rpc;
@@ -60,6 +61,18 @@ pub struct TargetAccumulatorLeafDetail {
     pub relationship_pair: Vec<RelationshipPair>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GetSyncDagBlockInfo {
+    pub leaf_index: u64,
+    pub batch_size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SyncDagBlockInfo {
+    pub block_headers: Vec<Header>,
+    pub accumulator_info: AccumulatorInfo,
+}
+
 #[net_rpc(client, server)]
 pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
     fn send_request(&self, peer_id: PeerId, request: MyReqeust) -> BoxFuture<Result<MyResponse>>;
@@ -73,6 +86,11 @@ pub trait NetworkDagRpc: Sized + Send + Sync + 'static {
         peer_id: PeerId,
         req: GetTargetAccumulatorLeafDetail,
     ) -> BoxFuture<Result<Option<Vec<TargetAccumulatorLeafDetail>>>>;
+    fn get_dag_block_info(
+        &self,
+        peer_id: PeerId,
+        req: GetSyncDagBlockInfo,
+    ) -> BoxFuture<Result<Option<Vec<SyncDagBlockInfo>>>>;
 }
 
 pub struct NetworkDagRpcImpl {
@@ -119,5 +137,16 @@ impl gen_server::NetworkDagRpc for NetworkDagRpcImpl {
                 batch_size: req.batch_size,
             })
             .boxed()
+    }
+
+    fn get_dag_block_info(
+        &self,
+        peer_id: PeerId,
+        req: GetSyncDagBlockInfo,
+    ) -> BoxFuture<Result<Option<Vec<SyncDagBlockInfo>>>> {
+        self.chain_service.send(chain_dag_service::GetDagBlockInfo {
+            start_index: req.leaf_index,
+            batch_size: req.batch_size,
+        }).boxed()
     }
 }
