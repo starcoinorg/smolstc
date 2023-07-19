@@ -35,7 +35,7 @@ pub struct RelationshipPair {
 impl SyncBlockDag {
     fn new_dag_for_test() -> BlockDAG {
         let genesis = Header::new(BlockHeader::random(), vec![HashValue::new(ORIGIN)]);
-        let genesis_hash = genesis.hash();
+        let genesis_hash = HashValue::new(ORIGIN);
 
         let k = 16;
         let path = std::path::PathBuf::from("./sync_test_db");
@@ -45,17 +45,11 @@ impl SyncBlockDag {
 
         let mut dag = BlockDAG::new(genesis, k, db, 1024);
 
-        let block = Header::new(
-            starcoin_types::block::BlockHeader::random(),
-            vec![genesis_hash],
-        );
-        dag.commit_header(block);
-
         dag
     }
     fn new_dag_for_test_2() -> BlockDAG {
         let genesis = Header::new(BlockHeader::random(), vec![HashValue::new(ORIGIN)]);
-        let genesis_hash = genesis.hash();
+        let genesis_hash = HashValue::new(ORIGIN);
 
         let k = 16;
         let path = std::path::PathBuf::from("./sync_test_db");
@@ -127,13 +121,13 @@ impl SyncBlockDag {
     }
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
-        let dag = Self::new_dag_for_test_2();
+        let dag = Self::new_dag_for_test();
         let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
         let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
         let mut next_parents = HashSet::new();
-        let genesis_hash = dag.get_genesis_hash();
+        let genesis_hash = HashValue::new(ORIGIN);
         let genesis_leaf = HashValue::sha3_256_of(&[genesis_hash].encode().unwrap());
         next_parents.insert(genesis_hash);
         accumulator

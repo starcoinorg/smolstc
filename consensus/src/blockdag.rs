@@ -142,10 +142,6 @@ impl BlockDAG {
             }
         }
     }
-
-    pub fn get_genesis_hash(&self) -> Hash {
-        self.genesis.hash()
-    }
 }
 
 #[cfg(test)]
