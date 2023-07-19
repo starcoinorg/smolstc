@@ -121,7 +121,7 @@ impl SyncBlockDag {
     }
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
-        let dag = Self::new_dag_for_test_2();
+        let dag = Self::new_dag_for_test();
         let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
         let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
@@ -170,7 +170,9 @@ impl SyncBlockDag {
 
                 let mut sorted_relationship_set =
                     relationship_set.iter().cloned().collect::<Vec<_>>();
+                println!("before sort: {:?}", sorted_relationship_set);
                 sorted_relationship_set.sort();
+                println!("after sort: {:?}", sorted_relationship_set);
 
                 let accumulator_leaf = HashValue::sha3_256_of(
                     &sorted_relationship_set
@@ -189,11 +191,11 @@ impl SyncBlockDag {
                         },
                     )
                     .expect("putting accumulator snapshot must be successful");
+                println!("insert a node, leaf hash = {}, accumulator root = {}", accumulator_leaf, accumulator.get_info().accumulator_root);
                 next_parents = children_set;
             }
         }
 
-        accumulator.flush().unwrap();
         accumulator.flush().unwrap();
         return SyncBlockDag {
             dag: Arc::new(dag),
