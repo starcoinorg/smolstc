@@ -1,37 +1,35 @@
 use rocksdb::WriteBatch;
+use starcoin_storage::storage::InnerStore;
 
-use crate::prelude::DB;
+use crate::{db::DBStorage, errors::StoreError};
 
 /// Abstraction over direct/batched DB writing
 pub trait DbWriter {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>;
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error>;
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError>;
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError>;
 }
 
 pub struct DirectDbWriter<'a> {
-    db: &'a DB,
+    db: &'a DBStorage,
 }
 
 impl<'a> DirectDbWriter<'a> {
-    pub fn new(db: &'a DB) -> Self {
+    pub fn new(db: &'a DBStorage) -> Self {
         Self { db }
     }
 }
 
 impl DbWriter for DirectDbWriter<'_> {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
-        self.db.put(key, value)
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
+        self.db
+            .put(cf_name, key.to_owned(), value)
+            .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
-        self.db.delete(key)
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
+        self.db
+            .remove(cf_name, key.to_owned())
+            .map_err(|e| StoreError::DBIoError(e.to_string()))
     }
 }
 
@@ -46,16 +44,12 @@ impl<'a> BatchDbWriter<'a> {
 }
 
 impl DbWriter for BatchDbWriter<'_> {
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
+    fn put(&mut self, _cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
         self.batch.put(key, value);
         Ok(())
     }
 
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
+    fn delete(&mut self, _cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
         self.batch.delete(key);
         Ok(())
     }
@@ -63,16 +57,12 @@ impl DbWriter for BatchDbWriter<'_> {
 
 impl<T: DbWriter> DbWriter for &mut T {
     #[inline]
-    fn put<K, V>(&mut self, key: K, value: V) -> Result<(), rocksdb::Error>
-    where
-        K: AsRef<[u8]>,
-        V: AsRef<[u8]>,
-    {
-        (*self).put(key, value)
+    fn put(&mut self, cf_name: &str, key: &[u8], value: Vec<u8>) -> Result<(), StoreError> {
+        (*self).put(cf_name, key, value)
     }
 
     #[inline]
-    fn delete<K: AsRef<[u8]>>(&mut self, key: K) -> Result<(), rocksdb::Error> {
-        (*self).delete(key)
+    fn delete(&mut self, cf_name: &str, key: &[u8]) -> Result<(), StoreError> {
+        (*self).delete(cf_name, key)
     }
 }

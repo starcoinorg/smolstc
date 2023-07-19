@@ -1,14 +1,21 @@
-use super::ordering::*;
-use crate::ghostdata::{GhostdagData, GhostdagStoreReader};
 use crate::util::Refs;
-use consensus_types::blockhash::{
-    self, BlockHashExtensions, BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType,
+use consensus_types::{
+    blockhash::{
+        self, BlockHashExtensions, BlockHashMap, BlockHashes, BlueWorkType, HashKTypeMap, KType,
+    },
+    ghostdata::GhostdagData,
+    ordering::*,
 };
-use consensus_types::header::HeaderStoreReader;
+use database::consensus::{GhostdagStoreReader, HeaderStoreReader, RelationsStoreReader};
 use reachability::reachability_service::ReachabilityService;
-use reachability::relations::RelationsStoreReader;
 use starcoin_crypto::HashValue as Hash;
 use std::sync::Arc;
+// For GhostdagStoreReader-related functions, use GhostDagDataWrapper instead.
+//  ascending_mergeset_without_selected_parent
+//  descending_mergeset_without_selected_parent
+//  consensus_ordered_mergeset
+//  consensus_ordered_mergeset_without_selected_parent
+//use database::consensus::GhostDagDataWrapper;
 
 #[derive(Clone)]
 pub struct GhostdagManager<
@@ -19,9 +26,9 @@ pub struct GhostdagManager<
 > {
     genesis_hash: Hash,
     pub(super) k: KType,
-    pub(super) ghostdag_store: Arc<T>,
+    pub(super) ghostdag_store: T,
     pub(super) relations_store: S,
-    pub(super) headers_store: Arc<V>,
+    pub(super) headers_store: V,
     pub(super) reachability_service: U,
 }
 
@@ -35,9 +42,9 @@ impl<
     pub fn new(
         genesis_hash: Hash,
         k: KType,
-        ghostdag_store: Arc<T>,
+        ghostdag_store: T,
         relations_store: S,
-        headers_store: Arc<V>,
+        headers_store: V,
         reachability_service: U,
     ) -> Self {
         Self {
@@ -139,7 +146,7 @@ impl<
                     0u128
                 } else {
                     //TODO: implement caculate pow work
-                    let difficulty = self.headers_store.get_difficulty(hash).unwrap();
+                    let _difficulty = self.headers_store.get_difficulty(hash).unwrap();
                     1024u128
                 }
             })
@@ -293,6 +300,15 @@ impl<
                     .into(),
             }
         }
+    }
+
+    pub fn sort_blocks(&self, blocks: impl IntoIterator<Item = Hash>) -> Vec<Hash> {
+        let mut sorted_blocks: Vec<Hash> = blocks.into_iter().collect();
+        sorted_blocks.sort_by_cached_key(|block| SortableBlock {
+            hash: *block,
+            blue_work: self.ghostdag_store.get_blue_work(*block).unwrap(),
+        });
+        sorted_blocks
     }
 }
 

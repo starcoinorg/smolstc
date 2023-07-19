@@ -13,5 +13,4 @@ serde.workspace = true
 itertools.workspace = true
 parking_lot.workspace = true
 rocksdb.workspace = true
-[dev-dependencies]
-tempfile.workspace = true
+starcoin-storage.workspace = true
