@@ -148,14 +148,30 @@ impl SyncBlockDag {
             next_parents.into_iter().for_each(|parent| {
                 let result_children = dag.get_children(parent);
                 match result_children {
-                    Ok(mut children) => {
-                        children_set.extend(children.clone().into_iter());
-                        relationship_set.extend(children.into_iter().map(|child| {
-                            return RelationshipPair {
-                                parent,
-                                child,
+                    Ok(children) => {
+                        children.iter().for_each(|child| {
+                            let result_parents = dag.get_parents(*child);
+                            match result_parents {
+                                Ok(parents) => {
+                                    relationship_set.extend(parents.into_iter().map(|parent| {
+                                        return RelationshipPair {
+                                            parent,
+                                            child: *child,
+                                        };
+                                    }));
+                                }
+                                Err(error) => {
+                                    panic!("failed to get the parents when building sync accumulator, error message: {}", error.to_string());
+                                }
                             }
-                        }).collect::<HashSet<RelationshipPair>>());
+                        });
+                        children_set.extend(children.clone().into_iter());
+                        // relationship_set.extend(children.into_iter().map(|child| {
+                        //     return RelationshipPair {
+                        //         parent,
+                        //         child,
+                        //     }
+                        // }).collect::<HashSet<RelationshipPair>>());
                     }
                     Err(error) => {
                         panic!("failed to get the children when building sync accumulator, error message: {}", error.to_string());
