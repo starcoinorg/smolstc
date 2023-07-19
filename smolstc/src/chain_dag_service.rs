@@ -134,7 +134,7 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
     ) -> <GetDagAccumulatorLeafDetails as ServiceRequest>::Response {
         let end_index = std::cmp::min(
             msg.start_index + msg.batch_size,
-            self.dag.accumulator.get_info().num_leaves,
+            self.dag.accumulator.get_info().num_leaves - 1,
         );
         let mut details = [].to_vec();
         for index in msg.start_index..=end_index {

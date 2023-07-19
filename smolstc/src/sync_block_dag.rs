@@ -127,13 +127,13 @@ impl SyncBlockDag {
     }
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
-        let dag = Self::new_dag_for_test();
+        let dag = Self::new_dag_for_test_2();
         let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
         let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
 
         let mut next_parents = HashSet::new();
-        let genesis_hash = HashValue::new(ORIGIN);
+        let genesis_hash = dag.get_genesis_hash();
         let genesis_leaf = HashValue::sha3_256_of(&[genesis_hash].encode().unwrap());
         next_parents.insert(genesis_hash);
         accumulator
@@ -152,10 +152,9 @@ impl SyncBlockDag {
             let mut children_set = HashSet::new();
             let mut relationship_set = HashSet::new();
             next_parents.into_iter().for_each(|parent| {
-            let result_children = dag.get_children(parent);
-            match result_children {
-                Ok(mut children) => {
-                    if !children.is_empty() {
+                let result_children = dag.get_children(parent);
+                match result_children {
+                    Ok(mut children) => {
                         children_set.extend(children.clone().into_iter());
                         relationship_set.extend(children.into_iter().map(|child| {
                             return RelationshipPair {
@@ -164,12 +163,11 @@ impl SyncBlockDag {
                             }
                         }).collect::<HashSet<RelationshipPair>>());
                     }
+                    Err(error) => {
+                        panic!("failed to get the children when building sync accumulator, error message: {}", error.to_string());
+                    }
                 }
-                Err(error) => {
-                    panic!("failed to get the children when building sync accumulator, error message: {}", error.to_string());
-                }
-            }
-            });
+           });
             if children_set.is_empty() {
                 break;
             } else {
