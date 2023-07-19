@@ -194,7 +194,19 @@ impl SyncDagService {
                 ),
                 event_handle.clone(),
                 ext_error_handle,
-            );
+            ).generate();
+            let (fut, handle) = sync_task.with_handle();
+            match fut.await {
+                anyhow::Result::Ok((start_index, full_accumulator)) => {
+                    println!("start index: {}, full accumulator info is {:?}", start_index, full_accumulator.get_info());
+                    return Ok((start_index, full_accumulator));
+                }
+                Err(error) => {
+                    println!("an error happened: {}", error.to_string());
+                    return Err(error.into());
+                }
+            }
+
             // TODO: we need to talk about this
             // .and_then(|sync_accumulator_result, event_handle| {
             //     let sync_dag_accumulator_task = TaskGenerator::new(
@@ -209,7 +221,17 @@ impl SyncDagService {
             //     Ok(sync_dag_accumulator_task)
             // });
         });
-        return Ok(async_std::task::block_on(sync));
+        // return Ok(async_std::task::block_on(sync));
+        match async_std::task::block_on(sync) {
+            std::result::Result::Ok(result) => {
+                println!("sync accumulator success");
+                return Ok(());
+            }
+            Err(error) => {
+                println!("sync accumulator error: {}", error.to_string());
+                Err(error.into())
+            }
+        }
     }
 }
 
