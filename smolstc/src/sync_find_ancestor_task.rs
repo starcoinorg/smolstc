@@ -23,7 +23,7 @@ impl FindAncestorTask {
         FindAncestorTask {
             start_leaf_number: std::cmp::min(current_leaf_numeber, target_leaf_numeber),
             fetcher,
-            batch_size: 10,
+            batch_size: 1,
         }
     }
 }

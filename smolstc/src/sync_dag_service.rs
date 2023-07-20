@@ -179,7 +179,7 @@ impl SyncDagService {
             let sync_task = TaskGenerator::new(
                 SyncDagAccumulatorTask::new(
                     start_index.saturating_add(1),
-                    10,
+                    1,
                     best_chain_info.flexi_dag_accumulator_info.num_leaves,
                     fetcher.clone(),
                 ),

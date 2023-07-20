@@ -133,7 +133,7 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
     ) -> <GetDagAccumulatorLeafDetails as ServiceRequest>::Response {
         let end_index = std::cmp::min(
-            msg.start_index + msg.batch_size,
+            msg.start_index + msg.batch_size - 1,
             self.dag.accumulator.get_info().num_leaves - 1,
         );
         let mut details = [].to_vec();
@@ -174,6 +174,7 @@ impl ServiceHandler<Self, GetDagAccumulatorLeafDetails> for ChainDagService {
                 relationship_pair,
             });
         }
+        println!("msg: {:?}", msg);
         Some(details)
     }
 }

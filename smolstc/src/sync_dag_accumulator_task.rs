@@ -65,7 +65,7 @@ impl TaskState for SyncDagAccumulatorTask {
         }
 
         let next_number = self.leaf_index.saturating_add(self.batch_size);
-        if next_number > self.target_index {
+        if next_number > self.target_index - 1 { // genesis leaf doesn't need synchronization
             return None;
         }
         Some(Self {
@@ -104,20 +104,17 @@ impl TaskResultCollector<TargetAccumulatorLeafDetail> for SyncDagAccumulatorColl
     type Output = (u64, MerkleAccumulator);
 
     fn collect(&mut self, mut item: TargetAccumulatorLeafDetail) -> anyhow::Result<CollectorState> {
-        println!("before sort: {:?}", item.relationship_pair);
         item.relationship_pair.sort();
-        println!("after sort: {:?}", item.relationship_pair);
         let accumulator_leaf = HashValue::sha3_256_of(
             &item.relationship_pair
                 .encode()
                 .expect("encoding the sorted relatship set must be successful"),
         );
         self.accumulator.append(&[accumulator_leaf])?;
-        println!("accumulator leaf {}", accumulator_leaf);
+        println!("item: {}", item.relationship_pair.len());
 
         let accumulator_info = self.accumulator.get_info();
         if accumulator_info.accumulator_root != item.accumulator_root {
-            println!("sync occurs error for the accumulator root differs from other!, local {}, peer {}", accumulator_info.accumulator_root, item.accumulator_root);
             bail!("sync occurs error for the accumulator root differs from other!, local {}, peer {}", accumulator_info.accumulator_root, item.accumulator_root)
         }
         self.accumulator.flush()?;
@@ -151,6 +148,7 @@ impl TaskResultCollector<TargetAccumulatorLeafDetail> for SyncDagAccumulatorColl
             accumulator_info,
             self.target
         );
+        println!("finish to sync accumulator, its info is: {:?}", accumulator_info);
 
         Ok((self.start_leaf_index, self.accumulator))
     }

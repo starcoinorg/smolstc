@@ -186,9 +186,7 @@ impl SyncBlockDag {
 
                 let mut sorted_relationship_set =
                     relationship_set.iter().cloned().collect::<Vec<_>>();
-                println!("before sort: {:?}", sorted_relationship_set);
                 sorted_relationship_set.sort();
-                println!("after sort: {:?}", sorted_relationship_set);
 
                 let accumulator_leaf = HashValue::sha3_256_of(
                     &sorted_relationship_set
@@ -213,6 +211,9 @@ impl SyncBlockDag {
         }
 
         accumulator.flush().unwrap();
+
+        println!("finish to build accumulator, its info is: {:?}", accumulator.get_info());
+
         return SyncBlockDag {
             dag: Arc::new(dag),
             accumulator,
