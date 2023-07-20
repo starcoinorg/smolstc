@@ -18,7 +18,7 @@ use starcoin_storage::{
     storage::CodecKVStore,
     Storage, Store, SyncFlexiDagStore,
 };
-use starcoin_types::block::BlockHeader;
+use starcoin_types::{block::{BlockHeader, BlockHeaderExtra}, genesis_config::ChainId, account_address::AccountAddress};
 
 pub struct SyncBlockDag {
     pub dag: Arc<BlockDAG>,
@@ -33,21 +33,24 @@ pub struct RelationshipPair {
 }
 
 impl SyncBlockDag {
-    fn new_dag_for_test() -> BlockDAG {
-        let genesis = Header::new(BlockHeader::sample(), vec![HashValue::new(ORIGIN)]);
-        let genesis_hash = genesis.hash();
-
-        let k = 16;
-        let path = std::path::PathBuf::from("./sync_test_db");
-        std::fs::remove_dir_all(path.clone()).unwrap_or(());
-
-        let db = open_db(path.clone(), true, 1);
-
-        let mut dag = BlockDAG::new(genesis, k, db, 1024);
-
-        dag
+    fn new_header_test(nonce: u32) -> BlockHeader {
+        BlockHeader::new(
+            HashValue::zero(),
+            0,
+            0,
+            AccountAddress::ZERO,
+            HashValue::zero(),
+            HashValue::zero(),
+            HashValue::zero(),
+            0,
+            0.into(),
+            HashValue::zero(),
+            ChainId::test(),
+            nonce,
+            BlockHeaderExtra::default(),
+        )
     }
-    fn new_dag_for_test_2() -> BlockDAG {
+    fn new_basic_dag_test() -> (Vec<Header>, BlockDAG) {
         let genesis = Header::new(BlockHeader::sample(), vec![HashValue::new(ORIGIN)]);
         let genesis_hash = genesis.hash();
 
@@ -60,68 +63,104 @@ impl SyncBlockDag {
         let mut dag = BlockDAG::new(genesis, k, db, 1024);
 
         let b = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(1),
             vec![genesis_hash],
         );
 
         let c = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(2),
             vec![genesis_hash],
         );
 
         let d = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(3),
             vec![genesis_hash],
         );
 
         let e = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(4),
             vec![genesis_hash],
         );
 
         let f = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(5),
             vec![b.hash(), c.hash()],
         );
         let h = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(6),
             vec![e.hash(), d.hash(), c.hash()],
         );
-        let i = Header::new(starcoin_types::block::BlockHeader::random(), vec![e.hash()]);
+        let i = Header::new(
+            Self::new_header_test(7),
+            vec![e.hash()]
+        );
         let k = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(8),
             vec![b.hash(), h.hash(), i.hash()],
         );
         let l = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(9),
             vec![d.hash(), i.hash()],
         );
         let j = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(10),
             vec![f.hash(), h.hash()],
         );
         let m = Header::new(
-            starcoin_types::block::BlockHeader::random(),
+            Self::new_header_test(11),
             vec![f.hash(), k.hash()],
         );
+        let p = Header::new(
+            Self::new_header_test(12),
+            vec![j.hash(), m.hash()],
+        );
+        let v = Header::new(
+            Self::new_header_test(13),
+            vec![k.hash(), c.hash(), l.hash()],
+        );
 
-        dag.commit_header(b);
-        dag.commit_header(c);
-        dag.commit_header(d);
-        dag.commit_header(e);
-        dag.commit_header(f);
-        dag.commit_header(h);
-        dag.commit_header(i);
-        dag.commit_header(k);
-        dag.commit_header(l);
-        dag.commit_header(j);
-        dag.commit_header(m);
+        let mut result = vec![];
 
+        result.push(b);
+        result.push(c);
+        result.push(d);
+        result.push(e);
+        result.push(f);
+        result.push(h);
+        result.push(i);
+        result.push(j);
+        result.push(k);
+        result.push(l);
+        result.push(m);
+        result.push(p);
+        result.push(v);
+
+        (result, dag)
+    }
+
+    fn new_dag_lay1_for_test() -> BlockDAG {
+        let (headers, mut dag) = Self::new_basic_dag_test();
+        headers.get(0..4).unwrap().into_iter().for_each(|header| {
+            dag.commit_header(header.clone());
+        });
+        dag
+    }
+
+    fn new_dag_genesis_for_test() -> BlockDAG {
+        let (_, mut dag) = Self::new_basic_dag_test();
+        dag
+    }
+ 
+    fn new_dag_full_for_test_2() -> BlockDAG {
+        let (headers, mut dag) = Self::new_basic_dag_test();
+        headers.into_iter().for_each(|header| {
+            dag.commit_header(header);
+        });
         dag
     }
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
-        let dag = Self::new_dag_for_test();
+        let dag = Self::new_dag_lay1_for_test();
         let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
         let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();

@@ -62,10 +62,6 @@ impl SyncDagService {
         ctx: &mut starcoin_service_registry::ServiceContext<Self>,
         best_chain_info: ChainInfo,
     ) -> AccumulatorInfo {
-        /// for debug, I use genesis for start.
-        /// in practice, it should be the one stored in the startup structure stored in the storage
-        let current_block_number = 0;
-
         let max_retry_times = 10; // in startcoin, it is in config
         let delay_milliseconds_on_error = 100;
 
@@ -91,6 +87,10 @@ impl SyncDagService {
                 .send(GetAccumulatorInfo),
         )
         .unwrap();
+
+        /// for debug, I use genesis for start.
+        /// in practice, it should be the one stored in the startup structure stored in the storage
+        let current_block_number = accumulator_info.num_leaves - 1;
 
         let accumulator_store = ctx
             .get_shared::<Arc<Storage>>()
@@ -179,7 +179,7 @@ impl SyncDagService {
             let sync_task = TaskGenerator::new(
                 SyncDagAccumulatorTask::new(
                     start_index.saturating_add(1),
-                    1,
+                    3,
                     best_chain_info.flexi_dag_accumulator_info.num_leaves,
                     fetcher.clone(),
                 ),
