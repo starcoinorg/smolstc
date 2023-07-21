@@ -145,6 +145,93 @@ impl SyncBlockDag {
         (result, dag)
     }
 
+    fn new_dag_diff_half_leaf_test() -> (Vec<Header>, BlockDAG) {
+        let genesis = Header::new(BlockHeader::sample(), vec![HashValue::new(ORIGIN)]);
+        let genesis_hash = genesis.hash();
+
+        let db = Self::new_dag_db_test();
+
+        let k = 16;
+        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+
+        let diff_b = Header::new(
+            Self::new_header_test(1),
+            vec![genesis_hash],
+        );
+
+        let diff_c = Header::new(
+            Self::new_header_test(2),
+            vec![genesis_hash],
+        );
+
+        let diff_d = Header::new(
+            Self::new_header_test(3),
+            vec![genesis_hash],
+        );
+
+        let diff_e = Header::new(
+            Self::new_header_test(4),
+            vec![genesis_hash],
+        );
+
+        let diff_f = Header::new(
+            Self::new_header_test(1005),
+            vec![diff_b.hash(), diff_c.hash()],
+        );
+        let diff_h = Header::new(
+            Self::new_header_test(1006),
+            vec![diff_e.hash(), diff_d.hash(), diff_c.hash()],
+        );
+        let diff_i = Header::new(
+            Self::new_header_test(1007),
+            vec![diff_e.hash()]
+        );
+        let diff_k = Header::new(
+            Self::new_header_test(1008),
+            vec![diff_b.hash(), diff_h.hash(), diff_i.hash()],
+        );
+        let diff_l = Header::new(
+            Self::new_header_test(1009),
+            vec![diff_d.hash(), diff_i.hash()],
+        );
+        let diff_j = Header::new(
+            Self::new_header_test(1010),
+            vec![diff_f.hash(), diff_h.hash()],
+        );
+        let diff_m = Header::new(
+            Self::new_header_test(1011),
+            vec![diff_f.hash(), diff_k.hash()],
+        );
+        let diff_p = Header::new(
+            Self::new_header_test(1012),
+            vec![diff_j.hash(), diff_m.hash()],
+        );
+        let diff_v = Header::new(
+            Self::new_header_test(1013),
+            vec![diff_k.hash(), diff_c.hash(), diff_l.hash()],
+        );
+
+        let mut result = vec![];
+
+        result.push(diff_b);
+        result.push(diff_c);
+        result.push(diff_d);
+        result.push(diff_e);
+        result.push(diff_f);
+        result.push(diff_h);
+        result.push(diff_i);
+        result.push(diff_j);
+        result.push(diff_k);
+        result.push(diff_l);
+        result.push(diff_m);
+        result.push(diff_p);
+        result.push(diff_v);
+
+        (result, dag)
+    }
+
+
+
     fn new_dag_diff_leaf_test() -> (Vec<Header>, BlockDAG) {
         let genesis = Header::new(BlockHeader::sample(), vec![HashValue::new(ORIGIN)]);
         let genesis_hash = genesis.hash();
@@ -230,6 +317,14 @@ impl SyncBlockDag {
         (result, dag)
     }
 
+    fn new_dag_half_diff_full_for_test() -> BlockDAG {
+        let (headers, mut dag) = Self::new_dag_diff_half_leaf_test();
+        headers.into_iter().for_each(|header| {
+            dag.commit_header(header);
+        });
+        dag
+    }
+
     fn new_dag_diff_full_for_test() -> BlockDAG {
         let (headers, mut dag) = Self::new_dag_diff_leaf_test();
         headers.into_iter().for_each(|header| {
@@ -260,7 +355,7 @@ impl SyncBlockDag {
     }
 
     pub fn build_sync_block_dag(store: Arc<Storage>) -> Self {
-        let dag = Self::new_dag_full_for_test_2();
+        let dag = Self::new_dag_half_diff_full_for_test();
         let accumulator_store = store.get_accumulator_store(AccumulatorStoreType::SyncDag);
         let accumulator = MerkleAccumulator::new_empty(accumulator_store.clone());
         let accumulator_snapshot = store.get_accumulator_snapshot_storage();
