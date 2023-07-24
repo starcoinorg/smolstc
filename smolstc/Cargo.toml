@@ -1,0 +1,39 @@
+[package]
+name = "smolstc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bcs-ext = { workspace = true }
+sp-utils = { workspace = true }
+network-p2p = { workspace = true }
+network-p2p-types = { workspace = true }
+network-p2p-derive = { workspace = true }
+network-p2p-core = { workspace = true }
+sc-peerset = { workspace = true }
+starcoin-service-registry = { workspace = true }
+starcoin-types = { workspace = true }
+starcoin-crypto = { workspace = true }
+rand = "0.8"
+futures-core = "0.3.4"
+async-std = { version = "1", features = ["attributes", "tokio1"] }
+futures = "0.3.12"
+serde = "1.0.130"
+serde_bytes = "0.11"
+anyhow = { workspace = true }
+actix = "0.13"
+reachability = { path = "../consensus/reachability" }
+consensus-types = { path = "../consensus/types" }
+consensus = { path = "../consensus" }
+database = { path = "../database" }
+parking_lot = "0.12"
+rocksdb = "0.21.0"
+ghostdag = { path = "../consensus/ghostdag" }
+stream-task = { workspace = true }
+schemars = { workspace = true }
+hex = { workspace = true }
+starcoin-accumulator = { workspace = true }
+starcoin-storage = { workspace = true }
+starcoin-config = { workspace = true }
