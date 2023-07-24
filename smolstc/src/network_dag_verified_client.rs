@@ -148,10 +148,13 @@ impl PeerSynDagAccumulator for VerifiedDagRpcClient {
                 result
             }
         };
-        println!("req: {:?}",             GetTargetAccumulatorLeafDetail {
+        println!(
+            "req: {:?}",
+            GetTargetAccumulatorLeafDetail {
                 leaf_index,
                 batch_size,
-            });
+            }
+        );
         self.client.get_accumulator_leaf_detail(
             peer_id,
             GetTargetAccumulatorLeafDetail {

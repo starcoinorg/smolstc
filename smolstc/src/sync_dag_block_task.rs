@@ -2,7 +2,7 @@ use crate::{
     network_dag_rpc::{SyncDagBlockInfo, TargetAccumulatorLeaf, TargetAccumulatorLeafDetail},
     sync_dag_protocol_trait::PeerSynDagAccumulator,
 };
-use anyhow::{bail, ensure, format_err, Result, Ok};
+use anyhow::{bail, ensure, format_err, Ok, Result};
 use bcs_ext::BCSCodec;
 use futures::FutureExt;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator, MerkleAccumulator};
@@ -45,7 +45,11 @@ impl TaskState for SyncDagBlockTask {
 
     fn new_sub_task(self) -> futures_core::future::BoxFuture<'static, Result<Vec<Self::Item>>> {
         async move {
-            let dag_info: Vec<SyncDagBlockInfo> = match self.fetcher.get_dag_block_info(None, self.start_index, self.batch_size).await {
+            let dag_info: Vec<SyncDagBlockInfo> = match self
+                .fetcher
+                .get_dag_block_info(None, self.start_index, self.batch_size)
+                .await
+            {
                 anyhow::Result::Ok(result) => result.unwrap_or_else(|| {
                     println!("failed to get the sync dag block info, result is None");
                     [].to_vec()
@@ -53,10 +57,11 @@ impl TaskState for SyncDagBlockTask {
                 Err(error) => {
                     println!("failed to get the sync dag block info, error: {:?}", error);
                     [].to_vec()
-                },
+                }
             };
             Ok(dag_info)
-        }.boxed()
+        }
+        .boxed()
     }
 
     fn next(&self) -> Option<Self> {
@@ -74,14 +79,11 @@ impl TaskState for SyncDagBlockTask {
     }
 }
 
-pub struct SyncDagBlockCollector {
-}
+pub struct SyncDagBlockCollector {}
 
 impl SyncDagBlockCollector {
-    pub fn new(
-    ) -> Self {
-        Self {
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 

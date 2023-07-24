@@ -68,7 +68,7 @@ impl DbHeadersStore {
     pub fn get_header(&self, hash: Hash) -> Result<Header, StoreError> {
         let result = self.headers_access.read(hash)?;
         Ok((*result.header).clone())
-    } 
+    }
 
     pub fn insert_batch(
         &self,

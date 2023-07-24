@@ -194,11 +194,16 @@ impl SyncDagService {
                 ),
                 event_handle.clone(),
                 ext_error_handle,
-            ).generate();
+            )
+            .generate();
             let (fut, handle) = sync_task.with_handle();
             match fut.await {
                 anyhow::Result::Ok((start_index, full_accumulator)) => {
-                    println!("start index: {}, full accumulator info is {:?}", start_index, full_accumulator.get_info());
+                    println!(
+                        "start index: {}, full accumulator info is {:?}",
+                        start_index,
+                        full_accumulator.get_info()
+                    );
                     return Ok((start_index, full_accumulator));
                 }
                 Err(error) => {

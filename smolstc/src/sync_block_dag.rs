@@ -6,19 +6,20 @@ use consensus_types::{
     blockhash::ORIGIN,
     header::{ConsensusHeader, Header},
 };
-use database::prelude::{FlexiDagStorageConfig, FlexiDagStorage};
+use database::prelude::{FlexiDagStorage, FlexiDagStorageConfig};
 use serde::{Deserialize, Serialize};
-use starcoin_accumulator::{
-    node::AccumulatorStoreType, Accumulator,
-    MerkleAccumulator,
-};
+use starcoin_accumulator::{node::AccumulatorStoreType, Accumulator, MerkleAccumulator};
 use starcoin_crypto::HashValue;
 use starcoin_storage::{
     flexi_dag::{SyncFlexiDagSnapshot, SyncFlexiDagSnapshotStorage},
     storage::CodecKVStore,
     Storage, Store, SyncFlexiDagStore,
 };
-use starcoin_types::{block::{BlockHeader, BlockHeaderExtra}, genesis_config::ChainId, account_address::AccountAddress};
+use starcoin_types::{
+    account_address::AccountAddress,
+    block::{BlockHeader, BlockHeaderExtra},
+    genesis_config::ChainId,
+};
 
 pub struct SyncBlockDag {
     pub dag: Arc<BlockDAG>,
@@ -71,58 +72,22 @@ impl SyncBlockDag {
         let k = 16;
         let mut dag = BlockDAG::new(genesis, k, db);
 
-        let b = Header::new(
-            Self::new_header_test(1),
-            vec![genesis_hash],
-        );
+        let b = Header::new(Self::new_header_test(1), vec![genesis_hash]);
 
-        let c = Header::new(
-            Self::new_header_test(2),
-            vec![genesis_hash],
-        );
+        let c = Header::new(Self::new_header_test(2), vec![genesis_hash]);
 
-        let d = Header::new(
-            Self::new_header_test(3),
-            vec![genesis_hash],
-        );
+        let d = Header::new(Self::new_header_test(3), vec![genesis_hash]);
 
-        let e = Header::new(
-            Self::new_header_test(4),
-            vec![genesis_hash],
-        );
+        let e = Header::new(Self::new_header_test(4), vec![genesis_hash]);
 
-        let f = Header::new(
-            Self::new_header_test(5),
-            vec![b.hash(), c.hash()],
-        );
-        let h = Header::new(
-            Self::new_header_test(6),
-            vec![e.hash(), d.hash(), c.hash()],
-        );
-        let i = Header::new(
-            Self::new_header_test(7),
-            vec![e.hash()]
-        );
-        let k = Header::new(
-            Self::new_header_test(8),
-            vec![b.hash(), h.hash(), i.hash()],
-        );
-        let l = Header::new(
-            Self::new_header_test(9),
-            vec![d.hash(), i.hash()],
-        );
-        let j = Header::new(
-            Self::new_header_test(10),
-            vec![f.hash(), h.hash()],
-        );
-        let m = Header::new(
-            Self::new_header_test(11),
-            vec![f.hash(), k.hash()],
-        );
-        let p = Header::new(
-            Self::new_header_test(12),
-            vec![j.hash(), m.hash()],
-        );
+        let f = Header::new(Self::new_header_test(5), vec![b.hash(), c.hash()]);
+        let h = Header::new(Self::new_header_test(6), vec![e.hash(), d.hash(), c.hash()]);
+        let i = Header::new(Self::new_header_test(7), vec![e.hash()]);
+        let k = Header::new(Self::new_header_test(8), vec![b.hash(), h.hash(), i.hash()]);
+        let l = Header::new(Self::new_header_test(9), vec![d.hash(), i.hash()]);
+        let j = Header::new(Self::new_header_test(10), vec![f.hash(), h.hash()]);
+        let m = Header::new(Self::new_header_test(11), vec![f.hash(), k.hash()]);
+        let p = Header::new(Self::new_header_test(12), vec![j.hash(), m.hash()]);
         let v = Header::new(
             Self::new_header_test(13),
             vec![k.hash(), c.hash(), l.hash()],
@@ -156,25 +121,13 @@ impl SyncBlockDag {
         let k = 16;
         let mut dag = BlockDAG::new(genesis, k, db);
 
-        let diff_b = Header::new(
-            Self::new_header_test(1),
-            vec![genesis_hash],
-        );
+        let diff_b = Header::new(Self::new_header_test(1), vec![genesis_hash]);
 
-        let diff_c = Header::new(
-            Self::new_header_test(2),
-            vec![genesis_hash],
-        );
+        let diff_c = Header::new(Self::new_header_test(2), vec![genesis_hash]);
 
-        let diff_d = Header::new(
-            Self::new_header_test(3),
-            vec![genesis_hash],
-        );
+        let diff_d = Header::new(Self::new_header_test(3), vec![genesis_hash]);
 
-        let diff_e = Header::new(
-            Self::new_header_test(4),
-            vec![genesis_hash],
-        );
+        let diff_e = Header::new(Self::new_header_test(4), vec![genesis_hash]);
 
         let diff_f = Header::new(
             Self::new_header_test(1005),
@@ -184,10 +137,7 @@ impl SyncBlockDag {
             Self::new_header_test(1006),
             vec![diff_e.hash(), diff_d.hash(), diff_c.hash()],
         );
-        let diff_i = Header::new(
-            Self::new_header_test(1007),
-            vec![diff_e.hash()]
-        );
+        let diff_i = Header::new(Self::new_header_test(1007), vec![diff_e.hash()]);
         let diff_k = Header::new(
             Self::new_header_test(1008),
             vec![diff_b.hash(), diff_h.hash(), diff_i.hash()],
@@ -232,8 +182,6 @@ impl SyncBlockDag {
         (result, dag)
     }
 
-
-
     fn new_dag_diff_leaf_test() -> (Vec<Header>, BlockDAG) {
         let genesis = Header::new(BlockHeader::sample(), vec![HashValue::new(ORIGIN)]);
         let genesis_hash = genesis.hash();
@@ -243,25 +191,13 @@ impl SyncBlockDag {
         let k = 16;
         let mut dag = BlockDAG::new(genesis, k, db);
 
-        let diff_b = Header::new(
-            Self::new_header_test(1001),
-            vec![genesis_hash],
-        );
+        let diff_b = Header::new(Self::new_header_test(1001), vec![genesis_hash]);
 
-        let diff_c = Header::new(
-            Self::new_header_test(1002),
-            vec![genesis_hash],
-        );
+        let diff_c = Header::new(Self::new_header_test(1002), vec![genesis_hash]);
 
-        let diff_d = Header::new(
-            Self::new_header_test(1003),
-            vec![genesis_hash],
-        );
+        let diff_d = Header::new(Self::new_header_test(1003), vec![genesis_hash]);
 
-        let diff_e = Header::new(
-            Self::new_header_test(1004),
-            vec![genesis_hash],
-        );
+        let diff_e = Header::new(Self::new_header_test(1004), vec![genesis_hash]);
 
         let diff_f = Header::new(
             Self::new_header_test(1005),
@@ -271,10 +207,7 @@ impl SyncBlockDag {
             Self::new_header_test(1006),
             vec![diff_e.hash(), diff_d.hash(), diff_c.hash()],
         );
-        let diff_i = Header::new(
-            Self::new_header_test(1007),
-            vec![diff_e.hash()]
-        );
+        let diff_i = Header::new(Self::new_header_test(1007), vec![diff_e.hash()]);
         let diff_k = Header::new(
             Self::new_header_test(1008),
             vec![diff_b.hash(), diff_h.hash(), diff_i.hash()],
@@ -347,7 +280,7 @@ impl SyncBlockDag {
         let (_, mut dag) = Self::new_basic_dag_test();
         dag
     }
- 
+
     fn new_dag_full_for_test_2() -> BlockDAG {
         let (headers, mut dag) = Self::new_basic_dag_test();
         headers.into_iter().for_each(|header| {
@@ -441,14 +374,21 @@ impl SyncBlockDag {
                         },
                     )
                     .expect("putting accumulator snapshot must be successful");
-                println!("insert a node, leaf hash = {}, accumulator root = {}", accumulator_leaf, accumulator.get_info().accumulator_root);
+                println!(
+                    "insert a node, leaf hash = {}, accumulator root = {}",
+                    accumulator_leaf,
+                    accumulator.get_info().accumulator_root
+                );
                 next_parents = children_set;
             }
         }
 
         accumulator.flush().unwrap();
 
-        println!("finish to build accumulator, its info is: {:?}", accumulator.get_info());
+        println!(
+            "finish to build accumulator, its info is: {:?}",
+            accumulator.get_info()
+        );
 
         return SyncBlockDag {
             dag: Arc::new(dag),
