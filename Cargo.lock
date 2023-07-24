@@ -370,6 +370,57 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "155a5a185e42c6b77ac7b88a15143d930a9e9727a5b7b77eed417404ab15c247"
 
 [[package]]
+name = "async-attributes"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3203e79f4dd9bdda415ed03cf14dae5a2bf775c683a00f94e9cd1faf0f596e5"
+dependencies = [
+ "quote 1.0.28",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "async-channel"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81953c529336010edd6d8e358f886d9581267795c61b19475b71314bffa46d35"
+dependencies = [
+ "concurrent-queue",
+ "event-listener",
+ "futures-core",
+]
+
+[[package]]
+name = "async-executor"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fa3dc5f2a8564f07759c008b9109dc0d39de92a88d5588b8a5036d286383afb"
+dependencies = [
+ "async-lock",
+ "async-task",
+ "concurrent-queue",
+ "fastrand",
+ "futures-lite",
+ "slab",
+]
+
+[[package]]
+name = "async-global-executor"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1b6f5d7df27bd294849f8eec66ecfc63d11814df7a4f5d74168a2394467b776"
+dependencies = [
+ "async-channel",
+ "async-executor",
+ "async-io",
+ "async-lock",
+ "blocking",
+ "futures-lite",
+ "once_cell",
+ "tokio",
+]
+
+[[package]]
 name = "async-io"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -399,6 +450,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-std"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62565bb4402e926b29953c785397c6dc0391b7b446e45008b0049eb43cec6f5d"
+dependencies = [
+ "async-attributes",
+ "async-channel",
+ "async-global-executor",
+ "async-io",
+ "async-lock",
+ "crossbeam-utils",
+ "futures-channel",
+ "futures-core",
+ "futures-io",
+ "futures-lite",
+ "gloo-timers",
+ "kv-log-macro",
+ "log",
+ "memchr",
+ "once_cell",
+ "pin-project-lite 0.2.9",
+ "pin-utils",
+ "slab",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "async-task"
+version = "4.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecc7ab41815b3c653ccd2978ec3255c81349336702dfdf62ee6f7069b12a3aae"
+
+[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -407,6 +491,19 @@ dependencies = [
  "proc-macro2 1.0.59",
  "quote 1.0.28",
  "syn 2.0.18",
+]
+
+[[package]]
+name = "asynchronous-codec"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb4401f0a3622dad2e0763fa79e0eb328bc70fb7dccfdd645341f00d671247d6"
+dependencies = [
+ "bytes",
+ "futures-sink",
+ "futures-util",
+ "memchr",
+ "pin-project-lite 0.2.9",
 ]
 
 [[package]]
@@ -497,7 +594,7 @@ dependencies = [
 [[package]]
 name = "bcs-ext"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs",
@@ -668,6 +765,27 @@ name = "block-padding"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+
+[[package]]
+name = "blocking"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77231a1c8f801696fc0123ec6150ce92cffb8e164a02afb9c8ddee0e9b65ad65"
+dependencies = [
+ "async-channel",
+ "async-lock",
+ "async-task",
+ "atomic-waker",
+ "fastrand",
+ "futures-lite",
+ "log",
+]
+
+[[package]]
+name = "bs58"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "476e9cd489f9e121e02ffa6014a8ef220ecb15c05ed23fc34cca13925dc283fb"
 
 [[package]]
 name = "bs58"
@@ -1786,7 +1904,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "forkable-jellyfish-merkle"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "backtrace",
@@ -1897,6 +2015,17 @@ dependencies = [
  "proc-macro2 1.0.59",
  "quote 1.0.28",
  "syn 2.0.18",
+]
+
+[[package]]
+name = "futures-retry"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde5a672a61f96552aa5ed9fd9c81c3fbdae4be9b1e205d6eaf17c83705adc0f"
+dependencies = [
+ "futures",
+ "pin-project-lite 0.2.9",
+ "tokio",
 ]
 
 [[package]]
@@ -2079,6 +2208,18 @@ dependencies = [
  "bitflags",
  "ignore",
  "walkdir",
+]
+
+[[package]]
+name = "gloo-timers"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b995a66bb87bebce9a0f4a95aed01daca4872c050bfcb21653361c03bc35e5c"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -2485,6 +2626,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ip_network"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ee15951c035f79eddbef745611ec962f63f4558f1dadf98ab723cc603487c6f"
+
+[[package]]
 name = "ipconfig"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2542,6 +2689,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f6d5ed8676d904364de097082f4e7d240b571b67989ced0240f08b7f966f940"
 dependencies = [
  "cpufeatures",
+]
+
+[[package]]
+name = "kv-log-macro"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0de8b303297635ad57c9f5059fd9cee7a47f8e8daa09df0fcd07dd39fb22977f"
+dependencies = [
+ "log",
 ]
 
 [[package]]
@@ -2613,7 +2769,7 @@ dependencies = [
  "libp2p-yamux",
  "multiaddr 0.16.0",
  "parking_lot 0.12.1",
- "pin-project",
+ "pin-project 1.1.0",
  "smallvec",
 ]
 
@@ -2624,7 +2780,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6a8fcd392ff67af6cc3f03b1426c41f7f26b6b9aff2dc632c1c56dd649e571f"
 dependencies = [
  "asn1_der",
- "bs58",
+ "bs58 0.4.0",
  "ed25519-dalek",
  "either",
  "fnv",
@@ -2638,7 +2794,7 @@ dependencies = [
  "multistream-select",
  "once_cell",
  "parking_lot 0.12.1",
- "pin-project",
+ "pin-project 1.1.0",
  "prost",
  "prost-build",
  "rand 0.8.5",
@@ -2647,7 +2803,7 @@ dependencies = [
  "sha2 0.10.6",
  "smallvec",
  "thiserror",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
  "void",
  "zeroize",
 ]
@@ -2670,13 +2826,13 @@ dependencies = [
  "multistream-select",
  "once_cell",
  "parking_lot 0.12.1",
- "pin-project",
+ "pin-project 1.1.0",
  "quick-protobuf",
  "rand 0.8.5",
  "rw-stream-sink",
  "smallvec",
  "thiserror",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
  "void",
 ]
 
@@ -2700,7 +2856,7 @@ version = "0.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c052d0026f4817b44869bfb6810f4e1112f43aec8553f2cb38881c524b563abf"
 dependencies = [
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "futures",
  "futures-timer",
  "libp2p-core 0.38.0",
@@ -2721,7 +2877,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e2d584751cecb2aabaa56106be6be91338a60a0f4e420cf2af639204f596fc1"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "ed25519-dalek",
  "log",
  "multiaddr 0.17.1",
@@ -2740,7 +2896,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2766dcd2be8c87d5e1f35487deb22d765f49c6ae1251b3633efe3b25698bd3d2"
 dependencies = [
  "arrayvec 0.7.2",
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "bytes",
  "either",
  "fnv",
@@ -2757,7 +2913,7 @@ dependencies = [
  "smallvec",
  "thiserror",
  "uint",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
  "void",
 ]
 
@@ -2801,7 +2957,7 @@ version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03805b44107aa013e7cbbfa5627b31c36cbedfdfb00603c0311998882bc4bace"
 dependencies = [
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "bytes",
  "futures",
  "libp2p-core 0.38.0",
@@ -2810,7 +2966,7 @@ dependencies = [
  "parking_lot 0.12.1",
  "rand 0.8.5",
  "smallvec",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -2888,7 +3044,7 @@ dependencies = [
  "log",
  "rand 0.8.5",
  "smallvec",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -2905,7 +3061,7 @@ dependencies = [
  "libp2p-core 0.38.0",
  "libp2p-swarm-derive",
  "log",
- "pin-project",
+ "pin-project 1.1.0",
  "rand 0.8.5",
  "smallvec",
  "thiserror",
@@ -2966,7 +3122,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb6cd86dd68cba72308ea05de1cebf3ba0ae6e187c40548167955d4e3970f6a"
 dependencies = [
  "async-trait",
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "bytes",
  "futures",
  "futures-timer",
@@ -3105,6 +3261,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0717cef1bc8b636c6e1c1bbdefc09e6322da8a9321966e8928ef80d20f7f770f"
 
 [[package]]
+name = "linked_hash_set"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47186c6da4d81ca383c7c47c1bfc80f4b95f4720514d860a5407aaf4233f9588"
+dependencies = [
+ "linked-hash-map",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3127,6 +3292,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "518ef76f2f87365916b142844c16d8fefd85039bc5699050210a7778ee1cd1de"
 dependencies = [
  "serde",
+ "value-bag",
 ]
 
 [[package]]
@@ -3773,7 +3939,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "static_assertions",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
  "url",
 ]
 
@@ -3792,7 +3958,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "static_assertions",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
  "url",
 ]
 
@@ -3817,7 +3983,7 @@ dependencies = [
  "digest 0.10.7",
  "multihash-derive",
  "sha2 0.10.6",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -3828,7 +3994,7 @@ checksum = "835d6ff01d610179fbce3de1694d007e500bf33a7f29689838941d6bf783ae40"
 dependencies = [
  "core2",
  "multihash-derive",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -3860,9 +4026,9 @@ dependencies = [
  "bytes",
  "futures",
  "log",
- "pin-project",
+ "pin-project 1.1.0",
  "smallvec",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -3943,7 +4109,7 @@ dependencies = [
 [[package]]
 name = "network-api"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3965,9 +4131,83 @@ dependencies = [
 ]
 
 [[package]]
+name = "network-p2p"
+version = "1.13.5"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "async-trait",
+ "asynchronous-codec 0.5.0",
+ "bcs-ext",
+ "bitflags",
+ "bs58 0.3.1",
+ "bytes",
+ "derive_more",
+ "either",
+ "fnv",
+ "futures",
+ "futures-timer",
+ "hex",
+ "ip_network",
+ "libp2p",
+ "linked-hash-map",
+ "linked_hash_set",
+ "log",
+ "lru 0.7.8",
+ "network-p2p-types",
+ "once_cell",
+ "parking_lot 0.12.1",
+ "pin-project 0.4.30",
+ "prometheus",
+ "rand 0.8.5",
+ "sc-peerset",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "starcoin-config",
+ "starcoin-crypto",
+ "starcoin-metrics",
+ "starcoin-types",
+ "thiserror",
+ "tokio",
+ "unsigned-varint 0.6.0",
+ "void",
+ "wasm-timer",
+ "zeroize",
+]
+
+[[package]]
+name = "network-p2p-core"
+version = "1.13.5"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
+dependencies = [
+ "anyhow",
+ "bcs-ext",
+ "futures",
+ "log",
+ "network-p2p-derive",
+ "network-p2p-types",
+ "num_enum",
+ "serde",
+ "starcoin-types",
+]
+
+[[package]]
+name = "network-p2p-derive"
+version = "1.13.5"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.59",
+ "quote 1.0.28",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "network-p2p-types"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -3986,7 +4226,7 @@ dependencies = [
 [[package]]
 name = "network-types"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "network-p2p-types",
@@ -4514,11 +4754,31 @@ dependencies = [
 
 [[package]]
 name = "pin-project"
+version = "0.4.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ef0f924a5ee7ea9cbcea77529dba45f8a9ba9f622419fe3386ca581a3ae9d5a"
+dependencies = [
+ "pin-project-internal 0.4.30",
+]
+
+[[package]]
+name = "pin-project"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c95a7476719eab1e366eaf73d0260af3021184f18177925b07f54b30089ceead"
 dependencies = [
- "pin-project-internal",
+ "pin-project-internal 1.1.0",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "0.4.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "851c8d0ce9bebe43790dedfc86614c23494ac9f423dd618d3a61fc693eafe61e"
+dependencies = [
+ "proc-macro2 1.0.59",
+ "quote 1.0.28",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -4847,11 +5107,11 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0dc34979ff898b6e141106178981ce2596c387ea6e62533facfc61a37fc879c0"
 dependencies = [
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "bytes",
  "prost",
  "thiserror",
- "unsigned-varint",
+ "unsigned-varint 0.7.1",
 ]
 
 [[package]]
@@ -5363,7 +5623,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26338f5e09bb721b85b135ea05af7767c90b52f6de4f087d4f4a3a9d64e7dc04"
 dependencies = [
  "futures",
- "pin-project",
+ "pin-project 1.1.0",
  "static_assertions",
 ]
 
@@ -5385,7 +5645,7 @@ dependencies = [
 [[package]]
 name = "sc-peerset"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "futures",
  "libp2p",
@@ -5746,6 +6006,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 
 [[package]]
+name = "smolstc"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "anyhow",
+ "async-std",
+ "bcs-ext",
+ "consensus",
+ "consensus-types",
+ "database",
+ "futures",
+ "futures-core",
+ "ghostdag",
+ "hex",
+ "network-p2p",
+ "network-p2p-core",
+ "network-p2p-derive",
+ "network-p2p-types",
+ "parking_lot 0.12.1",
+ "rand 0.8.5",
+ "reachability",
+ "rocksdb",
+ "sc-peerset",
+ "schemars",
+ "serde",
+ "serde_bytes",
+ "sp-utils",
+ "starcoin-accumulator",
+ "starcoin-config",
+ "starcoin-crypto",
+ "starcoin-service-registry",
+ "starcoin-storage",
+ "starcoin-types",
+ "stream-task",
+]
+
+[[package]]
 name = "snow"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5801,7 +6098,7 @@ dependencies = [
 [[package]]
 name = "sp-utils"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "futures",
  "futures-core",
@@ -5837,7 +6134,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "starcoin-account-api"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5859,7 +6156,7 @@ dependencies = [
 [[package]]
 name = "starcoin-accumulator"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs-ext",
@@ -5878,7 +6175,7 @@ dependencies = [
 [[package]]
 name = "starcoin-config"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "clap 3.2.25",
@@ -5961,7 +6258,7 @@ dependencies = [
 [[package]]
 name = "starcoin-gas"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "clap 3.2.25",
  "move-binary-format",
@@ -5977,7 +6274,7 @@ dependencies = [
 [[package]]
 name = "starcoin-gas-algebra-ext"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "move-binary-format",
  "move-core-types",
@@ -5992,7 +6289,7 @@ dependencies = [
 [[package]]
 name = "starcoin-logger"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6012,7 +6309,7 @@ dependencies = [
 [[package]]
 name = "starcoin-metrics"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "prometheus",
@@ -6025,7 +6322,7 @@ dependencies = [
 [[package]]
 name = "starcoin-move-compiler"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "move-binary-format",
@@ -6044,7 +6341,7 @@ dependencies = [
 [[package]]
 name = "starcoin-natives"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "arrayref",
  "libsecp256k1",
@@ -6070,7 +6367,7 @@ dependencies = [
 [[package]]
 name = "starcoin-service-registry"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "actix",
  "actix-rt",
@@ -6089,7 +6386,7 @@ dependencies = [
 [[package]]
 name = "starcoin-state-store-api"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "forkable-jellyfish-merkle",
@@ -6100,7 +6397,7 @@ dependencies = [
 [[package]]
 name = "starcoin-storage"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs-ext",
@@ -6131,7 +6428,7 @@ dependencies = [
 [[package]]
 name = "starcoin-system"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "systemstat",
@@ -6140,7 +6437,7 @@ dependencies = [
 [[package]]
 name = "starcoin-time-service"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "log",
  "serde",
@@ -6149,7 +6446,7 @@ dependencies = [
 [[package]]
 name = "starcoin-types"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs-ext",
@@ -6173,7 +6470,7 @@ dependencies = [
 [[package]]
 name = "starcoin-uint"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "hex",
  "serde",
@@ -6184,7 +6481,7 @@ dependencies = [
 [[package]]
 name = "starcoin-vm-types"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs-ext",
@@ -6221,7 +6518,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "stdlib"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "anyhow",
  "bcs-ext",
@@ -6243,6 +6540,26 @@ dependencies = [
  "starcoin-vm-types",
  "tempfile",
  "walkdir",
+]
+
+[[package]]
+name = "stream-task"
+version = "1.13.5"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
+dependencies = [
+ "anyhow",
+ "async-std",
+ "futures",
+ "futures-retry",
+ "futures-timer",
+ "log",
+ "parking_lot 0.12.1",
+ "pin-project 0.4.30",
+ "pin-utils",
+ "schemars",
+ "serde",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -6537,7 +6854,7 @@ dependencies = [
 [[package]]
 name = "timeout-join-handler"
 version = "1.13.5"
-source = "git+https://github.com/starcoinorg/starcoin?rev=e49e886e40bf5baf239e8feec6eb834c9da61ade#e49e886e40bf5baf239e8feec6eb834c9da61ade"
+source = "git+https://github.com/starcoinorg/starcoin?rev=fb6fcc48fdcad3d6f54ed97e004e25099ac24000#fb6fcc48fdcad3d6f54ed97e004e25099ac24000"
 dependencies = [
  "thiserror",
 ]
@@ -6907,11 +7224,23 @@ dependencies = [
 
 [[package]]
 name = "unsigned-varint"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35581ff83d4101e58b582e607120c7f5ffb17e632a980b1f38334d76b36908b2"
+dependencies = [
+ "asynchronous-codec 0.5.0",
+ "bytes",
+ "futures-io",
+ "futures-util",
+]
+
+[[package]]
+name = "unsigned-varint"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d86a8dc7f45e4c1b0d30e43038c38f274e77af056aa5f74b93c2cf9eb3c1c836"
 dependencies = [
- "asynchronous-codec",
+ "asynchronous-codec 0.6.1",
  "bytes",
  "futures-io",
  "futures-util",
@@ -6942,6 +7271,12 @@ checksum = "79daa5ed5740825c40b389c5e50312b9c86df53fccd33f281df655642b43869d"
 dependencies = [
  "getrandom 0.2.9",
 ]
+
+[[package]]
+name = "value-bag"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d92ccd67fb88503048c01b59152a04effd0782d035a83a6d256ce6085f08f4a3"
 
 [[package]]
 name = "variant_count"

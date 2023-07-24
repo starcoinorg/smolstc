@@ -11,6 +11,7 @@ members=[
     "consensus/types",
     "database",
     "consensus/ghostdag",
+    "smolstc",
 ]
 
 default-members = [
@@ -22,13 +23,22 @@ default-members = [
 ]
 
 [workspace.dependencies]
-starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "e49e886e40bf5baf239e8feec6eb834c9da61ade"}
-starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "e49e886e40bf5baf239e8feec6eb834c9da61ade"}
-starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "e49e886e40bf5baf239e8feec6eb834c9da61ade"}
-starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
-starcoin-types = {git = "https://github.com/starcoinorg/starcoin",rev = "e49e886e40bf5baf239e8feec6eb834c9da61ade"}
-starcoin-storage = {git = "https://github.com/starcoinorg/starcoin",rev = "e49e886e40bf5baf239e8feec6eb834c9da61ade"}
-rocksdb = "0.21.0"
+starcoin-network = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-storage = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-logger = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-config = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+bcs-ext = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+sp-utils = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+network-p2p = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+network-p2p-types = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+network-p2p-derive = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+network-p2p-core = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+sc-peerset = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-service-registry = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+stream-task = { git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-accumulator = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+starcoin-types = {git = "https://github.com/starcoinorg/starcoin",rev = "fb6fcc48fdcad3d6f54ed97e004e25099ac24000"}
+rocksdb = { default-features = false, features = ["lz4"], version = "0.21.0" }
 bincode = { version = "1", default-features = false }
 faster-hex = "0.6"
 indexmap = "1.9.1"
@@ -45,5 +55,6 @@ consensus-types = {path = "consensus/types"}
 ghostdag={path = "consensus/ghostdag"}
 reachability = {path = "consensus/reachability"}
 schemars = { git = "https://github.com/starcoinorg/schemars", rev = "9b3705780b8fe9c8676ff82919869ba7405b1062" }
+starcoin-crypto = {git = "https://github.com/starcoinorg/starcoin-crypto", rev="e19c5631c8f3c39730850080c196e0206834545f"}
 hex = "0.4"
-anyhow = "1.0"
+anyhow = "~1"
