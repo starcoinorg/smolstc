@@ -1,3 +1,4 @@
+use anyhow::bail;
 use consensus_types::{
     blockhash::{BlockHashes, KType, ORIGIN},
     header::{ConsensusHeader, Header},
@@ -166,6 +167,40 @@ impl BlockDAG {
             is_orphan = true;
         }
         Ok(is_orphan)
+    }
+
+    pub fn get_block_header(&self, hash: Hash) -> anyhow::Result<Header> {
+        match self.header_store.get_header(hash) {
+            Ok(header) => anyhow::Result::Ok(header),
+            Err(error) => {
+                println!("failed to get header by hash: {}", error.to_string());
+                bail!("failed to get header by hash: {}", error.to_string());
+            }
+        }
+    }
+
+    pub fn get_parents(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
+        match self.relations_store.get_parents(hash) {
+            Ok(parents) => anyhow::Result::Ok((*parents).clone()),
+            Err(error) => {
+                println!("failed to get parents by hash: {}", error.to_string());
+                bail!("failed to get parents by hash: {}", error.to_string());
+            }
+        }
+    }
+
+    pub fn get_children(&self, hash: Hash) -> anyhow::Result<Vec<Hash>> {
+        match self.relations_store.get_children(hash) {
+            Ok(children) => anyhow::Result::Ok((*children).clone()),
+            Err(error) => {
+                println!("failed to get parents by hash: {}", error.to_string());
+                bail!("failed to get parents by hash: {}", error.to_string());
+            }
+        }
+    }
+
+    pub fn get_genesis_hash(&self) -> Hash {
+        self.genesis.hash()
     }
 }
 
