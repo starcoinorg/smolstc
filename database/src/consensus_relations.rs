@@ -1,6 +1,8 @@
+use crate::{
+    db::DBStorage,
+    prelude::{BatchDbWriter, CachedDbAccess, DirectDbWriter, StoreError},
+};
 use consensus_types::blockhash::{BlockHashMap, BlockHashes, BlockLevel};
-use database::prelude::{BatchDbWriter, CachedDbAccess, DbKey, DirectDbWriter, StoreError, DB};
-use itertools::Itertools;
 use rocksdb::WriteBatch;
 use starcoin_crypto::HashValue as Hash;
 use std::{collections::hash_map::Entry::Vacant, sync::Arc};
@@ -20,36 +22,25 @@ pub trait RelationsStore: RelationsStoreReader {
     fn insert(&mut self, hash: Hash, parents: BlockHashes) -> Result<(), StoreError>;
 }
 
-const PARENTS_PREFIX: &[u8] = b"block-parents";
-const CHILDREN_PREFIX: &[u8] = b"block-children";
+pub(crate) const PARENTS_CF: &str = "block-parents";
+pub(crate) const CHILDREN_CF: &str = "block-children";
 
 /// A DB + cache implementation of `RelationsStore` trait, with concurrent readers support.
 #[derive(Clone)]
 pub struct DbRelationsStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     level: BlockLevel,
     parents_access: CachedDbAccess<Hash, Arc<Vec<Hash>>>,
     children_access: CachedDbAccess<Hash, Arc<Vec<Hash>>>,
 }
 
 impl DbRelationsStore {
-    pub fn new(db: Arc<DB>, level: BlockLevel, cache_size: u64) -> Self {
-        let lvl_bytes = level.to_le_bytes();
-        let parents_prefix = PARENTS_PREFIX
-            .iter()
-            .copied()
-            .chain(lvl_bytes)
-            .collect_vec();
-        let children_prefix = CHILDREN_PREFIX
-            .iter()
-            .copied()
-            .chain(lvl_bytes)
-            .collect_vec();
+    pub fn new(db: Arc<DBStorage>, level: BlockLevel, cache_size: u64) -> Self {
         Self {
             db: Arc::clone(&db),
             level,
-            parents_access: CachedDbAccess::new(Arc::clone(&db), cache_size, parents_prefix),
-            children_access: CachedDbAccess::new(db, cache_size, children_prefix),
+            parents_access: CachedDbAccess::new(Arc::clone(&db), cache_size, PARENTS_CF),
+            children_access: CachedDbAccess::new(db, cache_size, CHILDREN_CF),
         }
     }
 
@@ -170,14 +161,14 @@ impl RelationsStoreReader for MemoryRelationsStore {
     fn get_parents(&self, hash: Hash) -> Result<BlockHashes, StoreError> {
         match self.parents_map.get(&hash) {
             Some(parents) => Ok(BlockHashes::clone(parents)),
-            None => Err(StoreError::KeyNotFound(DbKey::new(PARENTS_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_children(&self, hash: Hash) -> Result<BlockHashes, StoreError> {
         match self.children_map.get(&hash) {
             Some(children) => Ok(BlockHashes::clone(children)),
-            None => Err(StoreError::KeyNotFound(DbKey::new(CHILDREN_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
@@ -211,6 +202,10 @@ impl RelationsStore for MemoryRelationsStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        db::{FlexiDagStorageConfig, RelationsStoreConfig},
+        prelude::FlexiDagStorage,
+    };
 
     #[test]
     fn test_memory_relations_store() {
@@ -220,9 +215,17 @@ mod tests {
     #[test]
     fn test_db_relations_store() {
         let db_tempdir = tempfile::tempdir().unwrap();
-        let db =
-            Arc::new(DB::open_default(db_tempdir.path().to_owned().to_str().unwrap()).unwrap());
-        test_relations_store(DbRelationsStore::new(db, 0, 2));
+        let rs_conf = RelationsStoreConfig {
+            block_level: 0,
+            cache_size: 2,
+        };
+        let config = FlexiDagStorageConfig::new()
+            .update_parallelism(1)
+            .update_relations_conf(rs_conf);
+
+        let db = FlexiDagStorage::create_from_path(db_tempdir.path(), config)
+            .expect("failed to create flexidag storage");
+        test_relations_store(db.relations_store);
     }
 
     fn test_relations_store<T: RelationsStore>(mut store: T) {

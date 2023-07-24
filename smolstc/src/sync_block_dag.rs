@@ -6,11 +6,11 @@ use consensus_types::{
     blockhash::ORIGIN,
     header::{ConsensusHeader, Header},
 };
-use database::prelude::{open_db, DB};
+use database::prelude::{FlexiDagStorageConfig, FlexiDagStorage};
 use serde::{Deserialize, Serialize};
 use starcoin_accumulator::{
-    accumulator_info::AccumulatorInfo, node::AccumulatorStoreType, Accumulator,
-    AccumulatorTreeStore, MerkleAccumulator,
+    node::AccumulatorStoreType, Accumulator,
+    MerkleAccumulator,
 };
 use starcoin_crypto::HashValue;
 use starcoin_storage::{
@@ -51,13 +51,15 @@ impl SyncBlockDag {
         )
     }
 
-    fn new_dag_db_test() -> Arc<DB> {
+    fn new_dag_db_test() -> FlexiDagStorage {
         let path = std::path::PathBuf::from("./sync_test_db");
         std::fs::remove_dir_all(path.clone()).unwrap_or(());
 
-        let db = open_db(path.clone(), true, 1);
+        let config = FlexiDagStorageConfig::create_with_params(1, 0, 1024);
+        let db = FlexiDagStorage::create_from_path(path, config)
+            .expect("Failed to create flexidag storage");
 
-        return db.clone();
+        return db;
     }
 
     fn new_basic_dag_test() -> (Vec<Header>, BlockDAG) {
@@ -67,7 +69,7 @@ impl SyncBlockDag {
         let db = Self::new_dag_db_test();
 
         let k = 16;
-        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+        let mut dag = BlockDAG::new(genesis, k, db);
 
         let b = Header::new(
             Self::new_header_test(1),
@@ -152,7 +154,7 @@ impl SyncBlockDag {
         let db = Self::new_dag_db_test();
 
         let k = 16;
-        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+        let mut dag = BlockDAG::new(genesis, k, db);
 
         let diff_b = Header::new(
             Self::new_header_test(1),
@@ -239,7 +241,7 @@ impl SyncBlockDag {
         let db = Self::new_dag_db_test();
 
         let k = 16;
-        let mut dag = BlockDAG::new(genesis, k, db, 1024);
+        let mut dag = BlockDAG::new(genesis, k, db);
 
         let diff_b = Header::new(
             Self::new_header_test(1001),
@@ -320,7 +322,7 @@ impl SyncBlockDag {
     fn new_dag_half_diff_full_for_test() -> BlockDAG {
         let (headers, mut dag) = Self::new_dag_diff_half_leaf_test();
         headers.into_iter().for_each(|header| {
-            dag.commit_header(header);
+            dag.commit_header(&header);
         });
         dag
     }
@@ -328,7 +330,7 @@ impl SyncBlockDag {
     fn new_dag_diff_full_for_test() -> BlockDAG {
         let (headers, mut dag) = Self::new_dag_diff_leaf_test();
         headers.into_iter().for_each(|header| {
-            dag.commit_header(header);
+            dag.commit_header(&header);
         });
         dag
     }
@@ -336,7 +338,7 @@ impl SyncBlockDag {
     fn new_dag_lay1_for_test() -> BlockDAG {
         let (headers, mut dag) = Self::new_basic_dag_test();
         headers.get(0..4).unwrap().into_iter().for_each(|header| {
-            dag.commit_header(header.clone());
+            dag.commit_header(&header);
         });
         dag
     }
@@ -349,7 +351,7 @@ impl SyncBlockDag {
     fn new_dag_full_for_test_2() -> BlockDAG {
         let (headers, mut dag) = Self::new_basic_dag_test();
         headers.into_iter().for_each(|header| {
-            dag.commit_header(header);
+            dag.commit_header(&header);
         });
         dag
     }

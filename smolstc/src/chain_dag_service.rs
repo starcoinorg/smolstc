@@ -5,14 +5,11 @@ use crate::{
     sync_block_dag::{RelationshipPair, SyncBlockDag},
 };
 use anyhow::Result;
-use network_p2p_types::identity::error;
 use starcoin_accumulator::{accumulator_info::AccumulatorInfo, Accumulator};
-use starcoin_crypto::HashValue;
 use starcoin_service_registry::{
     ActorService, ServiceContext, ServiceFactory, ServiceHandler, ServiceRequest,
 };
 use starcoin_storage::{storage::CodecKVStore, Storage};
-use stream_task::TaskResultCollector;
 
 pub struct ChainDagService {
     dag: SyncBlockDag,

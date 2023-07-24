@@ -1,37 +1,18 @@
-use crate::interval::Interval;
-
-use database::prelude::{
-    BatchDbWriter, CachedDbAccess, CachedDbItem, DbKey, DirectDbWriter, StoreError, DB,
+use crate::{
+    db::DBStorage,
+    prelude::{BatchDbWriter, CachedDbAccess, CachedDbItem, DirectDbWriter, StoreError},
 };
 use starcoin_crypto::HashValue as Hash;
+use starcoin_storage::storage::RawDBStorage;
 
-use consensus_types::blockhash::{self, BlockHashMap, BlockHashes};
-use itertools::Itertools;
+use consensus_types::{
+    blockhash::{self, BlockHashMap, BlockHashes},
+    interval::Interval,
+    reachability::ReachabilityData,
+};
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use rocksdb::WriteBatch;
-use serde::{Deserialize, Serialize};
-use std::{collections::hash_map::Entry::Vacant, iter::once, sync::Arc};
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ReachabilityData {
-    pub children: BlockHashes,
-    pub parent: Hash,
-    pub interval: Interval,
-    pub height: u64,
-    pub future_covering_set: BlockHashes,
-}
-
-impl ReachabilityData {
-    pub fn new(parent: Hash, interval: Interval, height: u64) -> Self {
-        Self {
-            children: Arc::new(vec![]),
-            parent,
-            interval,
-            height,
-            future_covering_set: Arc::new(vec![]),
-        }
-    }
-}
+use std::{collections::hash_map::Entry::Vacant, sync::Arc};
 
 /// Reader API for `ReachabilityStore`.
 pub trait ReachabilityStoreReader {
@@ -66,55 +47,41 @@ pub trait ReachabilityStore: ReachabilityStoreReader {
     fn get_reindex_root(&self) -> Result<Hash, StoreError>;
 }
 
-const REINDEX_ROOT_KEY: &[u8] = b"reachability-reindex-root";
-const STORE_PREFIX: &[u8] = b"reachability-data";
+const REINDEX_ROOT_KEY: &str = "reachability-reindex-root";
+pub(crate) const REACHABILITY_DATA_CF: &str = "reachability-data";
 // TODO: explore perf to see if using fixed-length constants for store prefixes is preferable
 
 /// A DB + cache implementation of `ReachabilityStore` trait, with concurrent readers support.
 #[derive(Clone)]
 pub struct DbReachabilityStore {
-    db: Arc<DB>,
+    db: Arc<DBStorage>,
     access: CachedDbAccess<Hash, Arc<ReachabilityData>>,
     reindex_root: CachedDbItem<Hash>,
-    prefix_end: u8,
 }
 
-const DEFAULT_PREFIX_END: u8 = u8::MAX;
-
 impl DbReachabilityStore {
-    pub fn new(db: Arc<DB>, cache_size: u64) -> Self {
-        Self::new_with_prefix_end(db, cache_size, DEFAULT_PREFIX_END)
+    pub fn new(db: Arc<DBStorage>, cache_size: u64) -> Self {
+        Self::new_with_prefix_end(db, cache_size)
     }
 
-    pub fn new_with_alternative_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
-        assert_ne!(
-            DEFAULT_PREFIX_END, prefix_end,
-            "this prefix end is already used as the default one"
-        );
-        Self::new_with_prefix_end(db, cache_size, prefix_end)
+    pub fn new_with_alternative_prefix_end(db: Arc<DBStorage>, cache_size: u64) -> Self {
+        Self::new_with_prefix_end(db, cache_size)
     }
 
-    fn new_with_prefix_end(db: Arc<DB>, cache_size: u64, prefix_end: u8) -> Self {
-        let store_prefix = STORE_PREFIX
-            .iter()
-            .copied()
-            .chain(once(prefix_end))
-            .collect_vec();
-        let reindex_root_prefix = REINDEX_ROOT_KEY
-            .iter()
-            .copied()
-            .chain(once(prefix_end))
-            .collect_vec();
+    fn new_with_prefix_end(db: Arc<DBStorage>, cache_size: u64) -> Self {
         Self {
             db: Arc::clone(&db),
-            access: CachedDbAccess::new(Arc::clone(&db), cache_size, store_prefix),
-            reindex_root: CachedDbItem::new(db, reindex_root_prefix),
-            prefix_end,
+            access: CachedDbAccess::new(Arc::clone(&db), cache_size, REACHABILITY_DATA_CF),
+            reindex_root: CachedDbItem::new(
+                db,
+                REACHABILITY_DATA_CF,
+                REINDEX_ROOT_KEY.as_bytes().to_vec(),
+            ),
         }
     }
 
     pub fn clone_with_new_cache(&self, cache_size: u64) -> Self {
-        Self::new_with_prefix_end(Arc::clone(&self.db), cache_size, self.prefix_end)
+        Self::new_with_prefix_end(Arc::clone(&self.db), cache_size)
     }
 }
 
@@ -132,7 +99,9 @@ impl ReachabilityStore for DbReachabilityStore {
             .write(BatchDbWriter::new(&mut batch), origin, data)?;
         self.reindex_root
             .write(BatchDbWriter::new(&mut batch), &origin)?;
-        self.db.write(batch)?;
+        self.db
+            .raw_write_batch(batch)
+            .map_err(|e| StoreError::DBIoError(e.to_string()))?;
 
         Ok(())
     }
@@ -412,14 +381,14 @@ impl MemoryReachabilityStore {
     fn get_data_mut(&mut self, hash: Hash) -> Result<&mut ReachabilityData, StoreError> {
         match self.map.get_mut(&hash) {
             Some(data) => Ok(data),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 
     fn get_data(&self, hash: Hash) -> Result<&ReachabilityData, StoreError> {
         match self.map.get(&hash) {
             Some(data) => Ok(data),
-            None => Err(StoreError::KeyNotFound(DbKey::new(STORE_PREFIX, hash))),
+            None => Err(StoreError::KeyNotFound(hash.to_string())),
         }
     }
 }
@@ -481,9 +450,7 @@ impl ReachabilityStore for MemoryReachabilityStore {
     fn get_reindex_root(&self) -> Result<Hash, StoreError> {
         match self.reindex_root {
             Some(root) => Ok(root),
-            None => Err(StoreError::KeyNotFound(DbKey::prefix_only(
-                REINDEX_ROOT_KEY,
-            ))),
+            None => Err(StoreError::KeyNotFound(REINDEX_ROOT_KEY.to_string())),
         }
     }
 }
