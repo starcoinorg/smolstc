@@ -1088,20 +1088,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "consensus"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "consensus-types",
- "database",
- "ghostdag",
- "parking_lot 0.12.1",
- "reachability",
- "starcoin-crypto",
- "starcoin-types",
-]
-
-[[package]]
 name = "consensus-types"
 version = "0.1.0"
 dependencies = [
@@ -1331,6 +1317,20 @@ dependencies = [
  "rand_core 0.6.4",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "dag-consensus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "consensus-types",
+ "database",
+ "ghostdag",
+ "parking_lot 0.12.1",
+ "reachability",
+ "starcoin-crypto",
+ "starcoin-types",
 ]
 
 [[package]]
@@ -6013,8 +6013,8 @@ dependencies = [
  "anyhow",
  "async-std",
  "bcs-ext",
- "consensus",
  "consensus-types",
+ "dag-consensus",
  "database",
  "futures",
  "futures-core",
