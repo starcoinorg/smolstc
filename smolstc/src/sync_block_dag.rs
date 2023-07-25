@@ -1,11 +1,11 @@
 use std::{collections::HashSet, sync::Arc};
 
 use bcs_ext::{BCSCodec, Sample};
-use consensus::blockdag::BlockDAG;
 use consensus_types::{
     blockhash::ORIGIN,
     header::{ConsensusHeader, Header},
 };
+use consensus::blockdag::BlockDAG;
 use database::prelude::{FlexiDagStorageConfig, FlexiDagStorage};
 use serde::{Deserialize, Serialize};
 use starcoin_accumulator::{
