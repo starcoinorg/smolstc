@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use bcs_ext::BCSCodec;
-use consensus::blockdag::BlockDAG;
 use futures::{channel::mpsc::channel, FutureExt, StreamExt};
 use futures_core::future::BoxFuture;
 use network_p2p::{config, config::RequestResponseConfig, Event, NetworkService, NetworkWorker};
